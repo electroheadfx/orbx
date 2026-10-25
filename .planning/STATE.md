@@ -5,10 +5,10 @@ current_phase: 1
 current_phase_name: Portes, CI et spikes
 status: planning
 stopped_at: ROADMAP.md et STATE.md écrits ; en attente de l'approbation du roadmap.
-last_updated: "2026-10-25T08:21:27.771Z"
+last_updated: "2026-10-25T08:24:41.859Z"
 last_activity: 2026-10-25
 last_activity_desc: "Completed quick task 261025-cqq: Afficher l’icône de chaque pastille d’Espace dans la barre latérale."
-state_head: 01aa126176fd35f151b17187e6b946b68a53c768
+state_head: 34ff8ec1464f18a5ac9ed21c1a41565538fbc198
 progress:
   total_phases: 5
   completed_phases: 0
@@ -91,6 +91,7 @@ None yet.
 | 261025-bc6 | Change Orbe to Orbx | 2026-10-25 | 96e0e41 | [261025-bc6-change-orbe-to-orbx](./quick/261025-bc6-change-orbe-to-orbx/) |
 | 261025-cqq | Afficher l’icône de chaque pastille d’Espace dans la barre latérale, et non seulement celle de l’Espace affiché. | 2026-10-25 | 45b65c1 | [261025-cqq-fix-orbx-icon-space-actually-it-doesn-t-](./quick/261025-cqq-fix-orbx-icon-space-actually-it-doesn-t-/) |
 | 8 | Rendre visibles les icônes des Espaces inactifs dans la barre du bas (12 px, opacité 0,85 ; icône active 14 px). | 2026-10-25 | 01aa126 | — |
+| 9 | Rendre les icônes des Espaces inactifs pleinement opaques et porter l'espacement des pastilles à 3 px (pastille inactive 14 px pour que 9 Espaces tiennent toujours). | 2026-10-25 | 34ff8ec | — |
 
 ## Deferred Items
 
