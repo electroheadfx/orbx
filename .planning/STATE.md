@@ -5,10 +5,10 @@ current_phase: 1
 current_phase_name: Portes, CI et spikes
 status: planning
 stopped_at: ROADMAP.md et STATE.md écrits ; en attente de l'approbation du roadmap.
-last_updated: "2026-10-25T12:11:25.154Z"
+last_updated: "2026-10-25T13:20:02.523Z"
 last_activity: 2026-10-25
-last_activity_desc: "Completed quick task 261025-i7r: Stabiliser l'essai CI macOS de la pochette d'un hôte public (attente du mandataire local après setProxy)."
-state_head: f3b971d5b1a21b258025f96293138dded3c4ba5f
+last_activity_desc: "Corrigé l'essai de l'icône Lucide : l'espace entre les tracés du SVG n'est plus compté comme du texte."
+state_head: d3ecd38f46a4781b54b3626cc369710f5afcbbe7
 progress:
   total_phases: 5
   completed_phases: 0
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-10-24)
 Phase: 1 of 5 (Portes, CI et spikes)
 Plan: 0 of 0 in current phase
 Status: Ready to plan
-Last activity: 2026-10-25 — Completed quick task 261025-i7r: Stabiliser l'essai CI macOS de la pochette d'un hôte public (attente du mandataire local après setProxy).
+Last activity: 2026-10-25 — Corrigé l'essai de l'icône Lucide (espace entre les tracés du SVG).
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -99,6 +99,7 @@ None yet.
 | 261025-f9z | Add lucide icons as a choice for the space icon picker | 2026-10-25 | ac95a62 | [261025-f9z-add-lucide-icons-as-a-choice-for-the-spa](./quick/261025-f9z-add-lucide-icons-as-a-choice-for-the-spa/) |
 | 15 | Uniformiser la taille et l'écart des pastilles d'Espace : icône 16 px, même largeur sélectionnée ou non. | 2026-10-25 | 0fcb5cb | — |
 | 261025-i7r | Stabiliser l'essai CI macOS de la pochette d'un hôte public : attendre le mandataire local après setProxy avant les vérifications. | 2026-10-25 | f3b971d | [261025-i7r-stabiliser-l-essai-ci-macos-pochette-d-u](./quick/261025-i7r-stabiliser-l-essai-ci-macos-pochette-d-u/) |
+| 17 | Corriger l'essai de l'icône Lucide : ignorer l'espace entre les tracés du SVG dans l'en-tête. | 2026-10-25 | d3ecd38 | — |
 
 ## Deferred Items
 
