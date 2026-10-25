@@ -9,10 +9,6 @@ Spaces, pinned tabs, command bar, split view — with a fully French interface
 > Free and independent project, unaffiliated with The Browser Company. Orbx
 > contains no Arc code or assets: everything is rewritten.
 
-Status: **version 0.15, macOS and Windows**. The Windows build is validated in
-continuous integration, not yet tried on a real machine: see
-[docs/windows.md](docs/windows.md).
-
 ## What works
 
 - **Sidebar**: favorites as tiles, pinned tabs, folders, today's tabs, drag and
