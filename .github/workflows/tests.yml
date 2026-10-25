@@ -29,6 +29,9 @@ jobs:
       - name: Extensions
         run: node --test tests/extensions.test.js
 
+      - name: Icônes
+        run: node --test tests/icons.test.js
+
       # L'écran par défaut des machines Windows est trop petit pour la fenêtre.
       - name: Écran en 1920 × 1080 (Windows)
         if: runner.os == 'Windows'
