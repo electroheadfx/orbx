@@ -2,7 +2,7 @@
 
 ## What This Is
 
-Orbe est un navigateur de bureau à barre latérale, en français, construit sur Electron et Chromium. Il reprend l'organisation et les raccourcis d'Arc — Espaces, onglets épinglés, dossiers, barre de commande, vue scindée — en privilégiant la fluidité, la légèreté et la maîtrise locale des données. Version 0.15.5, distribuée sur macOS et Windows.
+Orbe est un navigateur de bureau à barre latérale, en français, construit sur Electron et Chromium. Il reprend l'organisation et les raccourcis d'Arc — Espaces, onglets épinglés, dossiers, barre de commande, vue scindée — en privilégiant la fluidité, la légèreté et la maîtrise locale des données. Version 0.15.6, distribuée sur macOS et Windows.
 
 ## Core Value
 

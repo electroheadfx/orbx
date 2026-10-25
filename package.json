@@ -1,7 +1,7 @@
 {
   "name": "orbx",
   "productName": "Orbx",
-  "version": "0.15.5",
+  "version": "0.15.6",
   "description": "Orbx — un navigateur Chromium à barre latérale, en français, inspiré d'Arc.",
   "main": "src/main/main.js",
   "license": "MIT",
