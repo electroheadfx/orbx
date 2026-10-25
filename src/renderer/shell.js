@@ -305,7 +305,7 @@ function paintTheme(el, space, s, only) {
   if (el === document.body) document.documentElement.dataset.family = p.family;
 }
 
-// Pastilles des Espaces, en bas : un point par Espace, l'icône pour l'Espace courant.
+// Pastilles des Espaces, en bas : l'icône de chaque Espace ; celle de l'Espace affiché est plus grande.
 function drawSpaces(list, current) {
   const spaces = $('spaces');
   const sig = list.map((x) => x.id + x.icon + x.name).join('|') + '>' + current;

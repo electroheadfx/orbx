@@ -428,10 +428,10 @@ body.fullscreen #page-drag, .floating #page-drag { display: none; }
 #update-note:hover #update-close, #update-close:focus-visible { opacity: 1; transform: none; }
 
 #bottom { height: 42px; display: flex; align-items: center; gap: 4px; flex: none; }
-#spaces { display: flex; align-items: center; justify-content: center; gap: 2px; overflow: hidden; }
-/* Comme dans Arc : un point par Espace, l'icône pour celui qui est affiché. */
+#spaces { display: flex; align-items: center; justify-content: center; gap: 1px; overflow: hidden; }
+/* Comme dans Arc : chaque Espace montre son icône ; la pastille de l'Espace affiché est plus large et plus nette. */
 .sp {
-  width: 14px;
+  width: 16px;
   height: 26px;
   border-radius: 8px;
   display: grid;
@@ -441,16 +441,14 @@ body.fullscreen #page-drag, .floating #page-drag { display: none; }
   transition: color 120ms, width var(--spring-bouncy), transform var(--spring-bouncy);
   flex: none;
 }
-.sp::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; transition: transform var(--spring-bouncy); }
+.sp .em { font-size: 11px; opacity: 0.55; transition: opacity 120ms; }
 .sp:hover { color: var(--dim); }
-.sp:hover::before { transform: scale(1.5); }
+.sp:hover .em { opacity: 0.85; }
 .sp:active { transform: scale(0.86); transition: transform var(--press); }
 /* L'icône de l'Espace qui devient courant grossit à sa place. */
-.sp.active .em { animation: sp-in var(--spring-bouncy); }
+.sp.active .em { font-size: 13px; opacity: 1; animation: sp-in var(--spring-bouncy); }
 @keyframes sp-in { from { transform: scale(0.4); opacity: 0; } }
 .sp.active { width: 26px; color: var(--fg); }
-.sp.active::before { display: none; }
-.sp:not(.active) .em { display: none; }
 
 #dl-ring { position: absolute; inset: 0; width: 28px; height: 28px; transform: rotate(-90deg); display: none; }
 #dl-ring circle { fill: none; stroke: var(--accent); stroke-width: 2; stroke-dasharray: 75.4; stroke-dashoffset: 75.4; transition: stroke-dashoffset 200ms; }
@@ -772,7 +770,7 @@ body.dragging #fav:empty::before { content: attr(data-hint); grid-column: 1 / -1
 /* Pastilles des Espaces : glisser pour les réordonner, y déposer un onglet. */
 .sp.dragging-self { opacity: 0.35; }
 .sp.drop-into { color: var(--accent); transform: scale(1.25); }
-.sp.drop-into::before { transform: scale(1.8); }
+.sp.drop-into .em { opacity: 1; }
 
 /* Ligne montrée par « Afficher l'onglet dans la barre latérale ». */
 .row.flash, .tile.flash { animation: row-flash 900ms var(--ease-out); }
