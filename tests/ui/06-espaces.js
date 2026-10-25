@@ -72,7 +72,9 @@ module.exports = {
       assert.deepEqual(icones.map((x) => x.texte), ['🏠', '✨'], 'chaque pastille porte l’icône de son Espace');
       assert.deepEqual(icones.map((x) => x.affichee), [true, true], 'les icônes des Espaces inactifs restent affichées : ' + JSON.stringify(icones));
       assert.equal(icones[0].opacite, 1, 'les icônes inactives sont pleinement visibles : ' + JSON.stringify(icones));
-      assert.ok(icones[1].taille > icones[0].taille, 'l’Espace affiché a une icône plus grande : ' + JSON.stringify(icones));
+      assert.equal(icones[1].taille, icones[0].taille, 'l’Espace affiché garde la même taille d’icône : ' + JSON.stringify(icones));
+      const largeurs = await pastilles.evaluateAll((els) => els.map((el) => el.getBoundingClientRect().width));
+      assert.equal(largeurs[0], largeurs[1], 'les pastilles gardent la même largeur, sélection ou non : ' + JSON.stringify(largeurs));
     });
 
     await t.verifier('la couleur d’accent change avec l’Espace', async () => {

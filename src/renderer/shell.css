@@ -434,27 +434,24 @@ body.fullscreen #page-drag, .floating #page-drag { display: none; }
 
 #bottom { height: 42px; display: flex; align-items: center; gap: 4px; flex: none; }
 #spaces { display: flex; align-items: center; justify-content: center; gap: 6px; overflow: hidden; }
-/* Comme dans Arc : chaque Espace montre son icône ; la pastille de l'Espace affiché est plus large. */
+/* Chaque Espace montre son icône ; l'Espace affiché se distingue par la couleur seule.
+   Largeur et taille d'icône sont identiques partout : aucun décalage à la sélection. */
 .sp {
-  width: 12px;
+  width: 18px;
   height: 26px;
   border-radius: 8px;
   display: grid;
   place-items: center;
-  font-size: 13px;
+  font-size: 16px;
   color: var(--faint);
-  transition: color 120ms, width var(--spring-bouncy), transform var(--spring-bouncy);
+  transition: color 120ms, transform var(--spring-bouncy);
   flex: none;
 }
-.sp .em { font-size: 12px; opacity: 1; }
-.sp .em svg.lucide { width: 13px; height: 13px; }
+.sp .em { font-size: 16px; opacity: 1; }
+.sp .em svg.lucide { width: 16px; height: 16px; }
 .sp:hover { color: var(--dim); }
 .sp:active { transform: scale(0.86); transition: transform var(--press); }
-/* L'icône de l'Espace qui devient courant grossit à sa place. */
-.sp.active .em { font-size: 14px; opacity: 1; animation: sp-in var(--spring-bouncy); }
-.sp.active .em svg.lucide { width: 15px; height: 15px; }
-@keyframes sp-in { from { transform: scale(0.4); opacity: 0; } }
-.sp.active { width: 26px; color: var(--fg); }
+.sp.active { color: var(--fg); }
 
 #dl-ring { position: absolute; inset: 0; width: 28px; height: 28px; transform: rotate(-90deg); display: none; }
 #dl-ring circle { fill: none; stroke: var(--accent); stroke-width: 2; stroke-dasharray: 75.4; stroke-dashoffset: 75.4; transition: stroke-dashoffset 200ms; }
