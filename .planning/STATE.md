@@ -5,10 +5,10 @@ current_phase: 1
 current_phase_name: Portes, CI et spikes
 status: planning
 stopped_at: ROADMAP.md et STATE.md écrits ; en attente de l'approbation du roadmap.
-last_updated: "2026-10-25T13:20:02.523Z"
+last_updated: "2026-10-25T15:58:22.722Z"
 last_activity: 2026-10-25
 last_activity_desc: "Corrigé l'essai de l'icône Lucide : l'espace entre les tracés du SVG n'est plus compté comme du texte."
-state_head: d3ecd38f46a4781b54b3626cc369710f5afcbbe7
+state_head: 89eac41399cd21fd42f714c8e1a4063c1803511f
 progress:
   total_phases: 5
   completed_phases: 0
@@ -100,6 +100,7 @@ None yet.
 | 15 | Uniformiser la taille et l'écart des pastilles d'Espace : icône 16 px, même largeur sélectionnée ou non. | 2026-10-25 | 0fcb5cb | — |
 | 261025-i7r | Stabiliser l'essai CI macOS de la pochette d'un hôte public : attendre le mandataire local après setProxy avant les vérifications. | 2026-10-25 | f3b971d | [261025-i7r-stabiliser-l-essai-ci-macos-pochette-d-u](./quick/261025-i7r-stabiliser-l-essai-ci-macos-pochette-d-u/) |
 | 17 | Corriger l'essai de l'icône Lucide : ignorer l'espace entre les tracés du SVG dans l'en-tête. | 2026-10-25 | d3ecd38 | — |
+| 18 | Corriger les pastilles d'Espace (13 px) et aligner les essais UI sur l'accueil et le dépôt. | 2026-10-25 | 89eac41 | — |
 
 ## Deferred Items
 
