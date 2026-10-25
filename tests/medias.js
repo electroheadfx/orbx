@@ -57,6 +57,8 @@ function serve(cover) {
     hits[url.pathname] = (hits[url.pathname] || 0) + 1;
     if (url.pathname === '/son.wav') { res.setHeader('content-type', 'audio/wav'); res.setHeader('accept-ranges', 'bytes'); res.setHeader('content-length', sound.length); return res.end(sound); }
     if (url.pathname === '/pochette.png') { res.setHeader('content-type', 'image/png'); return res.end(cover); }
+    // Sonde du mandataire : même image, chemin propre pour ne pas déplacer les compteurs des vérifications.
+    if (url.pathname === '/sonde.png') { res.setHeader('content-type', 'image/png'); return res.end(cover); }
     if (server.extra && server.extra[url.pathname]) { res.setHeader('content-type', 'image/png'); return res.end(server.extra[url.pathname]); }
     if (url.pathname === '/interne.png' || url.pathname === '/rebond.png') { res.setHeader('content-type', 'image/png'); return res.end(cover); }
     // Redirections : vers la machine elle-même, vers un autre hôte « public », sans fin.
@@ -168,15 +170,49 @@ module.exports = async function mediasTests(ctx) {
     && R('http://site.test/', 'http://img.test/a.png', false, null) === 'hôte inconnu' && R('http://site.test/', 'ftp://img.test/a.png', false, false) === 'protocole' && R('http://site.test/', 'http://a:b@img.test/a.png', false, false) === 'identifiants');
   // Serveurs « publics » : une session d'essai dont le mandataire est le serveur local, et une
   // résolution de noms simulée. Les adresses de la machine, elles, sont jointes directement.
-  const { session } = require('electron');
+  const { session, net } = require('electron');
   const pub = session.fromPartition('essai-pochette-' + Date.now());
   await pub.setProxy({ proxyRules: `http=127.0.0.1:${server.address().port}` });
+  // La toute première requête d'une session neuve peut partir avant que la règle de mandataire
+  // ne soit prise en compte (observé sous charge en CI, exécution 40181399739). La sonde est
+  // brute, n'exerce pas loadArtwork, et ne peut donc pas masquer un défaut produit : elle prouve
+  // seulement qu'un 200 arrive du serveur local à travers le mandataire.
+  const sonde = () => new Promise((resolve) => {
+    let fini = false;
+    let req = null;
+    const fin = (ok) => {
+      if (fini) return;
+      fini = true;
+      clearTimeout(minuteur);
+      try { req.abort(); } catch {}
+      resolve(ok);
+    };
+    const minuteur = setTimeout(() => fin(false), 1500);
+    try {
+      req = net.request({ url: 'http://img.exemple.test/sonde.png', session: pub, method: 'GET' });
+    } catch { fin(false); return; }
+    req.on('response', (res) => {
+      if (res.statusCode !== 200) return fin(false);
+      res.on('data', () => {});
+      res.on('end', () => fin(true));
+      res.on('error', () => fin(false));
+      res.on('aborted', () => fin(false));
+      return undefined;
+    });
+    req.on('error', () => fin(false));
+    req.on('abort', () => fin(false));
+    req.end();
+  });
+  const debutMandataire = Date.now();
+  await until(sonde, 'mandataire de l’essai actif', 15000);
+  const attenteMandataire = Date.now() - debutMandataire;
+  if (attenteMandataire > 1000) console.log(`  – mandataire de l’essai actif après ${attenteMandataire} ms`);
   const resolve = async (host) => (host === 'double.exemple.test' ? ['93.184.216.34', '10.0.0.5'] : /\.test$/.test(host) ? ['93.184.216.34'] : []);
   const reasons = [];
   const fetchArt = (src, from = 'http://site.exemple.test/') => mediaLib.loadArtwork(pub, src, from, { resolve, trace: (u, why) => reasons.push(why) });
   const direct = await fetchArt('http://img.exemple.test/pochette.png');
   const followed = await fetchArt('http://img.exemple.test/redir-ok');
-  check('pochette d’un hôte public, directe ou après une redirection vers un autre hôte public : acceptée', direct.startsWith('data:image/png') && followed.startsWith('data:image/png') && server.hits['/redir-ok'] === 1, [direct.length, followed.length].join());
+  check('pochette d’un hôte public, directe ou après une redirection vers un autre hôte public : acceptée', direct.startsWith('data:image/png') && followed.startsWith('data:image/png') && server.hits['/redir-ok'] === 1, JSON.stringify({ direct: direct.length, suivie: followed.length, mandataire: attenteMandataire, hits: server.hits, raisons: reasons }));
   const before = { ...server.hits };
   const toLoop = await fetchArt('http://img.exemple.test/redir');
   check('redirection d’un hôte public vers 127.0.0.1 : refusée, la machine ne reçoit aucune requête', toLoop === '' && server.hits['/redir'] === (before['/redir'] || 0) + 1 && !server.hits['/interne.png'] && reasons.includes('réseau local'), JSON.stringify([toLoop.length, server.hits['/interne.png'], reasons]));
