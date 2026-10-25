@@ -103,7 +103,8 @@ module.exports = {
         },
       });
       assert.equal(vu.nom, 'Page D');
-      assert.ok(Math.abs(vu.dx) <= 2 && Math.abs(vu.dy) <= 2 && vu.gauche >= vu.largeur / 2 - 2, 'bulle au milieu de la moitié droite : ' + JSON.stringify(vu));
+      // La zone de dépôt garde une marge de 10 px : son bord gauche est à la moitié moins cette marge.
+      assert.ok(Math.abs(vu.dx) <= 2 && Math.abs(vu.dy) <= 2 && vu.gauche >= vu.largeur / 2 - 12, 'bulle au milieu de la moitié droite : ' + JSON.stringify(vu));
       const zone = await ctx.attendrePage('overlay.html#drop');
       const visible = () => ctx.principal(({ w }) => !!w.dropView && w.dropView.getVisible());
       if (!reduit) {

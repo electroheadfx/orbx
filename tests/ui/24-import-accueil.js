@@ -215,7 +215,7 @@ module.exports = {
       assert.equal(await a.locator('#colors button[aria-pressed=true]').count(), 1);
     });
 
-    await t.verifier('étape navigateur par défaut, puis dernière étape avec le mot de soutien ; « Commencer à naviguer » referme l’accueil', async () => {
+    await t.verifier('étape navigateur par défaut, puis dernière étape avec les premiers gestes ; « Commencer à naviguer » referme l’accueil', async () => {
       await a.click('#next');
       await jusqua(async () => (await etape()) === 'default', 'étape navigateur par défaut');
       await a.click('#make-default');
@@ -225,8 +225,8 @@ module.exports = {
       await a.keyboard.press('ArrowRight');
       await a.keyboard.press('ArrowRight');
       await jusqua(async () => (await etape()) === 'ready', 'dernière étape');
-      assert.equal(await a.textContent('.support b'), await ctx.texte('support.title'));
-      assert.equal(await a.textContent('.support .sub'), await ctx.texte('support.body'));
+      assert.equal(await a.textContent('.step.on h1'), await ctx.texte('welcome.readyTitle'));
+      assert.equal(await a.textContent('.step.on .lead'), await ctx.texte('welcome.readyLead'));
       assert.equal(await a.locator('.tips .line').count(), 6);
       assert.equal(await a.locator('#skip').isVisible(), false);
       await a.click('#next');
