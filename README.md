@@ -1,169 +1,154 @@
 # Orbx
 
-**Un navigateur à barre latérale, en français, bâti sur Chromium.**
+**A sidebar browser, in French, built on Chromium.**
 
-Orbx reprend l'organisation et les raccourcis clavier du navigateur Arc — barre
-latérale, Espaces, onglets épinglés, barre de commande, vue scindée — avec une
-interface entièrement en français (anglais disponible dans les réglages).
+Orbx adopts the organization and keyboard shortcuts of the Arc browser — sidebar,
+Spaces, pinned tabs, command bar, split view — with a fully French interface
+(English available in settings).
 
-> Projet libre et indépendant, sans lien avec The Browser Company. Orbx ne
-> contient aucun code ni aucune ressource d'Arc : tout est réécrit.
+> Free and independent project, unaffiliated with The Browser Company. Orbx
+> contains no Arc code or assets: everything is rewritten.
 
-État : **version 0.15, macOS et Windows**. La version Windows est validée en intégration continue, pas encore essayée sur une machine réelle : voir [docs/windows.md](docs/windows.md).
+Status: **version 0.15, macOS and Windows**. The Windows build is validated in
+continuous integration, not yet tried on a real machine: see
+[docs/windows.md](docs/windows.md).
 
-![Orbx : barre latérale, favoris, onglets épinglés et barre de commande](docs/captures/barre-de-commande.png)
+## What works
 
-| Vue scindée | Thème clair |
+- **Sidebar**: favorites as tiles, pinned tabs, folders, today's tabs, drag and
+  drop, inline rename, adjustable width, hiding (⌘S) with reappearance when
+  hovering the left edge.
+- **Spaces**: icon and theme per Space, switching with ⌃1…⌃9, ⌥⌘←/→ or a
+  two-finger swipe on the sidebar.
+- **Themes** (Spaces menu → Edit Theme): one to three colors in a gradient,
+  chosen by dragging points on a color picker; intensity; four textures (grain,
+  sand, tweed, denim); light, dark or automatic appearance per Space; eight
+  ready-made themes and three ready-made palettes. Text stays readable on any
+  color (computed contrast, at least 4.5).
+- **Motion**: rows slide when the list changes, loading glow, elastic bounce of
+  the list, two-finger swipe on the page to go back; the system's "Reduce
+  motion" setting is respected.
+- **Sounds**: seven brief, original sounds made by `scripts/make-sounds.js`
+  (screenshot; on demand, new tab, close, Space switch, pin, refusal), with
+  volume control.
+- **Command bar** (⌘T / ⌘L): address, search, switch to an open tab, history,
+  actions, search engine suggestions.
+- **Split view** up to four panes (⌃⇧=).
+- **Link preview (Peek)**: an outgoing link from a pinned tab, or a ⇧-click,
+  opens above the page; ⌘O turns it into a tab, Escape closes it.
+- **Profiles**: separate cookies, logins and favorites, one profile per Space.
+- **Import from Arc**: Spaces, pins, folders, favorites and profiles (Orbx menu
+  → Import from Arc…). Run again later, the same command updates Orbx from Arc
+  (order, names, folders, added tabs) without deleting anything, after a backup.
+- **Video and sound**: the current video becomes picture-in-picture when you
+  switch tabs; a mini player in the sidebar controls the sound.
+- **Built-in ad and tracker blocker** (24,000 domains, under a microsecond per
+  request), with a per-site exception from the shield.
+- **Chrome extensions**: installation from the Chrome Web Store, signature
+  verified (Settings → Extensions), buttons under the address, side panel.
+  Verified on real pages: Dark Reader, Wappalyzer, uBlock Origin Lite, CSS
+  Peeper and GoFullPage. The Claude extension opens through to its sign-in
+  screen; the rest has not been tried.
+- **Boosts**: custom CSS per site and "Zap" to hide an element.
+- **Passwords**: built-in saving and filling, encrypted with the system
+  keychain, CSV import and export (Safari / iCloud, Chrome). The threat model
+  is in [docs/mots-de-passe.md](docs/mots-de-passe.md).
+- **Notes** (⌃⇧N, ⌃⌥N next to the page) and **media** in the library.
+- **Boards** (⌃⇧E), Arc's "Easels": an infinite canvas for placing text,
+  pasted or dropped images, shapes, arrows, lines and sticky notes; "Capture to
+  a board" (⌥⇧⌘2) sends a region of the page there, with a link to its source.
+  One file per board, images separately, listed in the library. No "live"
+  capture or sharing yet.
+- **Archive**: ⌘W archives the tab, ⇧⌘T reopens it, inactive tabs are archived
+  automatically (12 h by default).
+- **Little window** (⌥⌘N), **private browsing** (⇧⌘N), multiple windows sharing
+  the same sidebar.
+- **Library**: history, archive, downloads.
+- Find in page, zoom, screenshot, print, developer tools, per-site permissions,
+  sleeping of old tabs.
+- **French and English**, light, dark or automatic theme.
+
+## Keyboard shortcuts
+
+Identical to Arc's. The full list is in the app:
+*Help → Essential keyboard shortcuts*.
+
+| Action | Shortcut |
 | --- | --- |
-| ![Vue scindée](docs/captures/vue-scindee.png) | ![Thème clair](docs/captures/theme-clair.png) |
+| New tab / command bar | ⌘T / ⌘L |
+| Archive tab / reopen it | ⌘W / ⇧⌘T |
+| Pin or unpin | ⌘D |
+| Next / previous tab | ⌥⌘↓ / ⌥⌘↑ |
+| Recent tabs | ⌃⇥ (hold ⌃) |
+| Go to tab 1…9 | ⌘1 … ⌘9 |
+| Next / previous Space | ⌥⌘→ / ⌥⌘← |
+| Go to Space 1…9 | ⌃1 … ⌃9 |
+| Hide the sidebar | ⌘S |
+| Toolbar | ⇧⌘D |
+| Split view / close pane | ⌃⇧= / ⌃⇧- |
+| Copy URL / as Markdown | ⇧⌘C / ⌥⇧⌘C |
+| Clear Today | ⇧⌘K |
+| Little window / private browsing | ⌥⌘N / ⇧⌘N |
+| History / library / downloads | ⌘Y / ⇧⌘L / ⇧⌘J |
+| Capture the page | ⇧⌘2 |
+| New board / capture to a board | ⌃⇧E / ⌥⇧⌘2 |
+| Settings | ⌘, |
 
-| Éditeur de thème | Dégradé de trois couleurs et grain |
-| --- | --- |
-| ![Éditeur de thème : nuancier, intensité, textures, thèmes prêts](docs/captures/theme-editeur.png) | ![Thème en dégradé avec grain](docs/captures/theme-degrade-grain.png) |
+## Running Orbx from source
 
-| Thème clair | Thème sombre |
-| --- | --- |
-| ![Thème clair](docs/captures/theme-clair.png) | ![Thème sombre](docs/captures/theme-sombre.png) |
-
-## Ce qui fonctionne
-
-- **Barre latérale** : favoris en tuiles, onglets épinglés, dossiers, onglets du
-  jour, glisser-déposer, renommage sur place, largeur réglable, masquage (⌘S)
-  avec réapparition au survol du bord gauche.
-- **Espaces** : icône et thème par Espace, changement par ⌃1…⌃9, ⌥⌘←/→ ou
-  balayage à deux doigts sur la barre latérale.
-- **Thèmes** (menu Espaces → Modifier le thème) : une à trois couleurs en
-  dégradé, choisies en déplaçant des points sur un nuancier ; intensité ; quatre
-  textures (grain, sable, tweed, denim) ; apparence claire, sombre ou
-  automatique par Espace ; huit thèmes et trois nuanciers prêts. Le texte reste
-  lisible sur n'importe quelle couleur (contraste calculé, 4,5 au moins).
-- **Mouvements** : les lignes glissent quand la liste change, lueur de
-  chargement, rebond élastique de la liste, balayage à deux doigts sur la page
-  pour revenir en arrière ; « Réduire les animations » du système est respecté.
-- **Sons** : sept sons brefs et originaux, fabriqués par `scripts/make-sounds.js`
-  (capture d'écran ; sur demande, nouvel onglet, fermeture, changement d'Espace,
-  épingle, refus), avec réglage du volume.
-- **Barre de commande** (⌘T / ⌘L) : adresse, recherche, bascule vers un onglet
-  ouvert, historique, actions, suggestions du moteur de recherche.
-- **Vue scindée** jusqu'à quatre volets (⌃⇧=).
-- **Aperçu des liens (Peek)** : un lien sortant d'un onglet épinglé, ou un
-  ⇧clic, s'ouvre par-dessus la page ; ⌘O en fait un onglet, Échap le ferme.
-- **Profils** : cookies, connexions et favoris séparés, un profil par Espace.
-- **Import depuis Arc** : Espaces, épinglés, dossiers, favoris et profils
-  (menu Orbx → Importer depuis Arc…). Relancée plus tard, la même commande met
-  Orbx à jour d'après Arc (ordre, noms, dossiers, onglets ajoutés) sans rien
-  supprimer, après une sauvegarde.
-- **Vidéo et son** : la vidéo en cours passe en image dans l'image quand tu
-  changes d'onglet ; un lecteur miniature dans la barre latérale pilote le son.
-- **Bloqueur de publicités et de traqueurs** intégré (24 000 domaines, moins
-  d'une microseconde par requête), avec exception par site depuis le bouclier.
-- **Extensions Chrome** : installation depuis le Chrome Web Store, signature
-  vérifiée (Réglages → Extensions), boutons sous l'adresse, panneau latéral.
-  Vérifiées sur de vraies pages : Dark Reader, Wappalyzer, uBlock Origin Lite,
-  CSS Peeper et GoFullPage. L'extension Claude s'ouvre jusqu'à son écran de
-  connexion ; la suite n'a pas été essayée.
-- **Boosts** : CSS personnalisé par site et « Zap » pour masquer un élément.
-- **Mots de passe** : enregistrement et remplissage intégrés, chiffrés avec le
-  trousseau du système, import et export CSV (Safari / iCloud, Chrome). Le
-  modèle de menace est dans [docs/mots-de-passe.md](docs/mots-de-passe.md).
-- **Notes** (⌃⇧N, ⌃⌥N à côté de la page) et **médias** dans la bibliothèque.
-- **Tableaux** (⌃⇧E), les « Easels » d'Arc : un plan infini où poser textes,
-  images collées ou déposées, formes, flèches, traits et pense-bêtes ;
-  « Capturer vers un tableau » (⌥⇧⌘2) y envoie une zone de la page, avec un
-  lien vers sa source. Un fichier par tableau, images à part, listés dans la
-  bibliothèque. Pas encore de capture « vivante » ni de partage.
-- **Archive** : ⌘W archive l'onglet, ⇧⌘T le rouvre, les onglets inactifs sont
-  archivés automatiquement (12 h par défaut).
-- **Petite fenêtre** (⌥⌘N), **navigation privée** (⇧⌘N), plusieurs fenêtres
-  partageant la même barre latérale.
-- **Bibliothèque** : historique, archive, téléchargements.
-- Recherche dans la page, zoom, capture, impression, outils de développement,
-  autorisations par site, mise en veille des onglets anciens.
-- **Français et anglais**, thème clair, sombre ou automatique.
-
-## Raccourcis clavier
-
-Identiques à ceux d'Arc. La liste complète est dans l'application :
-*Aide → Raccourcis clavier essentiels*.
-
-| Action | Raccourci |
-| --- | --- |
-| Nouvel onglet / barre de commande | ⌘T / ⌘L |
-| Archiver l'onglet / le rouvrir | ⌘W / ⇧⌘T |
-| Épingler ou désépingler | ⌘D |
-| Onglet suivant / précédent | ⌥⌘↓ / ⌥⌘↑ |
-| Onglets récents | ⌃⇥ (maintenir ⌃) |
-| Aller à l'onglet 1…9 | ⌘1 … ⌘9 |
-| Espace suivant / précédent | ⌥⌘→ / ⌥⌘← |
-| Aller à l'Espace 1…9 | ⌃1 … ⌃9 |
-| Masquer la barre latérale | ⌘S |
-| Barre d'outils | ⇧⌘D |
-| Vue scindée / fermer le volet | ⌃⇧= / ⌃⇧- |
-| Copier l'URL / en Markdown | ⇧⌘C / ⌥⇧⌘C |
-| Effacer Aujourd'hui | ⇧⌘K |
-| Petite fenêtre / navigation privée | ⌥⌘N / ⇧⌘N |
-| Historique / bibliothèque / téléchargements | ⌘Y / ⇧⌘L / ⇧⌘J |
-| Capturer la page | ⇧⌘2 |
-| Nouveau tableau / capturer vers un tableau | ⌃⇧E / ⌥⇧⌘2 |
-| Réglages | ⌘, |
-
-## Lancer Orbx depuis les sources
-
-Il faut [Node.js](https://nodejs.org) 20 ou plus récent.
+The project requires [Node.js](https://nodejs.org) 20 or newer.
 
 ```sh
 git clone https://github.com/electroheadfx/orbx.git
 cd orbx
-npm start        # lance le navigateur
-npm test         # tests de bout en bout (plus de 1 500 vérifications)
-npm run test:ui  # tests d'interface Playwright, souris et clavier réels (504 vérifications)
-npm run test:ext # couche d'API des extensions, dans le vrai navigateur (175 vérifications)
-# tests au clavier réel (prennent le clavier) : voir tests/natif/
-npm run build    # fabrique ~/.orbx-dev/dist/Orbx.app (-- --install pour /Applications)
+npm start        # launches the browser
+npm test         # end-to-end tests (over 1,500 checks)
+npm run test:ui  # Playwright UI tests, real mouse and keyboard (504 checks)
+npm run test:ext # extension API layer, in the real browser (175 checks)
+# real-keyboard tests (they take over the keyboard): see tests/natif/
+npm run build    # builds ~/.orbx-dev/dist/Orbx.app (-- --install for /Applications)
 ```
 
-Les essais se surveillent eux-mêmes : aucune boîte de dialogue native ne peut
-s'ouvrir sans réponse préparée, une exception non rattrapée fait échouer le
-scénario, et un essai qui n'avance plus s'arrête en écrivant ce qu'il attendait
-(fenêtres, pages, appels sans réponse ; piles d'appels natives si le fil
-principal est figé). Écran verrouillé ou en veille, les vérifications qui ont
-besoin d'images ou de son sont ignorées une par une, avec la raison.
+The tests watch themselves: no native dialog can open without a prepared
+answer, an uncaught exception fails the scenario, and a test that stops making
+progress stops by writing what it was waiting for (windows, pages, unanswered
+calls; native call stacks if the main thread is frozen). With the screen locked
+or asleep, checks that need images or sound are skipped one by one, with the
+reason.
 
-Sur macOS, les fenêtres d'essai sont invisibles : transparentes, insensibles à
-la souris, sans clavier ni icône dans le Dock, pour qu'on puisse continuer à
-travailler pendant les tests (`tests/discret.js`). `ORBX_TEST_VISIBLE=1` les
-montre.
+On macOS, test windows are invisible: transparent, mouse-transparent, with no
+keyboard or Dock icon, so you can keep working during tests (`tests/discret.js`).
+`ORBX_TEST_VISIBLE=1` shows them.
 
-Vidéos protégées (Widevine) : `ORBX_DRM=1 npm start` utilise un moteur qui les
-lit ; voir [docs/etude-extensions-et-distribution.md](docs/etude-extensions-et-distribution.md).
+Protected videos (Widevine): `ORBX_DRM=1 npm start` uses an engine that can play
+them; see [docs/etude-extensions-et-distribution.md](docs/etude-extensions-et-distribution.md).
 
-Au premier lancement, le moteur (Electron) est téléchargé dans `~/.orbx-dev`,
-en dehors du projet. Les données du navigateur sont dans
-`~/Library/Application Support/Orbx`.
+On first launch, the engine (Electron) is downloaded into `~/.orbx-dev`, outside
+the project. Browser data lives in `~/Library/Application Support/Orbx`.
 
-## Organisation du code
+## Code organization
 
 ```
-src/main/       processus principal : fenêtres, onglets, menus, données
-src/preload/    pont sécurisé entre l'interface et le processus principal
-src/renderer/   interface : barre latérale, barre de commande, pages internes
-src/shared/     textes français et anglais
-tests/          tests de bout en bout, tests d'interface (Playwright), sites réels
-docs/           analyse d'Arc et feuille de route
+src/main/       main process: windows, tabs, menus, data
+src/preload/    secure bridge between the interface and the main process
+src/renderer/   interface: sidebar, command bar, internal pages
+src/shared/     French and English strings
+tests/          end-to-end tests, UI tests (Playwright), real sites
+docs/           analysis of Arc and roadmap
 ```
 
-Pas de framework ni d'étape de compilation : du JavaScript, du HTML et du CSS
-simples, pour un démarrage rapide et une interface fluide.
+No framework or build step: plain JavaScript, HTML and CSS, for fast startup and
+a smooth interface.
 
-## Feuille de route
+## Roadmap
 
-Voir [docs/feuille-de-route.md](docs/feuille-de-route.md). Les prochains
-chantiers : extensions Chrome, synchronisation, puis la version Windows.
+See [docs/feuille-de-route.md](docs/feuille-de-route.md). Next projects: Chrome
+extensions, synchronization, then the Windows version.
 
-## Licence
+## License
 
-Le code est sous licence [MIT](LICENSE). La liste de blocage
-(`assets/blocklist.txt`) réunit des listes publiques qui gardent chacune leur
-licence (MIT et CC BY 3.0), rappelée en tête du fichier.
+The code is licensed under [MIT](LICENSE). The blocklist
+(`assets/blocklist.txt`) gathers public lists that each keep their own license
+(MIT and CC BY 3.0), recalled at the top of the file.
 
-Projet inspiré d'[Orbe](https://github.com/amadoubaui/orbe), le navigateur d'Amadou Ba.
+Inspired by [Orbe](https://github.com/amadoubaui/orbe), Amadou Ba's browser.
