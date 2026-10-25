@@ -545,7 +545,7 @@ function iconsMove(delta) {
 function openIcons(p) {
   if (p.kind !== 'draft') show('icons');
   // L'onglet suit l'icône en place : une icône Lucide s'ouvre sur la grille d'icônes.
-  const current = p.current || '';
+  const current = typeof p.current === 'string' ? p.current : '';
   iconsState = { kind: p.kind, current, tone: p.tone || 0, tab: current.startsWith(LUCIDE_PREFIX) ? 'lucide' : 'emoji', at: -1 };
   $('icons').style.left = (p.x || 260) + 'px';
   $('icons-tones').textContent = '';
