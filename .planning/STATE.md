@@ -5,10 +5,10 @@ current_phase: 1
 current_phase_name: Portes, CI et spikes
 status: planning
 stopped_at: ROADMAP.md et STATE.md écrits ; en attente de l'approbation du roadmap.
-last_updated: "2026-10-25T09:57:59.048Z"
+last_updated: "2026-10-25T11:09:40.614Z"
 last_activity: 2026-10-25
 last_activity_desc: "Completed quick task 261025-eik: Préparer Orbx pour son dépôt indépendant (README anglais, licence, config GSD)."
-state_head: d915fcd7ef95cd55e6886be419bea8df32cba68b
+state_head: ac95a6251a04930b3979603356ef7456bbf257c9
 progress:
   total_phases: 5
   completed_phases: 0
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-10-24)
 Phase: 1 of 5 (Portes, CI et spikes)
 Plan: 0 of 0 in current phase
 Status: Ready to plan
-Last activity: 2026-10-25 — Completed quick task 261025-cqq: Afficher l’icône de chaque pastille d’Espace dans la barre latérale.
+Last activity: 2026-10-25 — Completed quick task 261025-f9z: Add lucide icons as a choice for the space icon picker (verification: Needs Review).
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -96,6 +96,7 @@ None yet.
 | 261025-eik | Préparer Orbx pour son dépôt indépendant : rattacher GSD et MemPalace, README en anglais sans captures, licence au nom du nouveau mainteneur. | 2026-10-25 | e202cdb | [261025-eik-rebranding-orbx-commit-planning-mempalac](./quick/261025-eik-rebranding-orbx-commit-planning-mempalac/) |
 | 12 | Retirer la ligne d'état Windows du README. | 2026-10-25 | 414ee26 | — |
 | 13 | Passer la version à 0.15.6. | 2026-10-25 | a2a2ab6 | — |
+| 261025-f9z | Add lucide icons as a choice for the space icon picker | 2026-10-25 | ac95a62 | [261025-f9z-add-lucide-icons-as-a-choice-for-the-spa](./quick/261025-f9z-add-lucide-icons-as-a-choice-for-the-spa/) |
 
 ## Deferred Items
 
