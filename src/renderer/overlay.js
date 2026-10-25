@@ -471,36 +471,65 @@ function drawSwipe(msg) {
 }
 
 // --- Sélecteur d'icône --------------------------------------------------------
-// Un émoji pour un Espace, un dossier ou un onglet (emojis.js). Recherche par
-// mots-clés, teinte de peau retenue, flèches et Entrée au clavier ; le choix
-// part au processus principal, qui le vérifie.
+// Un émoji (emojis.js) ou une icône Lucide vendorisée (lucide.js) pour un Espace,
+// un dossier ou un onglet. Deux onglets ; la recherche filtre l'onglet actif, la
+// teinte de peau ne concerne que les émojis ; flèches et Entrée au clavier ; le
+// choix part au processus principal, qui le vérifie.
 const iconsInput = $('icons-input');
 const iconsList = $('icons-list');
-let iconsState = null; // { kind, current, tone, at }
+let iconsState = null; // { kind, current, tone, tab, at }
 const iconButtons = () => [...iconsList.querySelectorAll('.em-pick')];
+
+// Onglet actif : pastilles, indication du champ, bande de teintes (émoji seulement).
+function syncIconsTab() {
+  const isLucide = iconsState.tab === 'lucide';
+  for (const b of $('icons-tabs').children) {
+    const on = (b.dataset.tab === 'lucide') === isLucide;
+    b.classList.toggle('sel', on);
+    b.setAttribute('aria-selected', String(on));
+  }
+  iconsInput.placeholder = t(isLucide ? 'icons.searchIcon' : 'icons.search');
+  $('icons-tones').hidden = isLucide;
+}
 
 function drawIcons() {
   const q = iconsInput.value.trim();
-  const found = emojiSearch(q);
+  const isLucide = iconsState.tab === 'lucide';
+  const found = isLucide ? lucideSearch(q) : emojiSearch(q);
   iconsList.textContent = '';
-  let grid = null;
-  let group = null;
-  for (const x of found) {
-    // Sans recherche : une rubrique par titre ; avec : une seule grille.
-    if (!grid || (!q && x.group !== group)) {
-      group = x.group;
-      if (!q) iconsList.appendChild(Object.assign(document.createElement('h4'), { textContent: t('icons.group.' + x.group) }));
-      grid = Object.assign(document.createElement('div'), { className: 'icons-grid' });
+  if (isLucide) {
+    // Une seule grille plate, sans rubriques ni teintes.
+    if (found.length) {
+      const grid = Object.assign(document.createElement('div'), { className: 'icons-grid' });
+      for (const x of found) {
+        const value = LUCIDE_PREFIX + x.name;
+        const b = Object.assign(document.createElement('button'), { className: 'em-pick' + (value === iconsState.current ? ' sel' : '') });
+        b.dataset.e = value;
+        b.appendChild(iconEl(value));
+        grid.appendChild(b);
+      }
       iconsList.appendChild(grid);
     }
-    const e = emojiTone(x.e, iconsState.tone);
-    const b = Object.assign(document.createElement('button'), { className: 'em-pick' + (e === iconsState.current ? ' sel' : ''), textContent: e });
-    b.dataset.e = e;
-    grid.appendChild(b);
+  } else {
+    let grid = null;
+    let group = null;
+    for (const x of found) {
+      // Sans recherche : une rubrique par titre ; avec : une seule grille.
+      if (!grid || (!q && x.group !== group)) {
+        group = x.group;
+        if (!q) iconsList.appendChild(Object.assign(document.createElement('h4'), { textContent: t('icons.group.' + x.group) }));
+        grid = Object.assign(document.createElement('div'), { className: 'icons-grid' });
+        iconsList.appendChild(grid);
+      }
+      const e = emojiTone(x.e, iconsState.tone);
+      const b = Object.assign(document.createElement('button'), { className: 'em-pick' + (e === iconsState.current ? ' sel' : ''), textContent: e });
+      b.dataset.e = e;
+      grid.appendChild(b);
+    }
+    for (const b of $('icons-tones').children) b.classList.toggle('sel', Number(b.dataset.tone) === iconsState.tone);
   }
-  if (!found.length) iconsList.appendChild(Object.assign(document.createElement('div'), { id: 'icons-empty', textContent: t('icons.none') }));
+  if (!found.length) iconsList.appendChild(Object.assign(document.createElement('div'), { id: 'icons-empty', textContent: t(isLucide ? 'icons.noneIcon' : 'icons.none') }));
   iconsState.at = -1;
-  for (const b of $('icons-tones').children) b.classList.toggle('sel', Number(b.dataset.tone) === iconsState.tone);
 }
 
 function iconsMove(delta) {
@@ -515,7 +544,9 @@ function iconsMove(delta) {
 
 function openIcons(p) {
   if (p.kind !== 'draft') show('icons');
-  iconsState = { kind: p.kind, current: p.current || '', tone: p.tone || 0, at: -1 };
+  // L'onglet suit l'icône en place : une icône Lucide s'ouvre sur la grille d'icônes.
+  const current = p.current || '';
+  iconsState = { kind: p.kind, current, tone: p.tone || 0, tab: current.startsWith(LUCIDE_PREFIX) ? 'lucide' : 'emoji', at: -1 };
   $('icons').style.left = (p.x || 260) + 'px';
   $('icons-tones').textContent = '';
   EMOJI_TONES.forEach((m, i) => {
@@ -526,6 +557,7 @@ function openIcons(p) {
   // Un Espace garde toujours une icône ; un dossier ou un onglet peut reprendre la sienne.
   $('icons-reset').hidden = p.kind === 'space' || p.kind === 'draft' || !p.current;
   iconsInput.value = '';
+  syncIconsTab();
   drawIcons();
   iconsList.scrollTop = 0;
   iconsInput.focus();
@@ -545,8 +577,17 @@ iconsList.addEventListener('click', (e) => {
   const b = e.target.closest('.em-pick');
   if (b) pickIcon(b.dataset.e);
 });
+// Changement d'onglet : le champ garde le focus, la grille repart du haut.
+$('icons-tabs').addEventListener('click', (e) => {
+  const b = e.target.closest('.icon-tab');
+  if (!b || !iconsState || b.dataset.tab === iconsState.tab) return;
+  iconsState.tab = b.dataset.tab;
+  syncIconsTab();
+  drawIcons();
+  iconsList.scrollTop = 0;
+});
 // Les boutons ne prennent pas le clavier : on continue de taper dans le champ.
-for (const id of ['icons-list', 'icons-tones', 'icons-reset']) $(id).addEventListener('mousedown', (e) => e.preventDefault());
+for (const id of ['icons-tabs', 'icons-list', 'icons-tones', 'icons-reset']) $(id).addEventListener('mousedown', (e) => e.preventDefault());
 $('icons-tones').addEventListener('click', (e) => {
   const b = e.target.closest('.tone');
   if (!b) return;
@@ -555,13 +596,13 @@ $('icons-tones').addEventListener('click', (e) => {
   drawIcons();
   iconsList.scrollTop = top;
 });
-$('icons-reset').onclick = () => send('icon', { emoji: '', tone: iconsState.tone });
+$('icons-reset').onclick = () => send('icon', { icon: '', tone: iconsState.tone });
 
-// Émoji choisi : pour un Espace en cours de création, il reste dans le panneau (rien n'est
-// encore créé) ; sinon il part au processus principal.
-function pickIcon(emoji) {
-  if (iconsState.kind !== 'draft') return send('icon', { emoji, tone: iconsState.tone });
-  draft.icon = emoji;
+// Icône choisie : pour un Espace en cours de création, elle reste dans le panneau (rien
+// n'est encore créé) ; sinon elle part au processus principal.
+function pickIcon(value) {
+  if (iconsState.kind !== 'draft') return send('icon', { icon: value, tone: iconsState.tone });
+  draft.icon = value;
   draft.tone = iconsState.tone;
   closeDraftIcons();
   return drawSpace();
@@ -582,7 +623,13 @@ function closeDraftIcons() {
 }
 
 function drawSpace() {
-  $('space-icon').textContent = draft.icon;
+  // L'aperçu n'est reconstruit que si l'icône a changé (SVG ou émoji).
+  const preview = $('space-icon');
+  if (preview._v !== draft.icon) {
+    preview._v = draft.icon;
+    preview.textContent = '';
+    preview.appendChild(iconEl(draft.icon));
+  }
   for (const b of $('space-colors').children) { const on = !draft.preset && b.dataset.c === draft.color; b.classList.toggle('sel', on); b.setAttribute('aria-checked', String(on)); }
   for (const b of $('space-presets').children) { const on = b.dataset.preset === draft.preset; b.classList.toggle('sel', on); b.setAttribute('aria-checked', String(on)); }
   for (const b of $('space-profiles').children) { const on = b.dataset.profile === draft.profileId; b.classList.toggle('sel', on); b.setAttribute('aria-checked', String(on)); }
@@ -770,7 +817,7 @@ O.on('overlay', (p) => {
         bubble.className = 'drop-bubble';
         const ic = document.createElement('span');
         ic.className = 'drop-ic';
-        ic.appendChild(p.tab.icon ? emojiEl(p.tab.icon) : faviconEl(p.tab.favicon, p.tab.title));
+        ic.appendChild(p.tab.icon ? iconEl(p.tab.icon) : faviconEl(p.tab.favicon, p.tab.title));
         const name = document.createElement('span');
         name.className = 'drop-name';
         name.textContent = p.tab.title;

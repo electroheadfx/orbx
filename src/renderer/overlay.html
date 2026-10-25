@@ -88,8 +88,13 @@
   </div>
 </div>
 
-<!-- Sélecteur d'icône (Espace, dossier, onglet) : recherche, teintes de peau, émojis par rubrique. -->
+<!-- Sélecteur d'icône (Espace, dossier, onglet) : recherche, teintes de peau, émojis par
+     rubrique, ou icônes Lucide vendorisées. -->
 <div id="icons" class="panel" hidden>
+  <div id="icons-tabs" role="tablist">
+    <button class="icon-tab" role="tab" data-tab="emoji" data-t="icons.tabEmoji"></button>
+    <button class="icon-tab" role="tab" data-tab="lucide" data-t="icons.tabIcons"></button>
+  </div>
   <div id="icons-head">
     <input id="icons-input" spellcheck="false" autocomplete="off" data-t-ph="icons.search">
     <div id="icons-tones" role="radiogroup" data-t-title="icons.tone"></div>
@@ -131,6 +136,7 @@
 <script src="common.js"></script>
 <script src="theme.js"></script>
 <script src="emojis.js"></script>
+<script src="lucide.js"></script>
 <script src="overlay.js"></script>
 </body>
 </html>

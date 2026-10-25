@@ -36,7 +36,9 @@ module.exports = async function creationEspaceTests(ctx) {
     check('création d’un Espace : nom nettoyé, icône, couleur et profil acceptés', !!good && good.name === 'Mes projets' && good.icon === '🚀' && good.color === '#10b981' && good.profileId === 'p2', JSON.stringify(good));
     check('… nom vide accepté (nom par défaut), nom de plus de 80 caractères ou d’un autre type refusé',
       ok({ name: '' }).name === '' && !!ok({ name: 'x'.repeat(80) }) && ok({ name: 'x'.repeat(81) }) === null && ok({ name: 5 }) === null && ok({ name: {} }) === null);
-    check('… icône : un seul émoji, rien d’autre', ['', 'ab', '🚀🚀', '<b>', 7, null].every((icon) => ok({ icon }) === null) && !!ok({ icon: '👨‍👩‍👧' }));
+    check('… icône : un seul émoji ou une icône Lucide connue, rien d’autre',
+      ['', 'ab', '🚀🚀', '<b>', 7, null, 'lucide:inconnue', 'lucide:Home'].every((icon) => ok({ icon }) === null)
+      && !!ok({ icon: '👨‍👩‍👧' }) && ok({ icon: 'lucide:home' }).icon === 'lucide:home');
     check('… couleur : #rrggbb seulement ; thème prêt : un identifiant connu',
       ['red', '#12', '#12345g', 'url(x)', 3].every((color) => ok({ color }) === null) && ok({ preset: 'lagon' }).preset === 'lagon' && ok({ preset: 'inconnu' }) === null && ok({ preset: 4 }) === null);
     check('… profil : il doit exister ; « new » demande un profil neuf', ok({ profileId: 'absent' }) === null && ok({ profileId: undefined }) === null && ok({ profileId: 'new' }).newProfile === true);

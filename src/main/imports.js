@@ -5,6 +5,7 @@
 const crypto = require('crypto');
 const { shell } = require('electron');
 const { store } = require('./store');
+const icons = require('./icons');
 const browsers = require('./import-browsers');
 const bm = require('./import-bookmarks');
 const win = require('./window');
@@ -27,7 +28,7 @@ function dests() {
     current: w ? 'space:' + w.spaceId : '',
     list: [
       ...s.profiles.map((p) => ({ id: 'new:' + p.id, kind: 'new', name: p.name })),
-      ...s.spaces.map((sp) => ({ id: 'space:' + sp.id, kind: 'space', name: `${sp.icon} ${sp.name}`, empty: !sp.pinned.length })),
+      ...s.spaces.map((sp) => ({ id: 'space:' + sp.id, kind: 'space', name: icons.label(sp.icon, sp.name), empty: !sp.pinned.length })),
     ],
   };
 }
@@ -143,7 +144,7 @@ function apply(a) {
   last = entry;
   if (w) w.record('undo.import', () => entry.undo(), () => { if (!entry.done && entry.redo) { entry.redo(); entry.done = true; } }, (way) => (way === 'undo' ? !entry.done || entry.expired() : entry.done || !entry.redo));
   if (w) w.toast(t('bm.done', { n: data.bookmarks }));
-  return { ok: true, space: space.id, spaceName: `${space.icon} ${space.name}`, bookmarks: data.bookmarks, folders: data.folders, canUndo: true, undoId: entry.id };
+  return { ok: true, space: space.id, spaceName: icons.label(space.icon, space.name), bookmarks: data.bookmarks, folders: data.folders, canUndo: true, undoId: entry.id };
 }
 
 // Annule le dernier import — celui que désigne `id`, quand l'interface en donne un :

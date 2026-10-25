@@ -10,6 +10,8 @@ const fs = require('fs');
 const path = require('path');
 const { store, uid } = require('./store');
 const downloads = require('./downloads');
+// `icons` est déjà le cache d'icônes de fichiers de ce module (internals.icons).
+const iconsLib = require('./icons');
 
 const SECTIONS = ['history', 'archive', 'downloads', 'media', 'easels', 'spaces', 'boosts'];
 const HOW = ['manual', 'auto', 'little']; // façon dont un onglet a rejoint l'archive
@@ -50,7 +52,7 @@ function archiveRows({ q, how, space }) {
     if (space && a.spaceId !== space) continue;
     if (!match(a)) continue;
     const sp = spaces.get(a.spaceId);
-    rows.push({ id: a.id, url: a.url, title: a.title, favicon: a.favicon || '', at: a.at, by: a.by || 'manual', space: sp ? `${sp.icon} ${sp.name}` : '' });
+    rows.push({ id: a.id, url: a.url, title: a.title, favicon: a.favicon || '', at: a.at, by: a.by || 'manual', space: sp ? iconsLib.label(sp.icon, sp.name) : '' });
     if (rows.length >= 400) break;
   }
   return rows;
@@ -301,7 +303,7 @@ async function action(name, a, sender) {
         spaces: spaceRows(w, q),
         boosts: boostRows(q),
         // Pour les filtres de l'archive.
-        spaceNames: s.spaces.map((sp) => ({ id: sp.id, name: `${sp.icon} ${sp.name}` })),
+        spaceNames: s.spaces.map((sp) => ({ id: sp.id, name: iconsLib.label(sp.icon, sp.name) })),
         archiveTotal: s.archive.length,
       };
     }

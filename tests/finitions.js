@@ -9,6 +9,7 @@ const { clipboard, Menu, dialog, shell, app } = electron;
 const outils = require('./outils');
 const icons = require('../src/main/icons');
 const emojis = require('../src/renderer/emojis');
+const lucide = require('../src/renderer/lucide');
 
 const { sleep } = outils;
 const until = (fn, label, timeout = 10000) => outils.until(fn, label, timeout);
@@ -64,6 +65,8 @@ module.exports = async function finitionsTests(ctx) {
     && emojis.emojiTone('🏠', 3) === '🏠', String(emojis.EMOJI_LIST.length));
   check('sélecteur : la recherche lit les mots-clés français et anglais, sans tenir compte des accents',
     emojis.emojiSearch('fusee')[0].e === '🚀' && emojis.emojiSearch('rocket')[0].e === '🚀' && emojis.emojiSearch('étoile').some((x) => x.e === '🌟') && !emojis.emojiSearch('zzzzqq').length);
+  check('icône Lucide : chaque nom proposé passe la vérification, un nom inconnu ou mal formé est refusé',
+    lucide.LUCIDE_LIST.every((x) => icons.valid('lucide:' + x.name)) && !icons.valid('lucide:inconnue') && !icons.valid('lucide:Home'), String(lucide.LUCIDE_LIST.length));
 
   // --- Icône d'un dossier, d'un onglet, d'un Espace -------------------------------
   const [A, B, C] = make('ABC');
@@ -82,13 +85,13 @@ module.exports = async function finitionsTests(ctx) {
   check('sélecteur : il se place à droite de la barre latérale', await modal('parseInt(document.getElementById("icons").style.left, 10)') === w.sidebarWidth + 10);
   await modal('(() => { const i = document.getElementById("icons-input"); i.value = "fusée"; i.dispatchEvent(new Event("input")); })()');
   check('sélecteur : la saisie filtre la grille', await modal('[...document.querySelectorAll(".em-pick")].map((b) => b.textContent).join("")') === '🚀');
-  check('icône refusée si ce n’est pas un émoji : rien ne change', w.handle('icon', { emoji: '<img src=x>' }) === false && w.handle('icon', { emoji: 'abc' }) === false && w.handle('icon', 'x') === false && !folder.icon && w.modalMode === 'icons');
+  check('icône refusée si ce n’est pas un émoji : rien ne change', w.handle('icon', { icon: '<img src=x>' }) === false && w.handle('icon', { icon: 'abc' }) === false && w.handle('icon', 'x') === false && !folder.icon && w.modalMode === 'icons');
   await modal('document.querySelector(".em-pick").click()');
   await until(() => folder.icon === '🚀', 'icône du dossier');
   check('choisir un émoji : le dossier le porte, le sélecteur se referme, ⌘Z propose « Changer l’icône »', w.modalMode === null && pending() === 'undo.changeIcon');
   await until(() => ui(`document.querySelector('#pinned .folder > .row .ic .emoji')?.textContent === '🚀'`), 'émoji sur la ligne du dossier');
   check('barre latérale : l’émoji remplace le dessin du dossier', await ui(`!document.querySelector('#pinned .folder > .row .ic svg')`));
-  check('icône : un message reçu sans sélecteur ouvert est ignoré', w.handle('icon', { emoji: '🔥' }) === false && folder.icon === '🚀');
+  check('icône : un message reçu sans sélecteur ouvert est ignoré', w.handle('icon', { icon: '🔥' }) === false && folder.icon === '🚀');
   w.replay('undo');
   await until(() => ui(`!!document.querySelector('#pinned .folder > .row .ic svg') && !document.querySelector('#pinned .folder > .row .ic .emoji')`), 'dessin du dossier revenu');
   check('⌘Z rend au dossier son dessin ; ⇧⌘Z remet l’émoji', !folder.icon && (w.replay('redo'), folder.icon === '🚀'));
@@ -136,7 +139,7 @@ module.exports = async function finitionsTests(ctx) {
   pick(tpl, 'spaces.changeIcon').click();
   await until(() => w.modalMode === 'icons', 'sélecteur de l’Espace');
   await until(() => modal('document.querySelectorAll(".em-pick").length > 100'), 'grille');
-  check('icône de l’Espace : pas de retour à « aucune icône », et une icône vide est refusée', await modal('document.getElementById("icons-reset").hidden') && w.handle('icon', { emoji: '' }) === false && space.icon === '🧭');
+  check('icône de l’Espace : pas de retour à « aucune icône », et une icône vide est refusée', await modal('document.getElementById("icons-reset").hidden') && w.handle('icon', { icon: '' }) === false && space.icon === '🧭');
   await modal('(() => { const i = document.getElementById("icons-input"); i.value = "panda"; i.dispatchEvent(new Event("input")); i.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })); })()');
   await until(() => space.icon === '🐼', 'icône de l’Espace');
   await until(() => ui(`document.getElementById('space-icon').textContent === '🐼'`), 'en-tête de l’Espace');
@@ -147,6 +150,24 @@ module.exports = async function finitionsTests(ctx) {
   await until(() => w.modalMode === 'icons', 'sélecteur');
   w.handle('closeOverlay');
   check('Échap ou clic à côté : le sélecteur se ferme sans rien changer', w.modalMode === null && space.icon === '🧭');
+
+  // Lucide : le second onglet du même sélecteur, pour un Espace.
+  w.openIcons('space', space.id);
+  await until(() => w.modalMode === 'icons', 'sélecteur de l’Espace');
+  await until(() => modal('document.querySelectorAll("#icons-list .em-pick").length > 100'), 'grille d’émojis');
+  await modal('document.querySelector(\'#icons-tabs .icon-tab[data-tab="lucide"]\').click()');
+  await until(() => modal('document.querySelectorAll("#icons-list .em-pick svg.lucide").length > 50'), 'grille d’icônes');
+  check('sélecteur : onglet « Icônes » — une grille d’icônes, sans rubriques ni teintes',
+    await modal('document.querySelectorAll("#icons-list h4").length === 0 && document.getElementById("icons-tones").hidden && document.querySelectorAll("#icons-list .em-pick").length >= 76'));
+  await modal('(() => { const i = document.getElementById("icons-input"); i.value = "maison"; i.dispatchEvent(new Event("input")); })()');
+  check('recherche « maison » dans les icônes : home en tête', await modal('document.querySelector("#icons-list .em-pick").dataset.e') === 'lucide:home');
+  await modal('document.querySelector("#icons-list .em-pick").click()');
+  await until(() => space.icon === 'lucide:home', 'icône Lucide de l’Espace');
+  await until(() => ui('!!document.querySelector("#space-icon svg.lucide")'), 'dessin Lucide dans l’en-tête');
+  check('icône Lucide choisie : vérifiée, dessinée dans l’en-tête — jamais la valeur encodée en texte',
+    w.modalMode === null && win.spaceLabel(space) === space.name && await ui('document.getElementById("space-icon").textContent === ""'));
+  w.replay('undo');
+  check('⌘Z rend à l’Espace son émoji', space.icon === '🧭');
 
   // --- Supprimer un dossier : ses onglets vont dans l'archive -----------------------
   const ask = dialog.showMessageBox;

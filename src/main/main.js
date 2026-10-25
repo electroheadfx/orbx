@@ -6,6 +6,7 @@ const os = require('os');
 const fs = require('fs');
 const locales = require('../shared/locales');
 const { store } = require('./store');
+const icons = require('./icons');
 const sessions = require('./sessions');
 const suggest = require('./suggest');
 const win = require('./window');
@@ -191,7 +192,7 @@ const SETTABLE = {
 
 function profileList() {
   const s = store.state;
-  return s.profiles.map((p) => ({ id: p.id, name: p.name, spaces: s.spaces.filter((sp) => sp.profileId === p.id).map((sp) => `${sp.icon} ${sp.name}`) }));
+  return s.profiles.map((p) => ({ id: p.id, name: p.name, spaces: s.spaces.filter((sp) => sp.profileId === p.id).map((sp) => icons.label(sp.icon, sp.name)) }));
 }
 
 function extensionList() {
@@ -265,7 +266,7 @@ async function globalAction(action, a, sender) {
     case 'tasks:list': case 'tasks:end':
       return require('./tasks').handle(action, a);
     case 'settings:get':
-      return { settings: s.settings, spaces: s.spaces.map((sp) => ({ id: sp.id, name: `${sp.icon} ${sp.name}` })), profiles: profileList(), engines: Object.entries(suggest.ENGINES).map(([id, e]) => ({ id, name: e.name })), version: app.getVersion(), chrome: process.versions.chrome, ...panes.info() };
+      return { settings: s.settings, spaces: s.spaces.map((sp) => ({ id: sp.id, name: icons.label(sp.icon, sp.name) })), profiles: profileList(), engines: Object.entries(suggest.ENGINES).map(([id, e]) => ({ id, name: e.name })), version: app.getVersion(), chrome: process.versions.chrome, ...panes.info() };
     case 'settings:set':
       for (const [k, v] of Object.entries(a || {})) if (Object.hasOwn(SETTABLE, k) && SETTABLE[k](v)) s.settings[k] = v;
       store.save();

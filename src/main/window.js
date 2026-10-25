@@ -120,7 +120,8 @@ function resumed(saved, spaces, on) {
 // part (`from`), il est rappelé à la suite (pastille de profil d'Arc) : déplacer un onglet
 // vers un Espace d'un autre profil change ses cookies et ses identifiants, autant le voir avant.
 function spaceLabel(sp, data = store.state, from = null, gap = ' ') {
-  const base = `${sp.icon}${gap}${sp.name}`;
+  // Une icône Lucide n'est pas du texte : le nom seul, jamais la valeur encodée.
+  const base = icons.label(sp.icon, sp.name, gap);
   const profiles = (data && data.profiles) || [];
   if (profiles.length < 2 || !from || sp.profileId === from) return base;
   const p = profiles.find((x) => x.id === sp.profileId);
@@ -2944,16 +2945,16 @@ class OrbxWindow {
     this.showModal('icons', { kind, current: holder.icon || '', tone: clamp(Math.floor(tone), 0, 5), x: this.sidebarVisible ? this.sidebarWidth + 10 : 20 });
   }
 
-  // Choix fait dans le sélecteur : { emoji, tone }. L'émoji est vérifié (icons.js) ; vide, il
-  // rend l'icône d'origine (icône du site, dossier) — un Espace garde toujours une icône.
+  // Choix fait dans le sélecteur : { icon, tone }. L'icône est vérifiée (icons.js) ; vide,
+  // elle rend l'icône d'origine (icône du site, dossier) — un Espace garde toujours une icône.
   chooseIcon(a) {
     const target = this.iconTarget;
     if (!target || this.modalMode !== 'icons' || !a || typeof a !== 'object') return false;
-    const emoji = icons.clean(a.emoji);
-    if (emoji === null || (!emoji && target.kind === 'space')) return false;
+    const icon = icons.clean(a.icon);
+    if (icon === null || (!icon && target.kind === 'space')) return false;
     if (Number.isInteger(a.tone) && a.tone >= 0 && a.tone <= 5 && store.state.window) store.state.window.emojiTone = a.tone;
     this.hideModal();
-    return this.setIcon(target.kind, target.id, emoji);
+    return this.setIcon(target.kind, target.id, icon);
   }
 
   setIcon(kind, id, emoji) {

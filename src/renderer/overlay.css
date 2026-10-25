@@ -211,6 +211,11 @@
 
 #icons { top: 70px; width: 316px; max-height: min(420px, calc(100vh - 90px)); display: flex; flex-direction: column; padding: 10px; transform-origin: 10% 0; animation: panel-in var(--spring-snappy); }
 #icons[hidden] { display: none; }
+/* Onglets « Émoji » / « Icônes » : deux pastilles compactes, la teinte reste côté émoji. */
+#icons-tabs { display: flex; gap: 4px; margin-bottom: 8px; }
+.icon-tab { height: 26px; padding: 0 10px; border-radius: 7px; font-size: 12px; font-weight: 600; color: var(--dim); }
+.icon-tab:hover { background: var(--hover); }
+.icon-tab.sel { background: var(--pill); color: var(--fg); }
 #icons-head { display: flex; align-items: center; gap: 8px; }
 #icons-input { flex: 1; min-width: 0; height: 30px; padding: 0 10px; border: 0; outline: 0; border-radius: 8px; background: var(--pill); font-size: 13px; user-select: text; }
 #icons-tones { display: flex; gap: 2px; }
@@ -223,6 +228,8 @@
 #icons-list h4:first-child { margin-top: 0; }
 .icons-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 2px; }
 .em-pick { height: 30px; border-radius: 7px; font-size: 19px; line-height: 30px; transition: transform var(--spring-bouncy); }
+.em-pick svg.lucide { width: 18px; height: 18px; }
+#space-icon svg.lucide { width: 20px; height: 20px; }
 .em-pick:hover, .em-pick.at { background: var(--hover); }
 .em-pick.sel { background: var(--pill); }
 .em-pick:active { transform: scale(0.86); transition: transform var(--press); }

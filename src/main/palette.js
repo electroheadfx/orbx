@@ -8,6 +8,7 @@
 // Tout ce qui revient de la vue (identifiant d'Espace, de dossier, d'extension,
 // adresse à oublier) est vérifié ici avant d'agir.
 const { store } = require('./store');
+const icons = require('./icons');
 
 const t = (key, vars) => store.t(key, null, vars);
 
@@ -109,7 +110,7 @@ function dynamicList(w) {
   const list = [];
   for (const [c, key, keys] of labelled) if (key) list.push({ command: c.name, title: t(key), shortcut: keys });
   for (const s of d.spaces) {
-    const name = `${s.icon} ${s.name}`;
+    const name = icons.label(s.icon, s.name);
     if (s.id !== w.spaceId) list.push({ command: 'focusSpace', arg: s.id, title: t('cmd.focusSpace', { space: name }), sub: t('cmd.space') });
     if (loc && !(s.id === w.spaceId && loc.list === 'today')) list.push({ command: 'moveTabToday', arg: s.id, title: t('cmd.moveToday', { space: name }) });
     if (loc && !(s.id === w.spaceId && loc.list === 'pinned')) list.push({ command: 'moveTabPinned', arg: s.id, title: t('cmd.movePinned', { space: name }) });
