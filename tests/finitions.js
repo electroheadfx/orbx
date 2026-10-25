@@ -165,7 +165,7 @@ module.exports = async function finitionsTests(ctx) {
   await until(() => space.icon === 'lucide:home', 'icône Lucide de l’Espace');
   await until(() => ui('!!document.querySelector("#space-icon svg.lucide")'), 'dessin Lucide dans l’en-tête');
   check('icône Lucide choisie : vérifiée, dessinée dans l’en-tête — jamais la valeur encodée en texte',
-    w.modalMode === null && win.spaceLabel(space) === space.name && await ui('document.getElementById("space-icon").textContent === ""'));
+    w.modalMode === null && win.spaceLabel(space) === space.name && await ui('document.getElementById("space-icon").textContent.trim() === ""'));
   w.replay('undo');
   check('⌘Z rend à l’Espace son émoji', space.icon === '🧭');
 
