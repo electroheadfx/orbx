@@ -5,10 +5,10 @@ current_phase: 1
 current_phase_name: Portes, CI et spikes
 status: planning
 stopped_at: ROADMAP.md et STATE.md écrits ; en attente de l'approbation du roadmap.
-last_updated: "2026-10-24T20:28:18.740Z"
-last_activity: 2026-10-24
-last_activity_desc: "Completed quick task 261024-v41: Remplacer l’icône de l’application par la piste C « Nuit » (•x EFX orange, point azur)."
-state_head: 5a87a0e9d27897ede24a21f67e09a0e85d3196d5
+last_updated: "2026-10-25T07:47:02.423Z"
+last_activity: 2026-10-25
+last_activity_desc: "Completed quick task 261025-bc6: Change Orbe to Orbx."
+state_head: 96e0e412351afeec176cb5a8ccb944db746e4084
 progress:
   total_phases: 5
   completed_phases: 0
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-10-24)
 Phase: 1 of 5 (Portes, CI et spikes)
 Plan: 0 of 0 in current phase
 Status: Ready to plan
-Last activity: 2026-10-24 — Completed quick task 261024-v41: Remplacer l’icône de l’application par la piste C « Nuit » (•x EFX orange, point azur).
+Last activity: 2026-10-25 — Completed quick task 261025-bc6: Change Orbe to Orbx.
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -88,6 +88,7 @@ None yet.
 | 261024-txf | Bloquer les téléchargements automatiques lancés depuis une popup. | 2026-10-24 | 200db2f | [261024-txf-bloquer-les-t-l-chargements-automatiques](./quick/261024-txf-bloquer-les-t-l-chargements-automatiques/) |
 | 261024-u40 | Demander l'autorisation dès le premier téléchargement automatique. | 2026-10-24 | 076f6e0 | [261024-u40-supprimer-le-premier-t-l-chargement-auto](./quick/261024-u40-supprimer-le-premier-t-l-chargement-auto/) |
 | 261024-v41 | Remplacer l’icône de l’application Orbe par la piste C « Nuit » validée dans pen.dev : •x EFX orange agrandi à 72 % de la pastille, point en bleu azur, squircle indigo avec halo orange. | 2026-10-24 | 5a87a0e | [261024-v41-remplacer-l-ic-ne-de-l-application-orbe-](./quick/261024-v41-remplacer-l-ic-ne-de-l-application-orbe-/) |
+| 261025-bc6 | Change Orbe to Orbx | 2026-10-25 | 96e0e41 | [261025-bc6-change-orbe-to-orbx](./quick/261025-bc6-change-orbe-to-orbx/) |
 
 ## Deferred Items
 
