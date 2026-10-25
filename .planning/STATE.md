@@ -5,10 +5,10 @@ current_phase: 1
 current_phase_name: Portes, CI et spikes
 status: planning
 stopped_at: ROADMAP.md et STATE.md écrits ; en attente de l'approbation du roadmap.
-last_updated: "2026-10-25T08:30:41.237Z"
+last_updated: "2026-10-25T09:32:32.987Z"
 last_activity: 2026-10-25
-last_activity_desc: "Completed quick task 261025-cqq: Afficher l’icône de chaque pastille d’Espace dans la barre latérale."
-state_head: 288fe9b283fcbcc7ca13e3ab86802a4045fb8f38
+last_activity_desc: "Completed quick task 261025-eik: Préparer Orbx pour son dépôt indépendant (README anglais, licence, config GSD)."
+state_head: e202cdbfcf0d76c46cf9c93a1248860129092380
 progress:
   total_phases: 5
   completed_phases: 0
@@ -93,6 +93,7 @@ None yet.
 | 8 | Rendre visibles les icônes des Espaces inactifs dans la barre du bas (12 px, opacité 0,85 ; icône active 14 px). | 2026-10-25 | 01aa126 | — |
 | 9 | Rendre les icônes des Espaces inactifs pleinement opaques et porter l'espacement des pastilles à 3 px (pastille inactive 14 px pour que 9 Espaces tiennent toujours). | 2026-10-25 | 34ff8ec | — |
 | 10 | Porter à 6 px l'espacement des pastilles d'Espace (pastille inactive 12 px pour que 9 Espaces tiennent dans la largeur par défaut). | 2026-10-25 | 288fe9b | — |
+| 261025-eik | Préparer Orbx pour son dépôt indépendant : rattacher GSD et MemPalace, README en anglais sans captures, licence au nom du nouveau mainteneur. | 2026-10-25 | e202cdb | [261025-eik-rebranding-orbx-commit-planning-mempalac](./quick/261025-eik-rebranding-orbx-commit-planning-mempalac/) |
 
 ## Deferred Items
 
