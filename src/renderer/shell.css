@@ -441,12 +441,12 @@ body.fullscreen #page-drag, .floating #page-drag { display: none; }
   transition: color 120ms, width var(--spring-bouncy), transform var(--spring-bouncy);
   flex: none;
 }
-.sp .em { font-size: 11px; opacity: 0.55; transition: opacity 120ms; }
+.sp .em { font-size: 12px; opacity: 0.85; transition: opacity 120ms; }
 .sp:hover { color: var(--dim); }
-.sp:hover .em { opacity: 0.85; }
+.sp:hover .em { opacity: 1; }
 .sp:active { transform: scale(0.86); transition: transform var(--press); }
 /* L'icône de l'Espace qui devient courant grossit à sa place. */
-.sp.active .em { font-size: 13px; opacity: 1; animation: sp-in var(--spring-bouncy); }
+.sp.active .em { font-size: 14px; opacity: 1; animation: sp-in var(--spring-bouncy); }
 @keyframes sp-in { from { transform: scale(0.4); opacity: 0; } }
 .sp.active { width: 26px; color: var(--fg); }
 
