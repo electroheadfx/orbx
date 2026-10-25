@@ -5,10 +5,10 @@ current_phase: 1
 current_phase_name: Portes, CI et spikes
 status: planning
 stopped_at: ROADMAP.md et STATE.md écrits ; en attente de l'approbation du roadmap.
-last_updated: "2026-10-25T08:15:37.683Z"
+last_updated: "2026-10-25T08:21:27.771Z"
 last_activity: 2026-10-25
 last_activity_desc: "Completed quick task 261025-cqq: Afficher l’icône de chaque pastille d’Espace dans la barre latérale."
-state_head: 45b65c1774232d25a85359a2587c8583b81aefc4
+state_head: 01aa126176fd35f151b17187e6b946b68a53c768
 progress:
   total_phases: 5
   completed_phases: 0
@@ -90,6 +90,7 @@ None yet.
 | 261024-v41 | Remplacer l’icône de l’application Orbe par la piste C « Nuit » validée dans pen.dev : •x EFX orange agrandi à 72 % de la pastille, point en bleu azur, squircle indigo avec halo orange. | 2026-10-24 | 5a87a0e | [261024-v41-remplacer-l-ic-ne-de-l-application-orbe-](./quick/261024-v41-remplacer-l-ic-ne-de-l-application-orbe-/) |
 | 261025-bc6 | Change Orbe to Orbx | 2026-10-25 | 96e0e41 | [261025-bc6-change-orbe-to-orbx](./quick/261025-bc6-change-orbe-to-orbx/) |
 | 261025-cqq | Afficher l’icône de chaque pastille d’Espace dans la barre latérale, et non seulement celle de l’Espace affiché. | 2026-10-25 | 45b65c1 | [261025-cqq-fix-orbx-icon-space-actually-it-doesn-t-](./quick/261025-cqq-fix-orbx-icon-space-actually-it-doesn-t-/) |
+| 8 | Rendre visibles les icônes des Espaces inactifs dans la barre du bas (12 px, opacité 0,85 ; icône active 14 px). | 2026-10-25 | 01aa126 | — |
 
 ## Deferred Items
 
