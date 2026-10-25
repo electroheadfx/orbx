@@ -71,7 +71,8 @@ module.exports = {
       }));
       assert.deepEqual(icones.map((x) => x.texte), ['🏠', '✨'], 'chaque pastille porte l’icône de son Espace');
       assert.deepEqual(icones.map((x) => x.affichee), [true, true], 'les icônes des Espaces inactifs restent affichées : ' + JSON.stringify(icones));
-      assert.ok(icones[1].taille > icones[0].taille && icones[0].opacite < 1, 'l’Espace affiché a une icône plus grande, l’inactif une icône atténuée : ' + JSON.stringify(icones));
+      assert.equal(icones[0].opacite, 1, 'les icônes inactives sont pleinement visibles : ' + JSON.stringify(icones));
+      assert.ok(icones[1].taille > icones[0].taille, 'l’Espace affiché a une icône plus grande : ' + JSON.stringify(icones));
     });
 
     await t.verifier('la couleur d’accent change avec l’Espace', async () => {

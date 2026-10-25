@@ -428,10 +428,10 @@ body.fullscreen #page-drag, .floating #page-drag { display: none; }
 #update-note:hover #update-close, #update-close:focus-visible { opacity: 1; transform: none; }
 
 #bottom { height: 42px; display: flex; align-items: center; gap: 4px; flex: none; }
-#spaces { display: flex; align-items: center; justify-content: center; gap: 1px; overflow: hidden; }
-/* Comme dans Arc : chaque Espace montre son icône ; la pastille de l'Espace affiché est plus large et plus nette. */
+#spaces { display: flex; align-items: center; justify-content: center; gap: 3px; overflow: hidden; }
+/* Comme dans Arc : chaque Espace montre son icône ; la pastille de l'Espace affiché est plus large. */
 .sp {
-  width: 16px;
+  width: 14px;
   height: 26px;
   border-radius: 8px;
   display: grid;
@@ -441,9 +441,8 @@ body.fullscreen #page-drag, .floating #page-drag { display: none; }
   transition: color 120ms, width var(--spring-bouncy), transform var(--spring-bouncy);
   flex: none;
 }
-.sp .em { font-size: 12px; opacity: 0.85; transition: opacity 120ms; }
+.sp .em { font-size: 12px; opacity: 1; }
 .sp:hover { color: var(--dim); }
-.sp:hover .em { opacity: 1; }
 .sp:active { transform: scale(0.86); transition: transform var(--press); }
 /* L'icône de l'Espace qui devient courant grossit à sa place. */
 .sp.active .em { font-size: 14px; opacity: 1; animation: sp-in var(--spring-bouncy); }
