@@ -1,6 +1,6 @@
 // Barre latérale et menus : menus contextuels, dossiers, Espaces, boutons du
 // haut, articles de la barre de menus. Appelé par tests/selftest.js, ou seul :
-//   ORBE_SCENARIO=tests/laterale.js node scripts/dev.js --selftest
+//   ORBX_SCENARIO=tests/laterale.js node scripts/dev.js --selftest
 // Les pages viennent d'un serveur local ; les menus natifs ne sont pas affichés :
 // on lit leur contenu et on actionne leurs articles, comme le ferait un clic.
 const http = require('http');
@@ -49,7 +49,7 @@ function serve() {
 }
 
 module.exports = async function lateraleTests(ctx) {
-  const { first: w, store, win, commands, OrbeWindow, little } = ctx;
+  const { first: w, store, win, commands, OrbxWindow, little } = ctx;
   const menu = ctx.menu || require('../src/main/menu');
   let failed = 0;
   const check = ctx.check || ((name, ok, detail = '') => { if (!ok) failed += 1; console.log(`${ok ? '  ✓' : '  ✗'} ${name}${ok || !detail ? '' : ' — ' + detail}`); });
@@ -94,7 +94,7 @@ module.exports = async function lateraleTests(ctx) {
   const wipe = () => {
     for (const sp of [space, other]) { sp.pinned = []; sp.today = []; sp.splits = []; delete w.activeBySpace[sp.id]; }
     for (const list of Object.values(d.favs)) for (const id of list.filter(mine)) list.splice(list.indexOf(id), 1);
-    for (const id of Object.keys(d.tabs)) if (mine(id) && !d.spaces.some((sp) => w.orderedIds(sp).includes(id))) { OrbeWindow.destroyView(id); delete d.tabs[id]; }
+    for (const id of Object.keys(d.tabs)) if (mine(id) && !d.spaces.some((sp) => w.orderedIds(sp).includes(id))) { OrbxWindow.destroyView(id); delete d.tabs[id]; }
     store.state.archive = store.state.archive.filter((x) => !x.url.startsWith(base) && !x.url.startsWith(dead('')));
     w.closed.length = 0;
     w.undoStack.length = 0;
@@ -327,7 +327,7 @@ module.exports = async function lateraleTests(ctx) {
   clipboard.writeText('file:///etc/passwd');
   await until(async () => (await clipboard.readText()) === 'file:///etc/passwd', 'adresse interdite dans le presse-papiers');
   await w.folderMenu(inner.id);
-  check('… et grisé pour une adresse file:, orbe: ou javascript:', pick(seen.pop(), 'tabs.pasteUrlTab').enabled === false && (await w.clipboardUrl()) === null);
+  check('… et grisé pour une adresse file:, orbx: ou javascript:', pick(seen.pop(), 'tabs.pasteUrlTab').enabled === false && (await w.clipboardUrl()) === null);
   w.popup = popupF;
 
   pick(w.folderMenuTemplate(folder.id), 'tabs.closeFolder').click();
@@ -495,7 +495,7 @@ module.exports = async function lateraleTests(ctx) {
   check('… et revient quand la fenêtre repasse au premier plan', true);
   delete w.win.isFocused;
   if (w.win.isFocused !== focused) w.win.isFocused = focused;
-  OrbeWindow.pushAll();
+  OrbxWindow.pushAll();
 
   // --- Précédent / suivant, actualiser -------------------------------------------
   wipe();
@@ -555,12 +555,12 @@ module.exports = async function lateraleTests(ctx) {
   await until(() => titleOf(pastedTab) === 'P2', 'adresse collée ouverte');
   check('⌥⌘V : l’adresse du presse-papiers s’ouvre dans un nouvel onglet', pastedTab !== nav && d.tabs[pastedTab].url === base + '/p2' && space.today[0] === pastedTab);
   const n1 = space.today.length;
-  for (const bad of ['file:///etc/passwd', 'orbe://app/library.html', 'javascript:alert(1)', '   ']) {
+  for (const bad of ['file:///etc/passwd', 'orbx://app/library.html', 'javascript:alert(1)', '   ']) {
     clipboard.writeText(bad);
     await until(async () => (await clipboard.readText()) === bad, 'presse-papiers');
     await w.run('pasteUrl');
   }
-  check('… jamais une adresse file:, orbe: ou javascript:, ni un presse-papiers vide', space.today.length === n1 && w.activeId === pastedTab);
+  check('… jamais une adresse file:, orbx: ou javascript:, ni un presse-papiers vide', space.today.length === n1 && w.activeId === pastedTab);
   check('⌥⌘V figure au menu Édition, sous le raccourci du système', menuItem('edit.pasteUrl').accelerator === require('../src/main/platform').accel('Alt+Cmd+V'));
 
   toasts.length = 0;
@@ -673,7 +673,7 @@ module.exports = async function lateraleTests(ctx) {
   const tick = menuItem('app.defaultBrowser');
   app.isDefaultProtocolClient = () => false;
   menu.build();
-  check('« Définir comme navigateur par défaut » : coché quand Orbe l’est, décoché sinon', tick.type === 'checkbox' && tick.checked === true && menuItem('app.defaultBrowser').checked === false);
+  check('« Définir comme navigateur par défaut » : coché quand Orbx l’est, décoché sinon', tick.type === 'checkbox' && tick.checked === true && menuItem('app.defaultBrowser').checked === false);
   app.isDefaultProtocolClient = isDefault;
   menu.build();
 
@@ -713,7 +713,7 @@ module.exports = async function lateraleTests(ctx) {
 
   // Enregistrer la page.
   const saveAs = dialog.showSaveDialog;
-  const target = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-page-')), 'page.html');
+  const target = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-page-')), 'page.html');
   dialog.showSaveDialog = async () => ({ canceled: false, filePath: target });
   await w.run('savePage');
   dialog.showSaveDialog = saveAs;
@@ -733,13 +733,13 @@ module.exports = async function lateraleTests(ctx) {
 
   // Effacer les cookies, effacer le cache.
   const origin = base + '/';
-  await mwc.session.cookies.set({ url: origin, name: 'orbe-lat', value: '1' });
-  await mwc.executeJavaScript('localStorage.setItem("orbe-lat", "1")');
+  await mwc.session.cookies.set({ url: origin, name: 'orbx-lat', value: '1' });
+  await mwc.executeJavaScript('localStorage.setItem("orbx-lat", "1")');
   const h0 = server.hits['/p1'];
   await w.run('clearCookies');
   await until(() => server.hits['/p1'] === h0 + 1 && !mwc.isLoading(), 'page rechargée après l’effacement');
   check('Présentation → « Effacer les cookies et actualiser » : cookies et données du site effacés, page rechargée',
-    (await mwc.session.cookies.get({ url: origin, name: 'orbe-lat' })).length === 0 && await mwc.executeJavaScript('localStorage.getItem("orbe-lat")') === null);
+    (await mwc.session.cookies.get({ url: origin, name: 'orbx-lat' })).length === 0 && await mwc.executeJavaScript('localStorage.getItem("orbx-lat")') === null);
   const cached = await load('/cache', 'Cache');
   const cwc = wcOf(cached);
   await until(async () => (await cwc.session.getCacheSize()) > 0, 'page en cache');
@@ -812,16 +812,16 @@ module.exports = async function lateraleTests(ctx) {
 
   // Aide → Dépannage.
   const help = menuItem('help.troubleshooting');
-  check('Aide → Dépannage : « Afficher les données d’Orbe », « Copier les infos d’Orbe », « Gestionnaire de tâches », « Restaurer une sauvegarde »', !!help && help.submenu.items.filter((x) => x.type !== 'separator').map((x) => x.label).join('|') === [T('help.revealData'), T('help.copyInfo'), T('help.taskManager'), T('help.recordTrace'), T('backup.menu')].join('|'));
+  check('Aide → Dépannage : « Afficher les données d’Orbx », « Copier les infos d’Orbx », « Gestionnaire de tâches », « Restaurer une sauvegarde »', !!help && help.submenu.items.filter((x) => x.type !== 'separator').map((x) => x.label).join('|') === [T('help.revealData'), T('help.copyInfo'), T('help.taskManager'), T('help.recordTrace'), T('backup.menu')].join('|'));
   menuItem('help.copyInfo').click();
-  await until(async () => (await clipboard.readText()).startsWith(`Orbe ${app.getVersion()}\nElectron ${process.versions.electron}\nChromium ${process.versions.chrome}\n${process.platform}`), 'infos copiées');
-  check('« Copier les infos d’Orbe » : versions d’Orbe, d’Electron, de Chromium et du système', true);
+  await until(async () => (await clipboard.readText()).startsWith(`Orbx ${app.getVersion()}\nElectron ${process.versions.electron}\nChromium ${process.versions.chrome}\n${process.platform}`), 'infos copiées');
+  check('« Copier les infos d’Orbx » : versions d’Orbx, d’Electron, de Chromium et du système', true);
   const reveal = shell.showItemInFolder;
   let shown = '';
   shell.showItemInFolder = (p) => { shown = p; };
   menuItem('help.revealData').click();
   shell.showItemInFolder = reveal;
-  check('« Afficher les données d’Orbe » montre le dossier du profil', shown === app.getPath('userData'));
+  check('« Afficher les données d’Orbx » montre le dossier du profil', shown === app.getPath('userData'));
 
   // Menu du Dock.
   const dock = () => menu.dockTemplate();
@@ -836,12 +836,12 @@ module.exports = async function lateraleTests(ctx) {
   await until(() => lw.win.isVisible(), 'petite fenêtre réaffichée');
   check('… puis revient', dock()[1].label === T('dock.hideLittle'));
   lw.win.close();
-  const windows0 = OrbeWindow.all.length;
+  const windows0 = OrbxWindow.all.length;
   dock()[0].click();
-  await until(() => OrbeWindow.all.length === windows0 + 1 && OrbeWindow.all.some((x) => x.incognito), 'fenêtre privée ouverte');
+  await until(() => OrbxWindow.all.length === windows0 + 1 && OrbxWindow.all.some((x) => x.incognito), 'fenêtre privée ouverte');
   check('menu du Dock : « Navigation privée » ouvre une fenêtre privée', true);
-  for (const x of OrbeWindow.all.filter((y) => y.incognito)) x.win.close();
-  await until(() => OrbeWindow.all.length === windows0, 'fenêtre privée refermée');
+  for (const x of OrbxWindow.all.filter((y) => y.incognito)) x.win.close();
+  await until(() => OrbxWindow.all.length === windows0, 'fenêtre privée refermée');
 
   // Raccourcis : les nouvelles commandes se règlent comme les autres.
   const shortcuts = ctx.shortcuts || require('../src/main/shortcuts');

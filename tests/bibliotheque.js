@@ -1,8 +1,8 @@
 // Bibliothèque : archive (cause de fermeture, filtres, restauration, suppression,
 // confirmation), périodes, dernière section, Espaces, Boosts, menu d'un
-// téléchargement (copier, masquer, corbeille, partage), glisser hors d'Orbe.
+// téléchargement (copier, masquer, corbeille, partage), glisser hors d'Orbx.
 // Appelé par tests/selftest.js, ou seul :
-//   ORBE_SCENARIO=tests/bibliotheque.js node scripts/dev.js --selftest
+//   ORBX_SCENARIO=tests/bibliotheque.js node scripts/dev.js --selftest
 // Aucun fichier ne part réellement à la corbeille, rien n'est réellement glissé :
 // ces deux gestes du système sont remplacés par des témoins.
 const fs = require('fs');
@@ -208,7 +208,7 @@ module.exports = async function bibliothequeTests(ctx) {
   check('aucun Boost : message propre à la section', true);
 
   // --- Téléchargements : menu, copier, masquer, corbeille, glisser -------------------------
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-biblio-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-biblio-'));
   const file = (name, content) => { const p = path.join(dir, name); fs.writeFileSync(p, content); return p; };
   const png = nativeImage.createFromBitmap(Buffer.alloc(2 * 2 * 4, 200), { width: 2, height: 2 }).toPNG();
   const rec = (name, extra = {}) => ({ id: 'dl-' + name, name, path: path.join(dir, name), url: 'https://fichiers.exemple.fr/' + name, total: 10, received: 10, state: 'completed', at: Date.now(), profile: 'default', ...extra });
@@ -286,7 +286,7 @@ module.exports = async function bibliothequeTests(ctx) {
   console.error = err0;
   check('la corbeille refuse : la ligne reste, rien n’est perdu', failedTrash === false && !!find('image.png') && fs.existsSync(path.join(dir, 'image.png')));
 
-  // Glisser hors d'Orbe.
+  // Glisser hors d'Orbx.
   const drags = [];
   library.env.startDrag = (wc, item) => { drags.push(item); };
   got = await lib('lib:get', {});
@@ -315,7 +315,7 @@ module.exports = async function bibliothequeTests(ctx) {
   // --- Fichier téléchargé : marqué « venu d'Internet » pour le système ---------------------
   {
     const http = require('http');
-    const server = http.createServer((req, res) => { res.setHeader('content-disposition', 'attachment; filename="orbe-quarantaine.txt"'); res.end('bonjour'); });
+    const server = http.createServer((req, res) => { res.setHeader('content-disposition', 'attachment; filename="orbx-quarantaine.txt"'); res.end('bonjour'); });
     await new Promise((r) => server.listen(0, '127.0.0.1', r));
     const origin = `http://127.0.0.1:${server.address().port}/fichier`;
     const before = store.state.downloads[0];
@@ -323,7 +323,7 @@ module.exports = async function bibliothequeTests(ctx) {
     const got2 = await until(() => { const x = store.state.downloads[0]; return x && x !== before && x.state === 'completed' && x.marked !== undefined ? x : null; }, 'fichier téléchargé et marqué');
     if (mac) {
       const attr = require('child_process').execFileSync('/usr/bin/xattr', ['-p', 'com.apple.quarantine', got2.path]).toString().trim();
-      check('macOS : le fichier téléchargé porte la marque de quarantaine (avertissement du système à l’ouverture)', got2.marked === true && /^0081;[0-9a-f]{8};Orbe;[0-9A-F-]{36}$/.test(attr), attr);
+      check('macOS : le fichier téléchargé porte la marque de quarantaine (avertissement du système à l’ouverture)', got2.marked === true && /^0081;[0-9a-f]{8};Orbx;[0-9A-F-]{36}$/.test(attr), attr);
     } else if (process.platform === 'win32') {
       const zone = fs.readFileSync(got2.path + ':Zone.Identifier', 'utf8');
       check('Windows : le fichier téléchargé est marqué « zone Internet » (SmartScreen, avertissement à l’ouverture)', got2.marked === true && /\[ZoneTransfer\]\r\nZoneId=3\r\n/.test(zone) && zone.includes('HostUrl=' + origin), JSON.stringify(zone));
@@ -366,7 +366,7 @@ module.exports = async function bibliothequeTests(ctx) {
     downloads.beforeQuit(e3);
     await until(() => quits === 1, 'arrêt demandé après accord');
     const e4 = event();
-    check('« Quitter quand même » : Orbe quitte, sans reposer la question', e3.n === 1 && asked2.length === 2 && downloads.beforeQuit(e4) === false && e4.n === 0);
+    check('« Quitter quand même » : Orbx quitte, sans reposer la question', e3.n === 1 && asked2.length === 2 && downloads.beforeQuit(e4) === false && e4.n === 0);
     downloads.internals.items.delete('essai-quitter');
   }
 
@@ -391,7 +391,7 @@ module.exports = async function bibliothequeTests(ctx) {
       { id: 'n5', text: '   \n', at: Date.UTC(2026, 0, 9) },
       { id: 'n6', text: '.caché\nx', at: Date.UTC(2026, 0, 10) },
     ];
-    const out = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-notes-'));
+    const out = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-notes-'));
     const toasts = [];
     const toast0 = w.toast;
     w.toast = (text) => { toasts.push(text); };
@@ -452,7 +452,7 @@ module.exports = async function bibliothequeTests(ctx) {
         check('« notes:save » sans blocs (ancienne forme) : texte brut, sans mise en forme', old.text === 'simple\ntexte' && !('blocks' in old));
       }
       // La page reconstruit l'affichage élément par élément : une note dont le texte ressemble à du HTML n'en devient pas.
-      store.state.notes = [{ id: 'n-hostile', at: Date.now(), text: '', blocks: clean.concat([{ t: 'p', runs: [{ s: '<b>pas gras</b><script>window.__pwn = 1</script>', a: 'https://orbe.test/' }] }]) },
+      store.state.notes = [{ id: 'n-hostile', at: Date.now(), text: '', blocks: clean.concat([{ t: 'p', runs: [{ s: '<b>pas gras</b><script>window.__pwn = 1</script>', a: 'https://orbx.test/' }] }]) },
         { id: 'n-brute', at: Date.now() - 1000, text: '', blocks: [{ t: 'iframe', runs: [{ s: 'x' }] }, { t: 'p', runs: [{ s: 'clic', a: 'javascript:window.__pwn=2' }] }] }];
       const tab = w.openInternal('notes.html');
       const nwc = win.live.get(tab.id).wc;
@@ -460,7 +460,7 @@ module.exports = async function bibliothequeTests(ctx) {
       const seen = await nwc.executeJavaScript(`(() => { const e = document.getElementById('editor'); const tags = [...new Set([...e.querySelectorAll('*')].map((x) => x.tagName))].sort().join(); const links = [...e.querySelectorAll('a')].map((a) => a.getAttribute('href')); return { tags, links, pwn: window.__pwn || 0, last: e.lastElementChild.textContent, todo: e.querySelectorAll('ul.todo > li').length, done: e.querySelectorAll('ul.todo > li[data-done]').length, ol: e.querySelectorAll('ol > li').length, editable: e.contentEditable }; })()`);
       check('page des notes : titres, listes, cases et liens redessinés ; le texte « <script> » reste du texte, aucun autre élément n’entre',
         seen.tags === 'A,B,BR,H1,LI,OL,P,UL' && seen.pwn === 0 && seen.last === '<b>pas gras</b><script>window.__pwn = 1</script>' && seen.todo === 2 && seen.done === 1 && seen.ol === 2
-        && seen.links.join() === 'https://exemple.test/a%20b,https://orbe.test/' && seen.editable === 'true', JSON.stringify(seen));
+        && seen.links.join() === 'https://exemple.test/a%20b,https://orbx.test/' && seen.editable === 'true', JSON.stringify(seen));
       await nwc.executeJavaScript('document.querySelectorAll("#items .note")[1].click()');
       const brute = await nwc.executeJavaScript(`(() => { const e = document.getElementById('editor'); return { tags: [...e.querySelectorAll('*')].map((x) => x.tagName).join(), a: e.querySelectorAll('a').length, text: e.textContent }; })()`);
       check('note altérée sur le disque (type inconnu, lien « javascript: ») : le bloc inconnu est ignoré, le lien n’est pas créé', brute.tags === 'P' && brute.a === 0 && brute.text === 'clic', JSON.stringify(brute));
@@ -476,20 +476,20 @@ module.exports = async function bibliothequeTests(ctx) {
   // --- Sauvegardes locales de l'état ---------------------------------------------------------
   {
     const backups = require('../src/main/backups');
-    const name = (y, mo, da, h = 12, mi = 0) => `orbe-${y}${String(mo).padStart(2, '0')}${String(da).padStart(2, '0')}-${String(h).padStart(2, '0')}${String(mi).padStart(2, '0')}00.json`;
+    const name = (y, mo, da, h = 12, mi = 0) => `orbx-${y}${String(mo).padStart(2, '0')}${String(da).padStart(2, '0')}-${String(h).padStart(2, '0')}${String(mi).padStart(2, '0')}00.json`;
     const now = new Date(2026, 9, 20, 18, 0, 0);
     const names = [];
     for (let h = 1; h <= 14; h++) names.push(name(2026, 10, 20, h));
     for (let day = 1; day <= 19; day++) { names.push(name(2026, 10, day, 9)); names.push(name(2026, 10, day, 17)); }
-    names.push('autre.json', 'orbe-20261020.json');
+    names.push('autre.json', 'orbx-20261020.json');
     const kept = [...backups.keep(names, now)].sort();
-    const today = kept.filter((n) => n.startsWith('orbe-20261020-'));
-    const older = kept.filter((n) => !n.startsWith('orbe-20261020-'));
+    const today = kept.filter((n) => n.startsWith('orbx-20261020-'));
+    const older = kept.filter((n) => !n.startsWith('orbx-20261020-'));
     check('sauvegardes gardées : les dix dernières du jour, et la dernière de chacun des dix jours précédents',
       today.length === 10 && today[0] === name(2026, 10, 20, 5) && older.length === 10 && older[0] === name(2026, 10, 10, 17) && older.every((n) => n.endsWith('-170000.json')) && !kept.includes('autre.json'), kept.join(' '));
 
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-sauvegardes-'));
-    const state = path.join(tmp, 'orbe.json');
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-sauvegardes-'));
+    const state = path.join(tmp, 'orbx.json');
     fs.writeFileSync(state, JSON.stringify({ spaces: [{ id: 'a', name: 'Avant' }], marque: 1 }));
     const first = backups.snapshot(state, new Date(2026, 9, 20, 8, 0, 0));
     fs.writeFileSync(state, '{ abîmé');
@@ -501,7 +501,7 @@ module.exports = async function bibliothequeTests(ctx) {
       !!first && broken === null && listed.length === 10 && listed[0].name === name(2026, 10, 20, 21) && listed[9].name === name(2026, 10, 20, 12)
       && listed[0].at === new Date(2026, 9, 20, 21, 0, 0).getTime() && JSON.parse(fs.readFileSync(listed[0].file, 'utf8')).marque === 2, listed.map((b) => b.name).join(' '));
 
-    // Restauration : sur un état d'essai, sans relancer Orbe.
+    // Restauration : sur un état d'essai, sans relancer Orbx.
     const file0 = store.file;
     const flush0 = store.flush;
     const confirm0 = backups.env.confirm;
@@ -521,25 +521,25 @@ module.exports = async function bibliothequeTests(ctx) {
     fs.writeFileSync(path.join(backups.dirOf(state), name(2026, 10, 19, 9)), JSON.stringify({ spaces: [{ id: 'a', name: 'Hier' }], marque: 0 }));
     fs.writeFileSync(path.join(backups.dirOf(state), name(2026, 10, 18, 9)), '{ "spaces": "pas une liste" }');
     const wanted3 = name(2026, 10, 19, 9);
-    const refused3 = [await backups.restore('../orbe.json'), await backups.restore('inconnue.json'), await backups.restore(name(2026, 10, 18, 9)), await backups.restore(null)];
-    check('restauration : nom inconnu, chemin, ou sauvegarde qui n’est pas un état d’Orbe : refusés sans question', refused3.every((r) => r === false) && asked3.length === 0 && store.file === state, JSON.stringify(refused3));
+    const refused3 = [await backups.restore('../orbx.json'), await backups.restore('inconnue.json'), await backups.restore(name(2026, 10, 18, 9)), await backups.restore(null)];
+    check('restauration : nom inconnu, chemin, ou sauvegarde qui n’est pas un état d’Orbx : refusés sans question', refused3.every((r) => r === false) && asked3.length === 0 && store.file === state, JSON.stringify(refused3));
     const cancelled = await backups.restore(wanted3);
     check('« Restaurer une sauvegarde » : la question dit la date ; « Annuler » ne touche à rien', cancelled === false && asked3.length === 1 && asked3[0].message === T('backup.confirm') && /19/.test(asked3[0].detail) && JSON.parse(fs.readFileSync(state, 'utf8')).marque === 2 && relaunched === 0 && quits3 === 0);
     agree3 = true;
     const before3 = backups.list(state).length;
     const done3 = await backups.restore(wanted3);
-    // Orbe s'arrête normalement ; l'état n'est remplacé qu'une fois l'arrêt acquis (« will-quit »).
+    // Orbx s'arrête normalement ; l'état n'est remplacé qu'une fois l'arrêt acquis (« will-quit »).
     const pending3 = JSON.parse(fs.readFileSync(state, 'utf8')).marque === 2 && quits3 === 1 && backups.restoring();
     const applied3 = backups.apply();
     const fileAfter = store.file;
     store.file = file0;
     store.flush = flush0;
-    check('restauration acceptée : l’état revient à la sauvegarde, l’état quitté est sauvegardé d’abord, Orbe se relance sans rien réécrire',
+    check('restauration acceptée : l’état revient à la sauvegarde, l’état quitté est sauvegardé d’abord, Orbx se relance sans rien réécrire',
       done3 === true && pending3 && applied3 === true && JSON.parse(fs.readFileSync(state, 'utf8')).marque === 0 && relaunched === 1 && fileAfter === null
       && backups.list(state).some((b) => JSON.parse(fs.readFileSync(b.file, 'utf8')).marque === 2) && before3 > 0);
     store.file = state;
     const items3 = backups.menuItems();
-    store.file = path.join(tmp, 'vide', 'orbe.json');
+    store.file = path.join(tmp, 'vide', 'orbx.json');
     const none3 = backups.menuItems();
     store.file = file0;
     const { Menu } = require('electron');
@@ -561,7 +561,7 @@ module.exports = async function bibliothequeTests(ctx) {
   try { fs.rmSync(dir, { recursive: true, force: true }); } catch {}
   w.close(libId, { ask: false });
   for (const sp of [space, other]) {
-    for (const id of [...sp.today]) { win.OrbeWindow.destroyView(id); delete d.tabs[id]; }
+    for (const id of [...sp.today]) { win.OrbxWindow.destroyView(id); delete d.tabs[id]; }
     sp.today = [];
     sp.pinned = [];
     sp.splits = [];

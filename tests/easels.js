@@ -1,6 +1,6 @@
 // Tableaux : tests de bout en bout, sans réseau.
 // Appelé par tests/selftest.js, ou seul :
-//   ORBE_SCENARIO=tests/easels.js node scripts/dev.js --selftest
+//   ORBX_SCENARIO=tests/easels.js node scripts/dev.js --selftest
 // Les éléments sont créés par le code de la page lui-même : vraies entrées de
 // souris et de clavier (sendInputEvent) ou fonctions qu'appellent ces entrées.
 const http = require('http');
@@ -23,7 +23,7 @@ module.exports = async function easelTests(ctx) {
   });
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   const base = `http://127.0.0.1:${server.address().port}`;
-  const shots = process.env.ORBE_SHOTS;
+  const shots = process.env.ORBX_SHOTS;
   const back = w.activeId;
 
   // --- Création -----------------------------------------------------------------
@@ -66,13 +66,13 @@ module.exports = async function easelTests(ctx) {
   check('glisser un élément le déplace', Math.abs(moved.x - rect.x - 100) <= 2 && Math.abs(moved.y - rect.y - 80) <= 2, JSON.stringify(moved));
 
   await js(`(() => { const p = { x: 500, y: 150 }; const it = E.addText('text', p); E.startEdit(it.id, true); })()`);
-  for (const ch of 'Orbe') key(ch);
+  for (const ch of 'Orbx') key(ch);
   await sleep(150);
   await js('E.endEdit()');
   await js(`E.add([{ type: 'ellipse', x: 40, y: 40, w: 90, h: 90, color: 'red', sw: 2, fill: false }, { type: 'arrow', x: 40, y: 400, w: 200, h: -60, color: 'ink', sw: 2 }, { type: 'note', x: 600, y: 300, w: 180, h: 180, text: 'À faire', size: 18, color: 'yellow' }, { type: 'pen', x: 300, y: 420, w: 80, h: 40, pw: 80, ph: 40, pts: [0, 0, 40, 40, 80, 5], color: 'green', sw: 5 }])`);
   const kinds = await js('E.items.map((it) => it.type).join()');
   const typed = await js('E.items.find((it) => it.type === "text").text');
-  check('texte saisi au clavier, formes, flèche, trait et pense-bête', kinds === 'rect,text,ellipse,arrow,note,pen' && typed === 'Orbe', kinds + ' / ' + typed);
+  check('texte saisi au clavier, formes, flèche, trait et pense-bête', kinds === 'rect,text,ellipse,arrow,note,pen' && typed === 'Orbx', kinds + ' / ' + typed);
 
   // Rien de collé n'est interprété : le texte reste du texte.
   await js(`(() => { const dt = new DataTransfer(); dt.setData('text/html', '<img src=x onerror="window.__pwn=1">'); dt.setData('text/plain', '<img src=x onerror="window.__pwn=1">'); document.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })); })()`);
@@ -183,7 +183,7 @@ module.exports = async function easelTests(ctx) {
   // --- Export en PNG ----------------------------------------------------------------------
   {
     const os = require('os');
-    const out = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-tableau-'));
+    const out = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-tableau-'));
     const asked = [];
     const save0 = easels.env.saveDialog;
     let answer = path.join(out, 'sortie');
@@ -246,7 +246,7 @@ module.exports = async function easelTests(ctx) {
   await until(() => js('typeof E === "object" && E.ready.then(() => E.items.length === 8)'), 'tableau rechargé');
   await until(() => js('[...document.querySelectorAll("#world .image img")].every((i) => i.complete && i.naturalWidth > 0)'), 'images rechargées');
   const again = await js('JSON.stringify({ n: document.querySelectorAll("#world .it").length, title: document.getElementById("title").value, src: document.querySelector("#world .image img").src.slice(0, 5), text: document.querySelector("#world .text .tx").textContent })').then(JSON.parse);
-  check('rechargement : éléments, titre et images restaurés', again.n === 8 && again.title === 'Idées de voyage' && again.src === 'blob:' && again.text === 'Orbe', JSON.stringify(again));
+  check('rechargement : éléments, titre et images restaurés', again.n === 8 && again.title === 'Idées de voyage' && again.src === 'blob:' && again.text === 'Orbx', JSON.stringify(again));
 
   // Les captures ont besoin d'un écran vivant : écran verrouillé ou en veille,
   // Chromium ne livre aucune image de la page et rien n'arrive au tableau.
@@ -304,7 +304,7 @@ module.exports = async function easelTests(ctx) {
 
   // --- Validation côté processus principal ---------------------------------------------
   const clean = easels.cleanDoc({ title: 'x', evil: 1, items: [
-    { id: 'a', type: 'image', img: '../../orbe.json', x: 0, y: 0, w: 10, h: 10 },
+    { id: 'a', type: 'image', img: '../../orbx.json', x: 0, y: 0, w: 10, h: 10 },
     { id: 'b', type: 'image', img: 'aaaaaaaaaaaaaaaa.png', x: 0, y: 0, w: 10, h: 10, sourceUrl: 'javascript:alert(1)', html: '<b>' },
     { id: 'c', type: 'script', x: 0, y: 0, w: 1, h: 1 },
     { id: 'd', type: 'text', text: 'ok', x: 'NaN', y: Infinity, w: 5, h: 5, color: 'url(x)' },

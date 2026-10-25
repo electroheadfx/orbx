@@ -32,7 +32,7 @@ function installerExtension(userData) {
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, 'manifest.json'), JSON.stringify({
     manifest_version: 3,
-    name: 'Orbe — essai de démarrage',
+    name: 'Orbx — essai de démarrage',
     version,
     key: pub.toString('base64'),
     background: { service_worker: 'sw.js' },

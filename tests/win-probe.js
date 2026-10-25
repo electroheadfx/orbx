@@ -1,14 +1,14 @@
 // Sonde des fusibles, utilisée par tests/win-package.js. Ce fichier joue deux rôles :
-//  - chargé par Orbe comme scénario (ORBE_SCENARIO), il attend la coque, dit si
+//  - chargé par Orbx comme scénario (ORBX_SCENARIO), il attend la coque, dit si
 //    un port d'inspection est ouvert, puis rend la main ;
 //  - exécuté comme un script Node (ELECTRON_RUN_AS_NODE, NODE_OPTIONS=--require),
-//    il laisse une trace dans ORBE_PROBE_MARKER : c'est ce qui ne doit plus
+//    il laisse une trace dans ORBX_PROBE_MARKER : c'est ce qui ne doit plus
 //    arriver avec l'application fabriquée.
 const fs = require('fs');
 
 const asScenario = !!(module.parent && /main\.js$/.test(module.parent.filename || ''));
-if (!asScenario && process.env.ORBE_PROBE_MARKER) {
-  try { fs.appendFileSync(process.env.ORBE_PROBE_MARKER, `node ${process.version}\n`); } catch {}
+if (!asScenario && process.env.ORBX_PROBE_MARKER) {
+  try { fs.appendFileSync(process.env.ORBX_PROBE_MARKER, `node ${process.version}\n`); } catch {}
 }
 
 module.exports = async function probe({ first: w }) {
@@ -21,7 +21,7 @@ module.exports = async function probe({ first: w }) {
     if (Date.now() - t0 > 15000) throw new Error('Délai dépassé : coque chargée');
     await sleep(50);
   }
-  const port = Number(process.env.ORBE_PROBE_PORT);
+  const port = Number(process.env.ORBX_PROBE_PORT);
   let open = false;
   if (port) {
     open = await new Promise((resolve) => {

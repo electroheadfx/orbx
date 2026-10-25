@@ -2,7 +2,7 @@
 // Les codes de touche sont des positions physiques : le test vaut pour la
 // disposition de clavier de la machine où il tourne.
 //   swiftc -O tests/natif/touche.swift -o /tmp/touche
-//   TOUCHE=/tmp/touche ORBE_SCENARIO=tests/natif/raccourcis.js node scripts/dev.js --selftest
+//   TOUCHE=/tmp/touche ORBX_SCENARIO=tests/natif/raccourcis.js node scripts/dev.js --selftest
 const { execFileSync } = require('child_process');
 const { app } = require('electron');
 

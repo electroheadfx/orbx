@@ -16,7 +16,7 @@ function serve() {
   const server = http.createServer((req, res) => {
     const url = new URL(req.url, 'http://x');
     res.setHeader('content-type', 'text/html; charset=utf-8');
-    if (url.pathname === '/a') return res.end(page('Page A', '<h1>Alpha</h1><p>orbe orbe orbe</p><a id="pop" href="/c" target="_blank">ouvrir C</a>'));
+    if (url.pathname === '/a') return res.end(page('Page A', '<h1>Alpha</h1><p>orbx orbx orbx</p><a id="pop" href="/c" target="_blank">ouvrir C</a>'));
     if (url.pathname === '/b') return res.end(page('Page B', '<h1>Bravo</h1>'));
     if (url.pathname === '/c') return res.end(page('Page C', '<h1>Charlie</h1><script>document.title = window.opener ? "C avec opener" : "C sans opener"</script>'));
     if (url.pathname === '/video') return res.end(page('Page vidéo', `<video id="v" width="320" height="180" playsinline></video><script>
@@ -31,10 +31,10 @@ function serve() {
       };
     </script>`));
     if (url.pathname === '/pixel') { hits.pixel += 1; res.setHeader('content-type', 'image/gif'); return res.end(Buffer.from('R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==', 'base64')); }
-    if (url.pathname === '/pub') return res.end(page('Page avec pub', `<img src="http://pub.orbe.localhost:${server.address().port}/pixel"><img src="/pixel?local">`));
+    if (url.pathname === '/pub') return res.end(page('Page avec pub', `<img src="http://pub.orbx.localhost:${server.address().port}/pixel"><img src="/pixel?local">`));
     if (url.pathname === '/liens') return res.end(page('Page à liens', `<a id="dehors" href="http://localhost:${server.address().port}/b" style="display:block;width:300px;height:60px;background:#def">ailleurs</a>`));
     if (url.pathname === '/long') return res.end(page('Page longue', '<div style="height:4000px;background:linear-gradient(#fde,#def)">haut</div><p>bas</p>'));
-    if (url.pathname === '/file.txt') { res.setHeader('content-disposition', 'attachment; filename="orbe-test.txt"'); return res.end('bonjour'); }
+    if (url.pathname === '/file.txt') { res.setHeader('content-disposition', 'attachment; filename="orbx-test.txt"'); return res.end('bonjour'); }
     res.statusCode = 404;
     return res.end(page('404', 'introuvable'));
   });
@@ -51,7 +51,7 @@ function serve() {
 }
 
 module.exports = async function selftest(ctx) {
-  const { first: w, OrbeWindow, store, win, little, commands, openSettings, openUrl } = ctx;
+  const { first: w, OrbxWindow, store, win, little, commands, openSettings, openUrl } = ctx;
   const modalAtStart = w.modal; // relevé avant toute attente (tests/performances.js)
   const results = [];
   let failed = 0;
@@ -63,7 +63,7 @@ module.exports = async function selftest(ctx) {
   const ui = (js) => w.ui.webContents.executeJavaScript(js);
   const tabs = () => w.data.tabs;
   const titleOf = (id) => tabs()[id] && tabs()[id].title;
-  const shots = process.env.ORBE_SHOTS;
+  const shots = process.env.ORBX_SHOTS;
   const shot = async (name) => {
     if (!shots) return;
     await sleep(350);
@@ -73,7 +73,7 @@ module.exports = async function selftest(ctx) {
 
   const server = await serve();
   const base = `http://127.0.0.1:${server.address().port}`;
-  console.log('\nOrbe — tests de bout en bout\n');
+  console.log('\nOrbx — tests de bout en bout\n');
 
   // Écran vivant ? (mesuré une fois : voir tests/outils.js)
   await until(() => ui('typeof S === "object" && S !== null'), 'coque chargée', 20000);
@@ -373,7 +373,7 @@ module.exports = async function selftest(ctx) {
   let found = null;
   win.live.get(a.id).wc.on('found-in-page', (e, r) => { if (r.finalUpdate) found = r; });
   await sleep(250);
-  w.find('orbe');
+  w.find('orbx');
   await until(() => found, 'résultats de recherche');
   check('⌘F trouve le texte dans la page', found.matches === 3);
   w.closeFind();
@@ -446,7 +446,7 @@ module.exports = async function selftest(ctx) {
     return false;
   }, 'aperçu ouvert par un clic').catch((err) => {
     // Fenêtre de test en arrière-plan : Chromium ignore les clics simulés. Ce
-    // n'est pas un défaut d'Orbe ; on le signale et on poursuit.
+    // n'est pas un défaut d'Orbx ; on le signale et on poursuit.
     if (lwc.getURL() === base + '/liens' && !w.win.isFocused()) { skippedClick = true; w.openPeek(base.replace('127.0.0.1', 'localhost') + '/b', pinL.id); return until(() => w.peekState && w.peekState.title === 'Page B', 'aperçu'); }
     throw err;
   });
@@ -602,7 +602,7 @@ module.exports = async function selftest(ctx) {
 
   // Import depuis Arc (fichier d'exemple, jamais les vraies données)
   const arc = require('../src/main/import-arc');
-  const sample = path.join(require('os').tmpdir(), `orbe-arc-${Date.now()}.json`);
+  const sample = path.join(require('os').tmpdir(), `orbx-arc-${Date.now()}.json`);
   const tabItem = (id, url, title, parent) => [id, { id, title: null, parentID: parent, childrenIds: [], data: { tab: { savedURL: url, savedTitle: title } } }];
   fs.writeFileSync(sample, JSON.stringify({ sidebar: { containers: [{ global: {} }, {
     items: [
@@ -629,14 +629,14 @@ module.exports = async function selftest(ctx) {
   check('import Arc : profil et favoris du profil', imported.profileId !== 'default' && w.data.favs[imported.profileId].length === 1);
   check('import Arc : pas de doublon au second import', arc.merge(arcData) === 0);
   // Mise à jour d'après Arc : Arc a changé depuis l'import (ordre, dossier neuf, onglet neuf, doublon,
-  // favori neuf, nom), et Orbe a un épinglé et un favori que Arc n'a pas.
+  // favori neuf, nom), et Orbx a un épinglé et un favori que Arc n'a pas.
   {
     // Données seules, sans vue : rien n'est chargé.
     const pose = (id, url) => { w.data.tabs[id] = { id, url, homeUrl: url, title: id, favicon: '', createdAt: Date.now(), lastActiveAt: Date.now() }; return w.data.tabs[id]; };
-    const propre = pose('arc-essai-epingle', 'https://exemple.org/orbe-seul');
+    const propre = pose('arc-essai-epingle', 'https://exemple.org/orbx-seul');
     imported.pinned.push({ type: 'tab', id: propre.id });
-    const favOrbe = pose('arc-essai-favori', 'https://exemple.org/favori-orbe');
-    w.data.favs[imported.profileId].push(favOrbe.id);
+    const favOrbx = pose('arc-essai-favori', 'https://exemple.org/favori-orbx');
+    w.data.favs[imported.profileId].push(favOrbx.id);
     const idUn = imported.pinned.find((n) => n.type === 'tab' && w.data.tabs[n.id].url === 'https://exemple.org/un').id;
     const idDossier = importedFolder.id;
     const plus = JSON.parse(JSON.stringify(arcData));
@@ -657,14 +657,14 @@ module.exports = async function selftest(ctx) {
       plan.spaces === 1 && plan.tabs === 2 && plan.folders === 1 && plan.favorites === 1 && plan.today === 1 && plan.changed > 0 && JSON.stringify(w.data) === avant, JSON.stringify(plan));
     const fait = arc.sync(plus);
     const noms = imported.pinned.map((n) => (n.type === 'folder' ? '[' + n.name + ':' + n.children.map((c) => w.data.tabs[c.id].url.split('/').pop()).join(',') + ']' : w.data.tabs[n.id].url.split('/').pop())).join(' ');
-    check('… appliquée : dossiers et onglets dans l’ordre d’Arc, le doublon d’Arc créé, l’épinglé d’Orbe seul gardé à la suite',
-      noms === '[Dossier neuf:quatre] [Dossier Arc:deux] un un orbe-seul' && imported.name === 'Espace Arc renommé', noms + ' / ' + imported.name);
+    check('… appliquée : dossiers et onglets dans l’ordre d’Arc, le doublon d’Arc créé, l’épinglé d’Orbx seul gardé à la suite',
+      noms === '[Dossier neuf:quatre] [Dossier Arc:deux] un un orbx-seul' && imported.name === 'Espace Arc renommé', noms + ' / ' + imported.name);
     check('… un onglet et un dossier déjà là sont réutilisés (mêmes identifiants), rien n’est supprimé',
       imported.pinned[2].id === idUn && imported.pinned[1].id === idDossier && !!w.data.tabs[propre.id] && fait.tabs === 2);
     const favs = w.data.favs[imported.profileId].map((id) => w.data.tabs[id].url.split('/').pop()).join(' ');
-    check('… favoris : ceux d’Arc d’abord, dans son ordre, celui d’Orbe seul ensuite ; onglet du jour ajouté', favs === 'favori-neuf favori favori-orbe' && imported.today.length === 2, favs);
+    check('… favoris : ceux d’Arc d’abord, dans son ordre, celui d’Orbx seul ensuite ; onglet du jour ajouté', favs === 'favori-neuf favori favori-orbx' && imported.today.length === 2, favs);
     const iAvant = w.data.spaces.findIndex((x) => x.arcId === 's0');
-    check('… Espaces : le nouvel Espace d’Arc vient juste avant, comme dans Arc ; les Espaces d’Orbe seul ne bougent pas',
+    check('… Espaces : le nouvel Espace d’Arc vient juste avant, comme dans Arc ; les Espaces d’Orbx seul ne bougent pas',
       iAvant >= 0 && w.data.spaces[iAvant + 1] === imported && w.data.spaces[0].id === JSON.parse(avant).spaces[0].id, w.data.spaces.map((x) => x.name).join(' | '));
     const encore = arc.sync(plus);
     check('… une seconde mise à jour ne change plus rien', encore.changed === 0, JSON.stringify(encore));
@@ -676,7 +676,7 @@ module.exports = async function selftest(ctx) {
     const tous = [];
     const voir = (nodes) => { for (const n of nodes) { if (n.type === 'folder') voir(n.children); else tous.push(n.id); } };
     voir(imported.pinned);
-    for (const id of [...tous, ...imported.today, ...w.data.favs[imported.profileId]]) if (!garde.has(id)) { if (win.live.has(id)) OrbeWindow.destroyView(id); delete w.data.tabs[id]; }
+    for (const id of [...tous, ...imported.today, ...w.data.favs[imported.profileId]]) if (!garde.has(id)) { if (win.live.has(id)) OrbxWindow.destroyView(id); delete w.data.tabs[id]; }
     imported.pinned = [{ type: 'tab', id: idUn }, { type: 'folder', id: idDossier, name: 'Dossier Arc', open: false, children: [{ type: 'tab', id: importedFolder.children[0].id }] }];
     imported.today = imported.today.slice(0, 1);
     w.data.favs[imported.profileId] = [w.data.favs[imported.profileId][1]];
@@ -685,7 +685,7 @@ module.exports = async function selftest(ctx) {
   w.data.spaces.splice(w.data.spaces.indexOf(imported), 1);
   for (const id of [...imported.today, ...w.data.favs[imported.profileId], imported.pinned[0].id, importedFolder.children[0].id]) delete w.data.tabs[id];
   w.data.favs[imported.profileId] = [];
-  OrbeWindow.pushAll();
+  OrbxWindow.pushAll();
 
   // Aiguillage des liens venus d'autres applications
   store.state.settings.routes = [{ match: '127.0.0.1/b', to: s2.id }];
@@ -703,7 +703,7 @@ module.exports = async function selftest(ctx) {
     const refused = [
       emit('NSUserActivityTypeBrowsingWeb', { webpageURL: 'file:///etc/passwd' }),
       emit('NSUserActivityTypeBrowsingWeb', { webpageURL: 'javascript:alert(1)' }),
-      emit('NSUserActivityTypeBrowsingWeb', { webpageURL: 'orbe://app/settings.html' }),
+      emit('NSUserActivityTypeBrowsingWeb', { webpageURL: 'orbx://app/settings.html' }),
       emit('NSUserActivityTypeBrowsingWeb', { webpageURL: 'https://' + 'a'.repeat(5000) + '.exemple/' }),
       emit('NSUserActivityTypeBrowsingWeb', {}),
       emit('com.exemple.autre', { webpageURL: base + '/a' }),
@@ -718,11 +718,11 @@ module.exports = async function selftest(ctx) {
   // Langue
   await until(() => ui('document.querySelector("#b-newtab .title").textContent === "Nouvel onglet"'), 'libellé français');
   store.state.settings.lang = 'en';
-  OrbeWindow.pushAll();
+  OrbxWindow.pushAll();
   await until(() => ui('document.querySelector("#b-newtab .title").textContent === "New Tab"'), 'libellé anglais');
   check('l’interface passe en anglais', true);
   store.state.settings.lang = 'fr';
-  OrbeWindow.pushAll();
+  OrbxWindow.pushAll();
   await until(() => ui('document.querySelector("#b-newtab .title").textContent === "Nouvel onglet"'), 'retour au français');
 
   // Menu : raccourcis d'Arc
@@ -833,7 +833,7 @@ module.exports = async function selftest(ctx) {
     check('sons : chaque fichier est exactement ce que produit le script de synthèse (aucun fichier tiers)', facts.every((x) => x.same), facts.filter((x) => !x.same).map((x) => x.name).join(','));
     check('sons : brefs (moins d’une demi-seconde), mono 44,1 kHz', facts.every((x) => x.seconds > 0.08 && x.seconds < 0.5 && x.mono), JSON.stringify(facts.map((x) => [x.name, x.seconds])));
     check('sons : même niveau moyen pour tous, crête à −6 dB au plus, début et fin à zéro', facts.every((x) => x.peak <= gen.PEAK + 0.001 && x.rms > gen.LEVEL * 0.9 && x.rms < gen.LEVEL * 1.05 && x.edges < 0.001), JSON.stringify(facts.map((x) => [x.name, x.peak.toFixed(3), x.rms.toFixed(3)])));
-    check('pendant les essais, aucun son n’est joué (demande transmise « muette »)', sounds.QUIET === (process.env.ORBE_TEST_SOUNDS !== '1'));
+    check('pendant les essais, aucun son n’est joué (demande transmise « muette »)', sounds.QUIET === (process.env.ORBX_TEST_SOUNDS !== '1'));
 
     // Sons des gestes : déduits des changements d'état, après un geste seulement
     const S0 = { sounds: store.state.settings.sounds, soundGestures: store.state.settings.soundGestures, soundVolume: store.state.settings.soundVolume };
@@ -994,15 +994,15 @@ module.exports = async function selftest(ctx) {
   const noteTab = w.activeId;
   const nwc = win.live.get(noteTab).wc;
   await until(() => store.state.notes.length === 1 && nwc.executeJavaScript('document.querySelectorAll("#items .note").length === 1'), 'note créée');
-  await nwc.executeJavaScript(`(() => { const e = document.getElementById('editor'); e.textContent = 'Idées pour Orbe'; e.dispatchEvent(new InputEvent('input')); })()`);
-  await until(() => store.state.notes[0].text.startsWith('Idées pour Orbe'), 'note enregistrée');
+  await nwc.executeJavaScript(`(() => { const e = document.getElementById('editor'); e.textContent = 'Idées pour Orbx'; e.dispatchEvent(new InputEvent('input')); })()`);
+  await until(() => store.state.notes[0].text.startsWith('Idées pour Orbx'), 'note enregistrée');
   check('⌃⇧N crée une note, enregistrée au fil de la frappe', tabs()[noteTab].internal === true);
   w.close(noteTab);
   w.activate(a.id);
 
   // Page d'accueil
   const wel = w.openInternal('welcome.html');
-  await until(() => win.live.get(wel.id).wc.executeJavaScript('document.querySelector("h1").textContent === "Bienvenue dans Orbe" && document.querySelectorAll("[data-cmd]").length >= 3'), 'page d’accueil');
+  await until(() => win.live.get(wel.id).wc.executeJavaScript('document.querySelector("h1").textContent === "Bienvenue dans Orbx" && document.querySelectorAll("[data-cmd]").length >= 3'), 'page d’accueil');
   check('la page d’accueil s’affiche', tabs()[wel.id].internal === true);
   if (shots) fs.writeFileSync(path.join(shots, 'accueil.png'), (await win.live.get(wel.id).wc.capturePage()).toPNG());
   w.close(wel.id);
@@ -1034,7 +1034,7 @@ module.exports = async function selftest(ctx) {
   const sv2 = w.newTab(base + '/b');
   await until(() => titleOf(sv2.id) === 'Page B', 'onglets pour la vue scindée');
   w.splitWith(sv1.id, sv2.id);
-  const w2 = new OrbeWindow();
+  const w2 = new OrbxWindow();
   w2.close(sv2.id);
   let layoutError = null;
   try { w.layout(); } catch (err) { layoutError = err; }
@@ -1049,14 +1049,14 @@ module.exports = async function selftest(ctx) {
 
   const trap = w.newTab(base + '/a');
   await until(() => titleOf(trap.id) === 'Page A', 'page de test');
-  await win.live.get(trap.id).wc.executeJavaScript('location.href = "orbe://app/library.html"; 1', true).catch(() => {});
+  await win.live.get(trap.id).wc.executeJavaScript('location.href = "orbx://app/library.html"; 1', true).catch(() => {});
   await sleep(500);
   check('une page web ne peut pas se rendre sur une page interne', tabs()[trap.id].url === base + '/a' && !tabs()[trap.id].internal && win.live.get(trap.id).wc.getURL() === base + '/a');
   const before2 = Object.keys(tabs()).length;
   w.handle('dropUrl', 'file:///etc/hosts');
-  w.handle('dropUrl', 'orbe://app/shell.html');
+  w.handle('dropUrl', 'orbx://app/shell.html');
   w.handle('open', 'file:///etc/hosts');
-  check('les adresses file: et orbe: venant d’une page sont refusées', Object.keys(tabs()).length === before2);
+  check('les adresses file: et orbx: venant d’une page sont refusées', Object.keys(tabs()).length === before2);
   w.close(trap.id);
 
   const retry = w.newTab('http://127.0.0.1:1/x');
@@ -1069,9 +1069,9 @@ module.exports = async function selftest(ctx) {
   w.close(retry.id);
   w.activate(a.id);
 
-  // Bloqueur de publicités (« orbe.localhost » joue le rôle du domaine publicitaire)
+  // Bloqueur de publicités (« orbx.localhost » joue le rôle du domaine publicitaire)
   const adblock = require('../src/main/adblock');
-  adblock.setDomains(['orbe.localhost']);
+  adblock.setDomains(['orbx.localhost']);
   server.hits.pixel = 0;
   const pub = w.newTab(base + '/pub');
   await until(() => titleOf(pub.id) === 'Page avec pub' && !win.live.get(pub.id).loading, 'page avec publicité');
@@ -1106,7 +1106,7 @@ module.exports = async function selftest(ctx) {
   w.activate(a.id);
 
   // Navigation privée
-  const inc = new OrbeWindow({ incognito: true });
+  const inc = new OrbxWindow({ incognito: true });
   const it = inc.newTab(base + '/b');
   await until(() => inc.data.tabs[it.id].title === 'Page B', 'page en navigation privée');
   check('navigation privée : données séparées', inc.data !== store.state && !store.state.tabs[it.id] && inc.session !== w.session);
@@ -1121,7 +1121,7 @@ module.exports = async function selftest(ctx) {
   {
     const guard = require('../src/main/test-guard');
     const errors = guard.state.errors.length;
-    const quick = new OrbeWindow({ incognito: true });
+    const quick = new OrbxWindow({ incognito: true });
     const quickUi = quick.ui.webContents;
     const late = quickUi.listeners('did-finish-load'); // ce qui attend la fin du chargement
     quick.win.close();
@@ -1139,13 +1139,13 @@ module.exports = async function selftest(ctx) {
   check('⌥⌘N ouvre une petite fenêtre', !!lw.view);
   if (shots && platform.isWin) { await sleep(400); await require('./capture').shoot(lw.win, shots, 'win-petite-fenetre', platform.tint('', require('electron').nativeTheme.shouldUseDarkColors)); }
   const count = w.space.today.length;
-  lw.openInOrbe();
-  await until(() => w.space.today.length === count + 1, 'ouverture dans Orbe');
-  check('« Ouvrir dans Orbe » crée un onglet', tabs()[w.activeId].url === base + '/a');
+  lw.openInOrbx();
+  await until(() => w.space.today.length === count + 1, 'ouverture dans Orbx');
+  check('« Ouvrir dans Orbx » crée un onglet', tabs()[w.activeId].url === base + '/a');
 
   // Mise en veille des onglets
   store.state.settings.maxLiveTabs = 2;
-  OrbeWindow.trimLive();
+  OrbxWindow.trimLive();
   check('mise en veille au-delà de la limite', win.live.size <= 2 && win.live.has(w.activeId));
   store.state.settings.maxLiveTabs = 14;
 
@@ -1234,14 +1234,14 @@ module.exports = async function selftest(ctx) {
   const inMemory = Object.keys(store.state.history);
   check('historique enregistré dans son propre fichier, hors de l’état', !!onDisk && onDisk.length === inMemory.length && !('history' in JSON.parse(fs.readFileSync(store.file, 'utf8'))),
     JSON.stringify({ fichier: onDisk ? onDisk.length : 'absent', memoire: inMemory.length, seulementEnMemoire: onDisk ? inMemory.filter((k) => !onDisk.includes(k)).slice(0, 5) : [], seulementSurDisque: onDisk ? onDisk.filter((k) => !inMemory.includes(k)).slice(0, 5) : [], dansEtat: 'history' in JSON.parse(fs.readFileSync(store.file, 'utf8')) }));
-  // Ancien format (historique dans orbe.json) : repris tel quel au chargement.
+  // Ancien format (historique dans orbx.json) : repris tel quel au chargement.
   const { Store: StoreClass } = { Store: store.constructor };
   const old = new StoreClass();
-  const oldDir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'orbe-ancien-'));
-  fs.writeFileSync(path.join(oldDir, 'orbe.json'), JSON.stringify({ history: { 'https://exemple.org/': { url: 'https://exemple.org/', visits: 3, last: 1 } } }));
+  const oldDir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'orbx-ancien-'));
+  fs.writeFileSync(path.join(oldDir, 'orbx.json'), JSON.stringify({ history: { 'https://exemple.org/': { url: 'https://exemple.org/', visits: 3, last: 1 } } }));
   old.load(oldDir);
   old.flush();
-  check('ancien fichier : l’historique est déplacé sans perte', old.state.history['https://exemple.org/'].visits === 3 && JSON.parse(fs.readFileSync(path.join(oldDir, 'history.json'), 'utf8'))['https://exemple.org/'].visits === 3 && !('history' in JSON.parse(fs.readFileSync(path.join(oldDir, 'orbe.json'), 'utf8'))));
+  check('ancien fichier : l’historique est déplacé sans perte', old.state.history['https://exemple.org/'].visits === 3 && JSON.parse(fs.readFileSync(path.join(oldDir, 'history.json'), 'utf8'))['https://exemple.org/'].visits === 3 && !('history' in JSON.parse(fs.readFileSync(path.join(oldDir, 'orbx.json'), 'utf8'))));
   check('état enregistré sur disque', saved.spaces.length === 2 && Object.keys(saved.tabs).length === Object.keys(tabs()).length && saved.window.spaceId === w.spaceId);
 
   server.close();

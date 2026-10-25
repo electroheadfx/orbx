@@ -1,6 +1,6 @@
 // Import direct des signets de Chrome, Brave, Edge, Opera, Firefox et Safari.
 // Appelé par tests/selftest.js, ou seul :
-//   ORBE_SCENARIO=tests/import-navigateurs.js node scripts/dev.js --selftest
+//   ORBX_SCENARIO=tests/import-navigateurs.js node scripts/dev.js --selftest
 // Les profils sont fabriqués dans un dossier temporaire (tests/fixtures/navigateurs.js) :
 // aucun vrai profil de la machine n'est lu.
 const fs = require('fs');
@@ -23,7 +23,7 @@ module.exports = async function importTests(ctx) {
   check('en test, sans dossier d’essai désigné, aucun navigateur n’est cherché (les vrais profils ne sont pas lus)', real.home === '' && br.detect().length === 0 && (await br.read('chrome', 'Default')).error === 'missing');
 
   // --- Profils d'essai, à la manière de macOS ------------------------------------------
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-nav-'));
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-nav-'));
   const sqlite = ['/usr/bin/sqlite3', '/bin/sqlite3'].find((p) => fs.existsSync(p)) || '';
   const made = fx.profils(home, { platform: 'darwin', sqlite });
   br.configure({ home, platform: 'darwin', sqlite, local: '', roaming: '' });
@@ -74,7 +74,7 @@ module.exports = async function importTests(ctx) {
     const make = (fn) => { fs.rmSync(path.join(evilDir, 'places.sqlite'), { force: true }); cp.execFileSync(sqlite, [path.join(evilDir, 'places.sqlite'), view(fn)], { stdio: 'ignore' }); };
     const query = 'SELECT title FROM moz_bookmarks;';
     make(`writefile('${sqlEsc(marker)}', 'x')`);
-    // Ce que change le mode sûr, sur ce sqlite3 : sans lui, writefile() écrit ; avec les options d'Orbe, il est refusé.
+    // Ce que change le mode sûr, sur ce sqlite3 : sans lui, writefile() écrit ; avec les options d'Orbx, il est refusé.
     // (Depuis une vue, les sqlite3 récents refusent déjà : le mode sûr ne dépend pas de cette protection-là.)
     let unsafe = false;
     let safeWrote = true;
@@ -178,7 +178,7 @@ module.exports = async function importTests(ctx) {
   check('fichier de signets abîmé ou sans adresse web : dit, rien n’est importé', junk.error === 'unreadable' && empty.error === 'empty');
 
   // --- Chemins de Windows -----------------------------------------------------------------
-  const homeWin = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-nav-win-'));
+  const homeWin = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-nav-win-'));
   fx.profils(homeWin, { platform: 'win32' });
   br.configure({ home: homeWin, platform: 'win32', sqlite: '' });
   const win = br.detect();

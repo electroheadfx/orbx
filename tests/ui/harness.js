@@ -1,6 +1,6 @@
 // Outils communs aux tests d'interface : lance le vrai navigateur avec
 // Playwright sur un profil temporaire, sert des pages locales, et expose les
-// vues d'Orbe (coque, barre de commande, recherche, onglets) comme des pages
+// vues d'Orbx (coque, barre de commande, recherche, onglets) comme des pages
 // Playwright que l'on pilote à la souris et au clavier.
 const http = require('http');
 const fs = require('fs');
@@ -8,7 +8,7 @@ const os = require('os');
 const path = require('path');
 
 const root = path.join(__dirname, '..', '..');
-const runtime = process.env.ORBE_RUNTIME || path.join(os.homedir(), '.orbe-dev');
+const runtime = process.env.ORBX_RUNTIME || path.join(os.homedir(), '.orbx-dev');
 const electronBin = path.join(runtime, 'node_modules', 'electron', 'dist', 'Electron.app', 'Contents', 'MacOS', 'Electron');
 
 const { PROBE, juger, mesurer } = require('../outils');
@@ -44,7 +44,7 @@ function servir() {
     res.setHeader('content-type', 'text/html; charset=utf-8');
     res.setHeader('cache-control', 'no-store');
     switch (url.pathname) {
-      case '/a': return res.end(page('Page A', '<h1>Alpha</h1><p>orbe orbe orbe</p><a id="vers-b" href="/b">aller en B</a>'));
+      case '/a': return res.end(page('Page A', '<h1>Alpha</h1><p>orbx orbx orbx</p><a id="vers-b" href="/b">aller en B</a>'));
       case '/b': return res.end(page('Page B', '<h1>Bravo</h1><a id="vers-a" href="/a">aller en A</a>'));
       case '/c': return res.end(page('Page C', '<h1>Charlie</h1>'));
       // Lien vers un autre hôte (même serveur, sous le nom « localhost ») : depuis un onglet épinglé, il s'ouvre en aperçu.
@@ -81,15 +81,15 @@ async function lancer(opts = {}) {
   const { _electron } = require(path.join(runtime, 'node_modules', 'playwright-core'));
   const { server, hits } = opts.serveur || await servir();
   const hote = `127.0.0.1:${server.address().port}`;
-  const userData = opts.userData || fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-ui-'));
+  const userData = opts.userData || fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-ui-'));
   const app = await _electron.launch({
     executablePath: electronBin,
     // Trousseau factice : les tests ne touchent jamais au vrai trousseau du système.
-    // ORBE_UI_ARGS : options de plus pour le moteur, séparées par des espaces. Session
+    // ORBX_UI_ARGS : options de plus pour le moteur, séparées par des espaces. Session
     // verrouillée ou fenêtre recouverte (les minuteries de la coque y sont ralenties) :
-    //   ORBE_UI_ARGS="--disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-background-timer-throttling"
-    args: ['-r', path.join(__dirname, 'prelude.js'), '--use-mock-keychain', root, ...(process.env.ORBE_UI_ARGS || '').split(/\s+/).filter(Boolean)],
-    env: { ...process.env, ORBE_USER_DATA: userData, ORBE_NO_WELCOME: '1', ORBE_UI_TEST: '1' },
+    //   ORBX_UI_ARGS="--disable-backgrounding-occluded-windows --disable-renderer-backgrounding --disable-background-timer-throttling"
+    args: ['-r', path.join(__dirname, 'prelude.js'), '--use-mock-keychain', root, ...(process.env.ORBX_UI_ARGS || '').split(/\s+/).filter(Boolean)],
+    env: { ...process.env, ORBX_USER_DATA: userData, ORBX_NO_WELCOME: '1', ORBX_UI_TEST: '1' },
   });
 
   const ctx = { app, hote, hits, userData, serveur: { server, hits }, root, sleep, jusqua, delai };
@@ -141,17 +141,17 @@ async function lancer(opts = {}) {
   // --- Écran vivant ? -----------------------------------------------------------
   // Mesuré une fois par groupe, dans la coque (voir tests/outils.js) : sans image
   // présentée, une cadence ou une animation ne prouve rien.
-  // (ORBE_UI_ECRAN=inactif : fait comme si aucune image n'était présentée, pour essayer ce chemin.)
-  ctx.milieu = process.env.ORBE_UI_ECRAN === 'inactif' ? juger({ frames: 0, ticks: 25, ms: 500, visible: 'simulé' }) : await mesurer(() => ctx.shell.evaluate(PROBE));
+  // (ORBX_UI_ECRAN=inactif : fait comme si aucune image n'était présentée, pour essayer ce chemin.)
+  ctx.milieu = process.env.ORBX_UI_ECRAN === 'inactif' ? juger({ frames: 0, ticks: 25, ms: 500, visible: 'simulé' }) : await mesurer(() => ctx.shell.evaluate(PROBE));
 
   // --- Processus principal ----------------------------------------------------
   // `require` n'existe pas dans le contexte d'évaluation de Playwright ; on
-  // retrouve les modules d'Orbe déjà chargés par leur chemin absolu.
+  // retrouve les modules d'Orbx déjà chargés par leur chemin absolu.
   ctx.principal = (fn, arg) => app.evaluate(
     (electron, { src, racine, arg: a }) => {
       const req = (m) => process.mainModule.require(racine + '/src/main/' + m);
       const win = req('window.js');
-      const w = win.OrbeWindow.all.find((x) => !x.incognito) || win.OrbeWindow.all[0];
+      const w = win.OrbxWindow.all.find((x) => !x.incognito) || win.OrbxWindow.all[0];
       // eslint-disable-next-line no-eval
       return (0, eval)('(' + src + ')')({ electron, req, win, w, store: req('store.js').store }, a);
     },
@@ -427,9 +427,9 @@ async function lancer(opts = {}) {
     await cdp.send('Animation.enable');
     await cdp.send('Animation.setPlaybackRate', { playbackRate: taux });
   };
-  // ORBE_UI_CPU=4 : la coque tourne quatre fois plus lentement pendant tout le
+  // ORBX_UI_CPU=4 : la coque tourne quatre fois plus lentement pendant tout le
   // groupe (machine chargée simulée).
-  const frein = Number(process.env.ORBE_UI_CPU || 0);
+  const frein = Number(process.env.ORBX_UI_CPU || 0);
   if (frein > 1) await (await coque()).send('Emulation.setCPUThrottlingRate', { rate: frein });
 
   // Point d'un élément, une fois celui-ci immobile : les lignes glissent à leur
@@ -448,7 +448,7 @@ async function lancer(opts = {}) {
   };
 
   // Captures de la coque et des vues flottantes, pour relecture visuelle.
-  ctx.captures = process.env.ORBE_UI_SHOTS || path.join(os.tmpdir(), 'orbe-ui-captures');
+  ctx.captures = process.env.ORBX_UI_SHOTS || path.join(os.tmpdir(), 'orbx-ui-captures');
   ctx.capture = async (nom, page = ctx.shell) => {
     try {
       fs.mkdirSync(ctx.captures, { recursive: true });

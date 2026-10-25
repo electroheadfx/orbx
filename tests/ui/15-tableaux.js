@@ -24,7 +24,7 @@ module.exports = {
     };
 
     await t.verifier('⌃⇧E ouvre un tableau vide dans un onglet', async () => {
-      assert.match((await ctx.etat()).actifUrl, /^orbe:\/\/app\/easel\.html\?id=[a-f0-9]{16}$/);
+      assert.match((await ctx.etat()).actifUrl, /^orbx:\/\/app\/easel\.html\?id=[a-f0-9]{16}$/);
       assert.equal((await etat()).n, 0);
       assert.equal(await page.locator('#hint').isVisible(), true);
     });
@@ -61,13 +61,13 @@ module.exports = {
       await ctx.clic(page, '#tools [data-tool=text]');
       await m.click(700, 180);
       await jusqua(() => page.evaluate(() => !!document.activeElement && document.activeElement.isContentEditable), 'zone de texte active');
-      await page.keyboard.type('Bonjour Orbe', { delay: 10 });
+      await page.keyboard.type('Bonjour Orbx', { delay: 10 });
       await page.keyboard.press('Escape');
       const list = await items();
       assert.equal(list.length, 2);
       assert.equal(list[1].type, 'text');
-      assert.equal(list[1].text, 'Bonjour Orbe');
-      assert.equal(await page.locator('#world .it.text .tx').textContent(), 'Bonjour Orbe');
+      assert.equal(list[1].text, 'Bonjour Orbx');
+      assert.equal(await page.locator('#world .it.text .tx').textContent(), 'Bonjour Orbx');
       assert.equal(await page.evaluate(() => document.activeElement.isContentEditable), false);
     });
 
@@ -78,7 +78,7 @@ module.exports = {
       await page.keyboard.press('End');
       await page.keyboard.type(' !');
       await page.keyboard.press('Escape');
-      assert.equal((await items())[1].text, 'Bonjour Orbe !');
+      assert.equal((await items())[1].text, 'Bonjour Orbx !');
     });
 
     await t.verifier('Espace + glisser déplace la vue, sans toucher aux éléments', async () => {
@@ -124,7 +124,7 @@ module.exports = {
       const n = (await etat()).n;
       await m.click(60, 600); // rien de sélectionné, le clavier est au tableau
       await page.keyboard.press('ControlOrMeta+z');
-      assert.equal((await items())[1].text, 'Bonjour Orbe', 'la modification du texte est annulée');
+      assert.equal((await items())[1].text, 'Bonjour Orbx', 'la modification du texte est annulée');
       await page.keyboard.press('ControlOrMeta+z');
       assert.equal((await etat()).n, n - 1, 'le texte disparaît');
       await page.keyboard.press('ControlOrMeta+z');
@@ -135,8 +135,8 @@ module.exports = {
       await page.keyboard.press('ControlOrMeta+Shift+z');
       const list = await items();
       assert.equal(list.length, n);
-      assert.equal(list[1].text, 'Bonjour Orbe !');
-      assert.equal(await page.locator('#world .it.text .tx').textContent(), 'Bonjour Orbe !');
+      assert.equal(list[1].text, 'Bonjour Orbx !');
+      assert.equal(await page.locator('#world .it.text .tx').textContent(), 'Bonjour Orbx !');
     });
 
     await t.verifier('⌥-glisser duplique, les originaux restent en place', async () => {

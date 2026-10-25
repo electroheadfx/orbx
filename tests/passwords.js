@@ -1,6 +1,6 @@
 // Gestionnaire de mots de passe : tests de bout en bout, sans réseau.
 // Appelé par tests/selftest.js, ou seul :
-//   ORBE_SCENARIO=tests/passwords.js node scripts/dev.js --selftest
+//   ORBX_SCENARIO=tests/passwords.js node scripts/dev.js --selftest
 // Les mots de passe ci-dessous sont factices. Le trousseau du système n'est
 // jamais touché (main.js passe « use-mock-keychain » en test).
 const http = require('http');
@@ -21,10 +21,10 @@ EventTarget.prototype.addEventListener = function (t, f, o) { L('listen:' + t); 
 const qsa = Document.prototype.querySelectorAll;
 Document.prototype.querySelectorAll = function (s) { L('qsa:' + s); return qsa.call(this, s); };
 add.call(window, 'message', (e) => L('msg:' + JSON.stringify(e.data)));
-for (const t of ['input', 'change', 'orbe-pw', 'fill']) add.call(document, t, (e) => L('ev:' + t + ':' + (e.target && d.get.call(e.target))), true);
+for (const t of ['input', 'change', 'orbx-pw', 'fill']) add.call(document, t, (e) => L('ev:' + t + ':' + (e.target && d.get.call(e.target))), true);
 window.__probe = () => ({
-  keys: Object.getOwnPropertyNames(window).filter((k) => /orbe|electron|ipc|^require$|^process$|^module$/i.test(k)),
-  req: typeof require, proc: typeof process, orbe: typeof window.orbe,
+  keys: Object.getOwnPropertyNames(window).filter((k) => /orbx|electron|ipc|^require$|^process$|^module$/i.test(k)),
+  req: typeof require, proc: typeof process, orbx: typeof window.orbx,
 });
 </script>`;
 
@@ -58,7 +58,7 @@ function serve() {
 }
 
 module.exports = async function passwordTests(ctx) {
-  const { first: w, OrbeWindow, store, win, passwords } = ctx;
+  const { first: w, OrbxWindow, store, win, passwords } = ctx;
   const standalone = !ctx.check;
   let failed = 0;
   let total = 0;
@@ -67,7 +67,7 @@ module.exports = async function passwordTests(ctx) {
     if (!ok) failed += 1;
     console.log(`${ok ? '  ✓' : '  ✗'} ${name}${ok || !detail ? '' : ' — ' + detail}`);
   });
-  if (standalone) console.log('\nOrbe — mots de passe\n');
+  if (standalone) console.log('\nOrbx — mots de passe\n');
 
   const server = await serve();
   const port = server.address().port;
@@ -183,9 +183,9 @@ module.exports = async function passwordTests(ctx) {
   const raw = fs.readFileSync(file);
   const text = raw.toString('latin1');
   const leaks = [P1, 'alice', '127.0.0.1', Buffer.from(P1).toString('base64'), Buffer.from('alice').toString('base64')].filter((s) => text.includes(s));
-  check('coffre : fichier à part, sans mot de passe, identifiant ni site en clair', file.endsWith('passwords.json') && !leaks.length && JSON.parse(raw.toString('utf8')).orbe === 'passwords', String(leaks.length));
+  check('coffre : fichier à part, sans mot de passe, identifiant ni site en clair', file.endsWith('passwords.json') && !leaks.length && JSON.parse(raw.toString('utf8')).orbx === 'passwords', String(leaks.length));
   store.flush();
-  check('coffre : rien dans orbe.json', !fs.readFileSync(store.file, 'utf8').includes(P1));
+  check('coffre : rien dans orbx.json', !fs.readFileSync(store.file, 'utf8').includes(P1));
   if (process.platform !== 'win32') check('coffre : fichier lisible par son seul propriétaire', (fs.statSync(file).mode & 0o077) === 0);
 
   // --- Même compte, mot de passe changé, « jamais » ---------------------------
@@ -241,12 +241,12 @@ module.exports = async function passwordTests(ctx) {
   const pickerText = await ov().picker.webContents.executeJavaScript('document.documentElement.innerHTML');
   check('la liste ne contient aucun mot de passe', !pickerText.includes(P1) && !pickerText.includes(P2));
   const before = await js(wc, 'JSON.stringify({ log: window.__log, html: document.documentElement.outerHTML, probe: window.__probe() })');
-  check('avant le choix, la page ne peut rien apprendre (ni comptes, ni mots de passe, ni pont vers Orbe)',
+  check('avant le choix, la page ne peut rien apprendre (ni comptes, ni mots de passe, ni pont vers Orbx)',
     !before.includes(P1) && !before.includes(P2) && !before.includes('alice') && !/\bbob\b/.test(before)
-    && JSON.parse(before).probe.keys.length === 0 && JSON.parse(before).probe.req === 'undefined' && JSON.parse(before).probe.orbe === 'undefined');
-  await js(wc, 'window.postMessage({ type: "fill" }, "*"); window.postMessage({ channel: "orbe-pw", type: "focus" }, "*"); document.dispatchEvent(new CustomEvent("orbe-pw", { detail: { type: "fill" } })); 1');
+    && JSON.parse(before).probe.keys.length === 0 && JSON.parse(before).probe.req === 'undefined' && JSON.parse(before).probe.orbx === 'undefined');
+  await js(wc, 'window.postMessage({ type: "fill" }, "*"); window.postMessage({ channel: "orbx-pw", type: "focus" }, "*"); document.dispatchEvent(new CustomEvent("orbx-pw", { detail: { type: "fill" } })); 1');
   // Choix au clavier : ↓ jusqu'au compte voulu, puis Entrée (touches de confiance,
-  // relayées par Orbe ; la page ne les reçoit pas).
+  // relayées par Orbx ; la page ne les reçoit pas).
   const aliceKeyId = entries().find((e) => e.username === 'alice').id;
   const key = (keyCode) => { for (const type of ['keyDown', 'keyUp']) wc.sendInputEvent({ type, keyCode }); };
   const designated = () => ov().picker.webContents.executeJavaScript('(document.querySelector("#pick .acc.key-sel") || { dataset: {} }).dataset.id || ""');
@@ -264,7 +264,7 @@ module.exports = async function passwordTests(ctx) {
   await click(wc, '#go'); // envoi du compte rempli, inchangé
   await until(() => wc.getURL() === A + '/done', 'formulaire envoyé');
   await sleep(400);
-  check('compte rempli par Orbe puis envoyé : aucune proposition', !pending(wc));
+  check('compte rempli par Orbx puis envoyé : aucune proposition', !pending(wc));
 
   // --- Autre origine, http contre https ---------------------------------------
   wcB.loadURL(B + '/login');
@@ -538,7 +538,7 @@ module.exports = async function passwordTests(ctx) {
 
   // --- Navigation privée -------------------------------------------------------
   const count = entries().length;
-  const inc = new OrbeWindow({ incognito: true });
+  const inc = new OrbxWindow({ incognito: true });
   const wcI = await open(A + '/login', inc);
   await type(wcI, '#user', 'alice');
   await click(wcI, '#user');
@@ -583,8 +583,8 @@ module.exports = async function passwordTests(ctx) {
   await mw.webContents.executeJavaScript("O.send('pw:export', { profile: 'default' })");
   await mw.webContents.executeJavaScript("O.send('pw:export', { profile: 'default' })");
   check('gestionnaire : l’export redemande toujours la confirmation d’identité (pas de délai de grâce)', afterReveal === calls0 && authCalls === calls0 + 2, JSON.stringify([calls0, afterReveal, authCalls]));
-  const fromShell = await w.ui.webContents.executeJavaScript(`Promise.all([orbe.send('pw:state', {}), orbe.send('pw:reveal', { id: ${JSON.stringify(aliceId)} }), orbe.send('pw:export', {})])`);
-  check('les autres vues d’Orbe ne peuvent ni lister ni afficher les mots de passe', fromShell.every((r) => r === undefined));
+  const fromShell = await w.ui.webContents.executeJavaScript(`Promise.all([orbx.send('pw:state', {}), orbx.send('pw:reveal', { id: ${JSON.stringify(aliceId)} }), orbx.send('pw:export', {})])`);
+  check('les autres vues d’Orbx ne peuvent ni lister ni afficher les mots de passe', fromShell.every((r) => r === undefined));
   const edited = await mw.webContents.executeJavaScript(`O.send('pw:save', { profile: 'default', id: ${JSON.stringify(aliceId)}, username: 'alice2', password: '' })`);
   check('gestionnaire : modifier l’identifiant garde le mot de passe', edited.entries.some((e) => e.username === 'alice2') && entries().find((e) => e.id === aliceId).password === P1);
   const afterDelete = await mw.webContents.executeJavaScript(`O.send('pw:delete', { profile: 'default', id: ${JSON.stringify(aliceId)} })`);
@@ -636,7 +636,7 @@ module.exports = async function passwordTests(ctx) {
   check('coffre : relu et déchiffré à l’identique', reopen() && strip(entries()) === snapshot && !fs.readFileSync(file, 'latin1').includes('pw-'));
   const good = fs.readFileSync(file);
   const goodBak = fs.existsSync(file + '.bak') ? fs.readFileSync(file + '.bak') : null;
-  fs.writeFileSync(file, '{"orbe":"passwords","version":1,"data":"AAAA"}');
+  fs.writeFileSync(file, '{"orbx":"passwords","version":1,"data":"AAAA"}');
   check('coffre : fichier abîmé, la copie de secours prend le relais', reopen() && entries().length > 0);
   fs.writeFileSync(file + '.bak', 'illisible');
   const opens = reopen();
@@ -645,6 +645,22 @@ module.exports = async function passwordTests(ctx) {
   fs.writeFileSync(file, good);
   if (goodBak) fs.writeFileSync(file + '.bak', goodBak); else fs.unlinkSync(file + '.bak');
   check('coffre : de nouveau lisible une fois le fichier rétabli', reopen() && strip(entries()) === snapshot);
+
+  // Marqueur hérité : un coffre écrit sous l'ancien nom reste lisible, et le
+  // prochain enregistrement réécrit le marqueur actuel (orbe → orbx).
+  const legacy = JSON.parse(fs.readFileSync(file, 'utf8'));
+  fs.writeFileSync(file, JSON.stringify({ orbe: legacy.orbx, version: legacy.version, data: legacy.data }));
+  check('coffre : un marqueur hérité reste lisible', reopen() && strip(entries()) === snapshot);
+  passwords.save('default', { origin: A, username: 'herite', password: 'pw-herite' });
+  const rewritten = JSON.parse(fs.readFileSync(file, 'utf8'));
+  const added = entries().find((e) => e.username === 'herite');
+  check('coffre : le prochain enregistrement réécrit le marqueur orbx', rewritten.orbx === 'passwords' && !Object.hasOwn(rewritten, 'orbe') && !!added);
+  // Retirer l'entrée ajoutée et restaurer le fichier de référence.
+  if (added) passwords.remove('default', added.id);
+  fs.writeFileSync(file, good);
+  if (goodBak) fs.writeFileSync(file + '.bak', goodBak);
+  else if (fs.existsSync(file + '.bak')) fs.unlinkSync(file + '.bak');
+  check('coffre : référence restaurée après le cas hérité', reopen() && strip(entries()) === snapshot);
 
   // Ménage : onglets fermés, réglages et crochets rétablis.
   for (const [owner, id] of opened) if (owner === w && w.data.tabs[id]) w.close(id, { silent: true });

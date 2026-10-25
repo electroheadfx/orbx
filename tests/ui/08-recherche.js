@@ -39,9 +39,9 @@ module.exports = {
     });
 
     await t.verifier('saisie au clavier : le compteur indique 1/3', async () => {
-      await barre.keyboard.type('orbe', { delay: 25 });
+      await barre.keyboard.type('orbx', { delay: 25 });
       await attendre('1/3');
-      assert.equal(await barre.inputValue('#find-input'), 'orbe');
+      assert.equal(await barre.inputValue('#find-input'), 'orbx');
     });
 
     await t.verifier('Entrée passe au résultat suivant, et revient au premier après le dernier', async () => {
@@ -122,7 +122,7 @@ module.exports = {
       const sel = await barre.evaluate(() => { const i = document.getElementById('find-input'); return [i.selectionStart, i.selectionEnd]; });
       assert.deepEqual(sel, [0, 5]);
       await attendre('1/1');
-      await barre.keyboard.type('orbe', { delay: 25 });
+      await barre.keyboard.type('orbx', { delay: 25 });
       await attendre('1/3');
     });
 

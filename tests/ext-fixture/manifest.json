@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Orbe — extension d'essai",
+  "name": "Orbx — extension d'essai",
   "version": "1.0.0",
-  "description": "Exerce la couche d'API chrome.* d'Orbe (tests/ext-api.js).",
+  "description": "Exerce la couche d'API chrome.* d'Orbx (tests/ext-api.js).",
   "permissions": ["storage", "tabs", "cookies", "scripting", "fontSettings", "webNavigation", "alarms", "sidePanel", "debugger", "tabGroups", "identity", "downloads"],
   "optional_permissions": ["contextMenus"],
   "host_permissions": ["http://127.0.0.1/*"],
@@ -12,7 +12,7 @@
   "options_page": "options.html",
   "commands": {
     "essai": { "description": "Commande d'essai", "suggested_key": { "default": "Alt+Shift+Y" } },
-    "prise": { "description": "Raccourci déjà pris par Orbe", "suggested_key": { "default": "Ctrl+T" } },
+    "prise": { "description": "Raccourci déjà pris par Orbx", "suggested_key": { "default": "Ctrl+T" } },
     "_execute_action": { "suggested_key": { "default": "Alt+Shift+U" } }
   },
   "content_scripts": [{ "matches": ["http://127.0.0.1/*"], "js": ["content.js"], "run_at": "document_start" }]

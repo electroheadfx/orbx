@@ -33,7 +33,7 @@ const name = (cn) => seq(set(seq(oid('2.5.4.3'), der(0x0c, Buffer.from(cn)))));
 
 // Renvoie { key, cert } au format PEM, prêts pour https.createServer.
 // `notBefore` / `notAfter` permettent de fabriquer un certificat expiré.
-function selfSigned({ cn = 'Orbe (test)', dns = ['localhost'], ips = ['127.0.0.1'], notBefore = new Date(Date.now() - 864e5), notAfter = new Date(Date.now() + 30 * 864e5) } = {}) {
+function selfSigned({ cn = 'Orbx (test)', dns = ['localhost'], ips = ['127.0.0.1'], notBefore = new Date(Date.now() - 864e5), notAfter = new Date(Date.now() + 30 * 864e5) } = {}) {
   const { publicKey, privateKey } = crypto.generateKeyPairSync('ec', { namedCurve: 'prime256v1' });
   const algorithm = seq(oid('1.2.840.10045.4.3.2')); // ecdsa-with-SHA256
   const serial = crypto.randomBytes(8);

@@ -2,7 +2,7 @@
 // défaut, intensité, textures, apparence, thèmes et nuanciers prêts), application
 // immédiate à la barre, lisibilité du texte sur toutes les couleurs, fondu entre
 // deux Espaces, couleurs des vues flottantes.
-//   ORBE_DOC_SHOTS=<dossier> : enregistre aussi les captures du LISEZMOI.
+//   ORBX_DOC_SHOTS=<dossier> : enregistre aussi les captures du LISEZMOI.
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
@@ -76,7 +76,7 @@ module.exports = {
     const palette = async () => Theme.palette(await espace(), await ctx.principal(({ electron }) => electron.nativeTheme.shouldUseDarkColors));
 
     // Fond opaque pour lire les couleurs exactes (la translucidité a sa vérification).
-    await ctx.principal(({ store, win }) => { store.state.settings.translucent = false; win.OrbeWindow.pushAll(); });
+    await ctx.principal(({ store, win }) => { store.state.settings.translucent = false; win.OrbxWindow.pushAll(); });
     await ctx.ouvrir('/a', 'Page A');
     await ctx.ouvrir('/b', 'Page B');
     await ctx.ouvrir('/c', 'Page C');
@@ -255,10 +255,10 @@ module.exports = {
     await t.verifier('barre translucide (réglage) : le fond laisse passer le bureau ; réglage coupé, il est opaque', async () => {
       const alpha = () => shell.evaluate(() => { const cs = getComputedStyle(document.body); const m = (cs.backgroundImage !== 'none' ? cs.backgroundImage : cs.backgroundColor).match(/rgba?\([^)]+\)/g).map((c) => c.match(/[\d.]+/g).map(Number)); return m.map((c) => (c.length > 3 ? c[3] : 1)); });
       assert.ok((await alpha()).every((a) => a === 1), 'opaque quand le réglage est coupé');
-      await ctx.principal(({ store, win }) => { store.state.settings.translucent = true; win.OrbeWindow.pushAll(); });
+      await ctx.principal(({ store, win }) => { store.state.settings.translucent = true; win.OrbxWindow.pushAll(); });
       await jusqua(async () => (await alpha()).every((a) => a === 0.8), 'fond à 80 %');
       await lisible('barre translucide');
-      await ctx.principal(({ store, win }) => { store.state.settings.translucent = false; win.OrbeWindow.pushAll(); });
+      await ctx.principal(({ store, win }) => { store.state.settings.translucent = false; win.OrbxWindow.pushAll(); });
       await jusqua(async () => (await alpha()).every((a) => a === 1), 'fond opaque');
     });
 
@@ -342,7 +342,7 @@ module.exports = {
     });
 
     // --- Captures du LISEZMOI (profil d'essai, pages locales) ---------------------
-    const dossier = process.env.ORBE_DOC_SHOTS;
+    const dossier = process.env.ORBX_DOC_SHOTS;
     if (dossier) {
       fs.mkdirSync(dossier, { recursive: true });
       const photo = (nom) => ctx.principal(async ({ w }, a) => {

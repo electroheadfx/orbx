@@ -1,7 +1,7 @@
 // Sensations : fichiers récents au survol de l'icône de la Bibliothèque, sortes
 // montrées (clic droit), captures rangées dans la Bibliothèque…
 // Appelé par tests/selftest.js, ou seul :
-//   ORBE_SCENARIO=tests/sensations.js node scripts/dev.js --selftest
+//   ORBX_SCENARIO=tests/sensations.js node scripts/dev.js --selftest
 // Rien n'est réellement glissé ni ouvert : ces gestes du système sont remplacés par des témoins.
 const fs = require('fs');
 const os = require('os');
@@ -24,7 +24,7 @@ module.exports = async function sensationsTests(ctx) {
   // === Fichiers récents (BIB-4, BIB-5) ===================================================
   {
     const saved = { downloads: store.state.downloads, peek: store.state.settings.libraryPeek, env: { ...library.env }, open: downloads.env.openPath };
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-recents-'));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-recents-'));
     const HOSTILE = '<img src=x onerror="window.pwned=1">.txt';
     const rec = (name, extra = {}) => {
       const file = path.join(dir, name.replace(/[<>"=/]/g, '_'));
@@ -33,14 +33,14 @@ module.exports = async function sensationsTests(ctx) {
     };
     const gone = rec('disparu.txt');
     fs.rmSync(gone.path);
-    const list = [rec(HOSTILE), rec('photo.png'), rec('Orbe 2026-10-09.png', { capture: true }), gone, { ...rec('encours.zip'), state: 'progressing' }, rec('a.pdf'), rec('b.pdf'), rec('c.pdf'), rec('d.pdf')];
+    const list = [rec(HOSTILE), rec('photo.png'), rec('Orbx 2026-10-09.png', { capture: true }), gone, { ...rec('encours.zip'), state: 'progressing' }, rec('a.pdf'), rec('b.pdf'), rec('c.pdf'), rec('d.pdf')];
     store.state.downloads = list;
     store.state.settings.libraryPeek = ['captures', 'downloads', 'media'];
     const lib = (name, a) => library.action(name, a, w.ui.webContents);
 
     const rows = await lib('lib:recent');
     check('fichiers récents : les cinq derniers encore sur le disque, du plus récent au plus ancien ; ni fichier disparu, ni téléchargement en cours',
-      rows.length === 5 && rows.map((r) => r.name).join('|') === [HOSTILE, 'photo.png', 'Orbe 2026-10-09.png', 'a.pdf', 'b.pdf'].join('|'), JSON.stringify(rows.map((r) => r.name)));
+      rows.length === 5 && rows.map((r) => r.name).join('|') === [HOSTILE, 'photo.png', 'Orbx 2026-10-09.png', 'a.pdf', 'b.pdf'].join('|'), JSON.stringify(rows.map((r) => r.name)));
     check('fichiers récents : chaque fiche dit sa sorte (capture, média, téléchargement) ; aucun chemin ni adresse ne part vers la barre',
       rows.map((r) => r.kind).join() === 'downloads,media,captures,downloads,downloads' && rows.every((r) => Object.keys(r).sort().join() === 'at,danger,id,kind,name'), JSON.stringify(rows[0]));
 
@@ -83,21 +83,21 @@ module.exports = async function sensationsTests(ctx) {
     // (l'icône du fichier est demandée au système au moment où la fiche est montrée)
     await until(() => !!library.internals.icons.get(list[1].path) || library.internals.dragIcon(list[1].path), 'icône du fichier');
     const okDrag = await lib('lib:drag', rows[1].id);
-    check('glisser une fiche récente hors d’Orbe : le vrai fichier part, depuis la barre latérale', okDrag === true && dragged.join() === list[1].path, JSON.stringify(dragged));
+    check('glisser une fiche récente hors d’Orbx : le vrai fichier part, depuis la barre latérale', okDrag === true && dragged.join() === list[1].path, JSON.stringify(dragged));
     check('identifiant inconnu ou forgé : ni ouverture ni glisser', (await lib('lib:openFile', '../../etc/passwd')) === false && (await lib('lib:drag', { id: rows[0].id })) === false && opened.length === 1 && dragged.length === 1);
 
-    // Captures d'Orbe : elles rejoignent la Bibliothèque (sauf en navigation privée).
+    // Captures d'Orbx : elles rejoignent la Bibliothèque (sauf en navigation privée).
     library.env.captureDir = () => dir;
     const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
-    const kept = await new Promise((done) => library.keepCapture('Orbe essai.png', png, { done }));
+    const kept = await new Promise((done) => library.keepCapture('Orbx essai.png', png, { done }));
     const top = (await lib('lib:recent'))[0];
     check('capture enregistrée : le fichier est écrit et sa fiche prend la tête des récents, rangée parmi les captures',
-      !!kept && fs.existsSync(path.join(dir, 'Orbe essai.png')) && top.name === 'Orbe essai.png' && top.kind === 'captures' && store.state.downloads[0].capture === true, JSON.stringify(top));
+      !!kept && fs.existsSync(path.join(dir, 'Orbx essai.png')) && top.name === 'Orbx essai.png' && top.kind === 'captures' && store.state.downloads[0].capture === true, JSON.stringify(top));
     const before = store.state.downloads.length;
-    const priv = await new Promise((done) => library.keepCapture('Orbe privée.png', png, { incognito: true, done }));
-    check('capture en navigation privée : le fichier est écrit, aucune fiche n’est gardée', priv === null && fs.existsSync(path.join(dir, 'Orbe privée.png')) && store.state.downloads.length === before);
+    const priv = await new Promise((done) => library.keepCapture('Orbx privée.png', png, { incognito: true, done }));
+    check('capture en navigation privée : le fichier est écrit, aucune fiche n’est gardée', priv === null && fs.existsSync(path.join(dir, 'Orbx privée.png')) && store.state.downloads.length === before);
     const all = await lib('lib:get', {});
-    check('Bibliothèque → Médias : la capture y figure', all.media.some((r) => r.name === 'Orbe essai.png'));
+    check('Bibliothèque → Médias : la capture y figure', all.media.some((r) => r.name === 'Orbx essai.png'));
 
     await ui('libPeek.close(true)');
     Object.assign(library.env, saved.env);
@@ -160,11 +160,11 @@ module.exports = async function sensationsTests(ctx) {
     w.setTheme({ colors: ['#8a8f98'], intensity: 0.9, grain: 0, texture: 'grain', mode: 'light' });
     const read = () => ui('({ dim: getComputedStyle(document.body).getPropertyValue("--dim").trim(), bg: getComputedStyle(document.body).getPropertyValue("--bg").trim(), paint: getComputedStyle(document.body).getPropertyValue("--paint").trim() })');
     store.state.settings.translucent = true;
-    ctx.OrbeWindow.pushAll();
+    ctx.OrbxWindow.pushAll();
     const through = Theme.palette(w.space, dark, SHOW);
     await until(async () => { const r = await read(); return r.bg === through.stops[0] && r.dim === through.dim && /0\.8\)$/.test(r.paint); }, 'palette de la barre translucide');
     store.state.settings.translucent = false;
-    ctx.OrbeWindow.pushAll();
+    ctx.OrbxWindow.pushAll();
     const opaque = Theme.palette(w.space, dark);
     await until(async () => { const r = await read(); return r.bg === opaque.stops[0] && r.dim === opaque.dim && r.paint === opaque.stops[0]; }, 'palette de la barre opaque');
     check('la barre latérale prend la palette calculée pour son fond : translucide (80 %) ou opaque, selon le réglage', true);
@@ -172,7 +172,7 @@ module.exports = async function sensationsTests(ctx) {
     store.state.settings.translucent = translucent0;
     w.setTheme(theme0.plain ? { colors: [] } : theme0);
     if (theme0.plain) w.setTheme({ intensity: theme0.intensity, grain: theme0.grain, texture: theme0.texture, mode: theme0.mode });
-    ctx.OrbeWindow.pushAll();
+    ctx.OrbxWindow.pushAll();
   }
 
   // === Accueil : musique et vague du logo (SON-3, IMP-2, ANI-28) ============================
@@ -226,7 +226,7 @@ module.exports = async function sensationsTests(ctx) {
   // === Médias des dossiers de l'utilisateur (BIB-7) =========================================
   {
     const saved = { env: { ...library.env }, open: downloads.env.openPath, reveal: downloads.env.reveal, downloads: store.state.downloads };
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-medias-'));
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-medias-'));
     const desk = path.join(root, 'Bureau');
     const outside = path.join(root, 'ailleurs');
     fs.mkdirSync(desk); fs.mkdirSync(outside); fs.mkdirSync(path.join(desk, 'sous-dossier'));
@@ -244,11 +244,11 @@ module.exports = async function sensationsTests(ctx) {
     const mediaTab = w.openInternal('library.html#media');
     const fenetres = require('../src/main/window');
     const mediaWc = () => { const rt = fenetres.live.get(mediaTab.id); return rt ? rt.wc : null; };
-    await until(() => mediaWc() && mediaWc().getURL().startsWith('orbe://app/library.html') && !mediaWc().isLoading(), 'page Bibliothèque ouverte');
+    await until(() => mediaWc() && mediaWc().getURL().startsWith('orbx://app/library.html') && !mediaWc().isLoading(), 'page Bibliothèque ouverte');
     const lib = (name, a) => library.action(name, a, mediaWc());
     const other = (name, a) => library.action(name, a, w.ui.webContents);
     await lib('lib:get', {});
-    await lib('lib:get', { from: 'orbe' });
+    await lib('lib:get', { from: 'orbx' });
     await lib('lib:get', { from: '../../etc' });
     check('médias : sans choix d’un dossier (ou avec un choix inconnu), aucun dossier de l’utilisateur n’est lu', asked.length === 0, asked.join());
     const refused = await other('lib:get', { from: 'desktop' });
@@ -267,7 +267,7 @@ module.exports = async function sensationsTests(ctx) {
     const okOpen = await lib('lib:openFile', film.id);
     const okReveal = await lib('lib:reveal', film.id);
     const okDrag = await lib('lib:drag', film.id);
-    check('fichier d’un dossier : ouvrir, afficher dans le Finder, glisser hors d’Orbe', okOpen === true && okReveal === true && okDrag === true && [opened[0], revealed[0], dragged[0]].every((f) => f === path.join(desk, 'film.mp4')), JSON.stringify([okOpen, okReveal, okDrag, opened, revealed, dragged]));
+    check('fichier d’un dossier : ouvrir, afficher dans le Finder, glisser hors d’Orbx', okOpen === true && okReveal === true && okDrag === true && [opened[0], revealed[0], dragged[0]].every((f) => f === path.join(desk, 'film.mp4')), JSON.stringify([okOpen, okReveal, okDrag, opened, revealed, dragged]));
     // Le fichier est remplacé par un lien vers ailleurs : plus rien ne s'ouvre.
     let swapped = false;
     if (linked) { fs.rmSync(path.join(desk, 'film.mp4')); fs.symlinkSync(secret, path.join(desk, 'film.mp4')); swapped = (await lib('lib:openFile', film.id)) === false && (await lib('lib:drag', film.id)) === false; }

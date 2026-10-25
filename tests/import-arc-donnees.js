@@ -1,6 +1,6 @@
 // Reprise de l'historique, des mots de passe et des cookies d'Arc (src/main/import-arc-data.js).
 // Appelé par tests/selftest.js, ou seul :
-//   ORBE_SCENARIO=tests/import-arc-donnees.js node scripts/dev.js --selftest
+//   ORBX_SCENARIO=tests/import-arc-donnees.js node scripts/dev.js --selftest
 // Les profils d'Arc sont fabriqués dans un dossier temporaire, chiffrés avec une clé d'essai :
 // ni le vrai dossier d'Arc ni le trousseau de la machine ne sont jamais lus.
 const crypto = require('crypto');
@@ -40,7 +40,7 @@ module.exports = async function arcDonneesTests(ctx) {
   };
   const chrome = (ms) => String(Math.round((ms + 11644473600000) * 1000));
   const q = (s) => "'" + String(s).replace(/'/g, "''") + "'";
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-arc-essai-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-arc-essai-'));
   const tmp = path.join(root, 'tmp');
   fs.mkdirSync(tmp);
   const now = Date.now();
@@ -83,13 +83,13 @@ module.exports = async function arcDonneesTests(ctx) {
   check('faux dossier d’Arc : trois profils reconnus (« Default », « Profile N »), les autres dossiers ignorés ; le décompte ne demande pas la clé',
     data.profiles().map((p) => p.key).join() === 'default,Profile 3,Profile 9' && n.profiles === 3 && n.history === 5 && n.logins === 5 && n.cookies === 8 && demandes === 0, JSON.stringify(n));
 
-  // Profil d'Orbe né du « Profile 3 » d'Arc ; « Profile 9 » n'en a pas.
+  // Profil d'Orbx né du « Profile 3 » d'Arc ; « Profile 9 » n'en a pas.
   const pro = { id: 'arc-essai-pro', name: 'Pro (essai)', arcKey: 'Profile 3' };
   store.state.profiles.push(pro);
   store.state.favs[pro.id] = [];
   const targets = new Map([['default', { pid: 'default', session: sessions.profileSession('default') }], ['Profile 3', { pid: pro.id, session: sessions.profileSession(pro.id) }]]);
   const sinks = { history: (list) => store.mergeHistory(list), logins: (pid, list) => passwords.importList(pid, list) };
-  store.state.history['https://exemple.org/connue'] = { url: 'https://exemple.org/connue', visits: 9, last: now - 86400e3, title: 'Titre d’Orbe' };
+  store.state.history['https://exemple.org/connue'] = { url: 'https://exemple.org/connue', visits: 9, last: now - 86400e3, title: 'Titre d’Orbx' };
   const total = () => Object.keys(store.state.history).length;
   const h0 = total();
 
@@ -103,7 +103,7 @@ module.exports = async function arcDonneesTests(ctx) {
     !!h['https://exemple.org/lu'] && h['https://exemple.org/lu'].visits === 7 && Math.abs(h['https://exemple.org/lu'].last - (now - 3600e3)) < 2 && !h['https://exemple.org/cachee'] && !h['chrome://settings/'] && !!h['https://travail.exemple.org/'], JSON.stringify(h['https://exemple.org/lu']));
   check('… une adresse déjà connue garde le plus grand nombre de visites, et prend la date et le titre les plus récents',
     h['https://exemple.org/connue'].visits === 9 && h['https://exemple.org/connue'].title === 'Titre d’Arc' && Math.abs(h['https://exemple.org/connue'].last - (now - 30e3)) < 2);
-  check('… le profil d’Arc sans profil d’Orbe n’est pas repris', !h['https://sans-profil.exemple.org/'] && r.profiles === 2);
+  check('… le profil d’Arc sans profil d’Orbx n’est pas repris', !h['https://sans-profil.exemple.org/'] && r.profiles === 2);
 
   // --- « L'historique seulement » : la clé n'est même pas demandée ---------------------------
   demandes = 0;
@@ -142,7 +142,7 @@ module.exports = async function arcDonneesTests(ctx) {
     un('session').httpOnly === true && un('session').secure === true && un('__Host-id').sameSite === 'strict' && un('__Host-id').hostOnly === true && Math.abs(un('session').expirationDate - (now + 86400e3) / 1000) < 5 && un('ephemere').session === true, JSON.stringify(lus));
   check('… expiré, cloisonné par site, déplacé d’un autre site (empreinte d’hôte fausse), illisible : aucun n’entre',
     !/perime|cloisonne|deplace|abime/.test(surCompte) && r.skipped >= 5, surCompte + ' ' + r.skipped);
-  check('… chaque profil d’Arc dans son profil d’Orbe, sans mélange',
+  check('… chaque profil d’Arc dans son profil d’Orbx, sans mélange',
     (await cookiesDe(sessions.profileSession(pro.id), 'https://travail.exemple.org/')) === 'pro=connexion-pro' && !/pro=/.test(await cookiesDe(sesDefaut, 'https://travail.exemple.org/')) && !/session=|__Host/.test(await cookiesDe(sessions.profileSession(pro.id), 'https://compte.exemple.org/')),
     (await cookiesDe(sessions.profileSession(pro.id), 'https://travail.exemple.org/')) + ' | ' + (await cookiesDe(sesDefaut, 'https://travail.exemple.org/')));
   check('Arc n’est pas modifié (bases identiques à l’octet), et aucune copie temporaire ne reste', empreinte() === avant && fs.readdirSync(tmp).length === 0, fs.readdirSync(tmp).join());
@@ -181,7 +181,7 @@ module.exports = async function arcDonneesTests(ctx) {
     try {
       demandes = 0;
       await commands.run(w, 'importArcData');
-      check('commande : la fenêtre ne compte que les profils d’Arc qui ont un profil d’Orbe, annonce la demande de macOS et le risque de « Toujours autoriser » ; par défaut l’historique seul ; « Annuler » ne lit rien',
+      check('commande : la fenêtre ne compte que les profils d’Arc qui ont un profil d’Orbx, annonce la demande de macOS et le risque de « Toujours autoriser » ; par défaut l’historique seul ; « Annuler » ne lit rien',
         vues.length === 1 && /2 profils/.test(vues[0].detail) && /5 mots de passe/.test(vues[0].detail) && /8 cookies/.test(vues[0].detail) && /security/.test(vues[0].detail) && /Toujours autoriser/.test(vues[0].detail) && vues[0].buttons.length === 3 && vues[0].defaultId === 1 && vues[0].cancelId === 2 && demandes === 0, JSON.stringify(vues[0] && vues[0].detail));
       vues.length = 0; reponse = 1;
       await commands.run(w, 'importArcData');

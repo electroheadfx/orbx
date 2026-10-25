@@ -1,6 +1,6 @@
 // Barre latérale : sélection multiple et pile d'annulation, sans réseau.
 // Appelé par tests/selftest.js, ou seul :
-//   ORBE_SCENARIO=tests/barre.js node scripts/dev.js --selftest
+//   ORBX_SCENARIO=tests/barre.js node scripts/dev.js --selftest
 // Les onglets sont créés dans un Espace à part (jamais chargés : seules les
 // données comptent ici) ; les messages passent par `handle`, la porte
 // qu'emprunte la barre latérale, pour vérifier aussi le contrôle des arguments.
@@ -42,7 +42,7 @@ module.exports = async function barreTests(ctx) {
     }
     const kept = new Set(d.spaces.flatMap((sp) => w.orderedIds(sp)));
     for (const list of Object.values(d.favs)) for (const id of list.filter((x) => mine(x) && !kept.has(x))) list.splice(list.indexOf(id), 1);
-    for (const id of Object.keys(d.tabs)) if (mine(id) && !kept.has(id)) { win.OrbeWindow.destroyView(id); delete d.tabs[id]; }
+    for (const id of Object.keys(d.tabs)) if (mine(id) && !kept.has(id)) { win.OrbxWindow.destroyView(id); delete d.tabs[id]; }
     store.state.archive = store.state.archive.filter((x) => !x.url.startsWith(url('')));
     w.closed.length = 0;
     w.undoStack.length = 0;

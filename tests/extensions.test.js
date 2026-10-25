@@ -126,7 +126,7 @@ function extensionZip(manifest = MANIFEST, more = []) {
 
 const tmpDirs = [];
 function tmp() {
-  const d = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-ext-test-'));
+  const d = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-ext-test-'));
   tmpDirs.push(d);
   return d;
 }

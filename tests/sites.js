@@ -1,14 +1,14 @@
 // Essai sur de vrais sites (demande Internet) : chargement, titre, icône,
-// temps de chargement. Sert à repérer les sites qui refusent Orbe.
-//   ORBE_SCENARIO=tests/sites.js node scripts/dev.js --selftest
+// temps de chargement. Sert à repérer les sites qui refusent Orbx.
+//   ORBX_SCENARIO=tests/sites.js node scripts/dev.js --selftest
 const fs = require('fs');
 const path = require('path');
 
 const SITES = [
   'https://fr.wikipedia.org/wiki/Dakar',
   'https://www.youtube.com/',
-  'https://www.google.com/search?q=orbe+navigateur',
-  'https://github.com/amadoubaui/orbe',
+  'https://www.google.com/search?q=orbx+navigateur',
+  'https://github.com/electroheadfx/orbx',
   'https://www.lemonde.fr/',
   'https://web.whatsapp.com/',
   'https://www.figma.com/',
@@ -18,8 +18,8 @@ const SITES = [
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 module.exports = async function sites({ first: w, win }) {
-  const shots = process.env.ORBE_SHOTS;
-  console.log('\nOrbe — essai sur des sites réels\n');
+  const shots = process.env.ORBX_SHOTS;
+  console.log('\nOrbx — essai sur des sites réels\n');
   let failed = 0;
   for (const url of SITES) {
     const t0 = Date.now();

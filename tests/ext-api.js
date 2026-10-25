@@ -1,7 +1,7 @@
 // Couche d'API chrome.* (src/main/ext-api.js, src/preload/ext.js) : essai de
 // bout en bout dans le vrai navigateur, sans réseau, avec l'extension
 // tests/ext-fixture et un petit serveur local.
-//   npm run test:ext      (ou : ORBE_SCENARIO=tests/ext-api.js node scripts/dev.js --selftest)
+//   npm run test:ext      (ou : ORBX_SCENARIO=tests/ext-api.js node scripts/dev.js --selftest)
 const http = require('http');
 const path = require('path');
 const { BrowserWindow } = require('electron');
@@ -23,7 +23,7 @@ function serve() {
   return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve(server)));
 }
 
-module.exports = async function extApiTest({ first: w, OrbeWindow, win, extApi, extHost }) {
+module.exports = async function extApiTest({ first: w, OrbxWindow, win, extApi, extHost }) {
   const results = [];
   let failed = 0;
   const check = (name, ok, detail = '') => {
@@ -34,7 +34,7 @@ module.exports = async function extApiTest({ first: w, OrbeWindow, win, extApi, 
   // Une exception non rattrapée ferait apparaître une boîte d'erreur bloquante.
   const uncaught = [];
   process.on('uncaughtException', (err) => { uncaught.push(String((err && err.stack) || err)); });
-  console.log('\nOrbe — API des extensions\n');
+  console.log('\nOrbx — API des extensions\n');
 
   const server = await serve();
   const base = `http://127.0.0.1:${server.address().port}`;
@@ -54,7 +54,7 @@ module.exports = async function extApiTest({ first: w, OrbeWindow, win, extApi, 
   // Juste après le chargement de l'extension, Chromium peut ne pas avoir encore
   // transmis ses scripts de contenu au nouveau processus : on recharge alors la page.
   for (let i = 0; i < 4; i++) {
-    if (await until(() => rtA.wc.executeJavaScript('!!document.documentElement.dataset.orbeTab'), 'script de contenu', 1500).catch(() => false)) break;
+    if (await until(() => rtA.wc.executeJavaScript('!!document.documentElement.dataset.orbxTab'), 'script de contenu', 1500).catch(() => false)) break;
     rtA.wc.reload();
   }
   // Page d'extension pilotée par le test : ni onglet, ni fenêtre surgissante.
@@ -96,15 +96,15 @@ module.exports = async function extApiTest({ first: w, OrbeWindow, win, extApi, 
 
   // tabs
   let tabs = await call('tabs.query', {});
-  check('tabs.query liste les onglets d’Orbe, avec l’identifiant du webContents', tabs.length === 1 && tabs[0].id === rtA.wc.id && tabs[0].url === base + '/a' && tabs[0].title === 'Page a' && tabs[0].windowId === w.win.id, tabs);
+  check('tabs.query liste les onglets d’Orbx, avec l’identifiant du webContents', tabs.length === 1 && tabs[0].id === rtA.wc.id && tabs[0].url === base + '/a' && tabs[0].title === 'Page a' && tabs[0].windowId === w.win.id, tabs);
   let active = await call('tabs.query', { active: true, currentWindow: true });
-  check('tabs.query({ active, currentWindow }) donne l’onglet actif d’Orbe', active.length === 1 && active[0].id === rtA.wc.id && active[0].active === true);
+  check('tabs.query({ active, currentWindow }) donne l’onglet actif d’Orbx', active.length === 1 && active[0].id === rtA.wc.id && active[0].active === true);
   check('l’identifiant d’onglet est celui qu’Electron attend (tabs.sendMessage natif)', await call('tabs.sendMessage', rtA.wc.id, 'titre') === 'Page a');
-  check('le script de contenu reçoit le même identifiant (sender.tab.id)', await until(() => rtA.wc.executeJavaScript('document.documentElement.dataset.orbeTab'), 'script de contenu') === String(rtA.wc.id));
+  check('le script de contenu reçoit le même identifiant (sender.tab.id)', await until(() => rtA.wc.executeJavaScript('document.documentElement.dataset.orbxTab'), 'script de contenu') === String(rtA.wc.id));
 
   const created = await call('tabs.create', { url: base + '/b' });
   const bId = Object.keys(w.data.tabs).find((id) => win.live.get(id) && win.live.get(id).wc.id === created.id);
-  check('tabs.create ouvre un onglet actif dans Orbe', !!bId && w.activeId === bId && created.active === true && created.windowId === w.win.id, created);
+  check('tabs.create ouvre un onglet actif dans Orbx', !!bId && w.activeId === bId && created.active === true && created.windowId === w.win.id, created);
   await until(() => w.data.tabs[bId].title === 'Page b', 'page b');
   await until(async () => (await events('tabs.onUpdated')).some((e) => e.args[0] === created.id && e.args[1].status === 'complete'), 'tabs.onUpdated');
   const upd = (await events('tabs.onUpdated')).filter((e) => e.args[0] === created.id);
@@ -122,7 +122,7 @@ module.exports = async function extApiTest({ first: w, OrbeWindow, win, extApi, 
   check('tabs.update({ url }) navigue', true);
   check('tabs.update sans identifiant vise l’onglet actif', (await call('tabs.update', { muted: true })).id === rtA.wc.id && rtA.wc.isAudioMuted());
   rtA.wc.setAudioMuted(false);
-  check('tabs.create refuse file: et les pages d’Orbe', await call('tabs.create', { url: 'file:///etc/hosts' }).then(() => false, () => true) && await call('tabs.create', { url: 'orbe://app/settings.html' }).then(() => false, () => true));
+  check('tabs.create refuse file: et les pages d’Orbx', await call('tabs.create', { url: 'file:///etc/hosts' }).then(() => false, () => true) && await call('tabs.create', { url: 'orbx://app/settings.html' }).then(() => false, () => true));
   await call('tabs.remove', [bg.id]);
   check('tabs.remove ferme l’onglet', (await call('tabs.query', {})).length === 2 && !Object.keys(w.data.tabs).some((id) => win.live.get(id) && win.live.get(id).wc.id === bg.id));
   await until(async () => (await events('tabs.onRemoved')).some((e) => e.args[0] === bg.id), 'tabs.onRemoved');
@@ -140,29 +140,29 @@ module.exports = async function extApiTest({ first: w, OrbeWindow, win, extApi, 
 
   // windows
   const cur = await call('windows.getCurrent', { populate: true });
-  check('windows.getCurrent décrit la fenêtre d’Orbe', cur.id === w.win.id && cur.type === 'normal' && cur.tabs.length === 2 && cur.width > 0, cur);
-  check('windows.getAll et getLastFocused', (await call('windows.getAll')).length === OrbeWindow.all.length && (await call('windows.getLastFocused')).id === w.win.id);
+  check('windows.getCurrent décrit la fenêtre d’Orbx', cur.id === w.win.id && cur.type === 'normal' && cur.tabs.length === 2 && cur.width > 0, cur);
+  check('windows.getAll et getLastFocused', (await call('windows.getAll')).length === OrbxWindow.all.length && (await call('windows.getLastFocused')).id === w.win.id);
 
   // cookies
-  await call('cookies.set', { url: base + '/', name: 'orbe', value: 'bonjour', expirationDate: Math.floor(Date.now() / 1000) + 3600 });
-  const cookie = await call('cookies.get', { url: base + '/', name: 'orbe' });
+  await call('cookies.set', { url: base + '/', name: 'orbx', value: 'bonjour', expirationDate: Math.floor(Date.now() / 1000) + 3600 });
+  const cookie = await call('cookies.get', { url: base + '/', name: 'orbx' });
   check('cookies.set puis cookies.get', cookie && cookie.value === 'bonjour' && cookie.domain === '127.0.0.1' && cookie.session === false, cookie);
-  check('le cookie est bien dans la session du profil', (await ses.cookies.get({ url: base + '/', name: 'orbe' })).length === 1);
-  check('cookies.getAll filtre par nom', (await call('cookies.getAll', { name: 'orbe' })).length === 1);
+  check('le cookie est bien dans la session du profil', (await ses.cookies.get({ url: base + '/', name: 'orbx' })).length === 1);
+  check('cookies.getAll filtre par nom', (await call('cookies.getAll', { name: 'orbx' })).length === 1);
   check('cookies.get refuse un site hors des autorisations', await call('cookies.get', { url: 'https://exemple.fr/', name: 'x' }).then(() => false, () => true));
   await ses.cookies.set({ url: 'https://exemple.fr/', name: 'secret', value: '1' });
   check('cookies.getAll ne rend que les sites autorisés', !(await call('cookies.getAll', {})).some((c) => c.name === 'secret'));
-  await call('cookies.remove', { url: base + '/', name: 'orbe' });
-  check('cookies.remove', await call('cookies.get', { url: base + '/', name: 'orbe' }) === null);
-  await until(async () => (await events('cookies.onChanged')).some((e) => e.args[0].removed && e.args[0].cookie.name === 'orbe'), 'cookies.onChanged');
+  await call('cookies.remove', { url: base + '/', name: 'orbx' });
+  check('cookies.remove', await call('cookies.get', { url: base + '/', name: 'orbx' }) === null);
+  await until(async () => (await events('cookies.onChanged')).some((e) => e.args[0].removed && e.args[0].cookie.name === 'orbx'), 'cookies.onChanged');
   check('cookies.onChanged est émis, sans les cookies des autres sites', !(await events('cookies.onChanged')).some((e) => e.args[0].cookie.name === 'secret'));
 
   // contextMenus
   await call('contextMenus.create', { id: 'm1', title: 'Chercher « %s »', contexts: ['selection'] });
   await call('contextMenus.create', { id: 'm2', title: 'Sur la page', contexts: ['page'] });
   await call('contextMenus.create', { id: 'm3', title: 'Coché', type: 'checkbox', contexts: ['all'] });
-  let menu = extApi.contextMenuItems(rtA.wc, { pageURL: base + '/a', selectionText: 'orbe' });
-  check('contextMenus : éléments regroupés sous le nom de l’extension', menu.length === 1 && menu[0].label === ext.name && menu[0].submenu.map((m) => m.label).join('|') === 'Chercher « orbe »|Coché', menu);
+  let menu = extApi.contextMenuItems(rtA.wc, { pageURL: base + '/a', selectionText: 'orbx' });
+  check('contextMenus : éléments regroupés sous le nom de l’extension', menu.length === 1 && menu[0].label === ext.name && menu[0].submenu.map((m) => m.label).join('|') === 'Chercher « orbx »|Coché', menu);
   menu = extApi.contextMenuItems(rtA.wc, { pageURL: base + '/a' });
   check('contextMenus : le contexte choisit les éléments', menu[0].submenu.map((m) => m.label).join('|') === 'Sur la page|Coché');
   menu[0].submenu[1].click();
@@ -177,7 +177,7 @@ module.exports = async function extApiTest({ first: w, OrbeWindow, win, extApi, 
   w.popup = (t) => { tpl = t; };
   w.pageMenu(rtA, { pageURL: base + '/a', x: 5, y: 5 });
   w.popup = popupMenu;
-  check('le menu contextuel d’Orbe contient ceux de l’extension', !!tpl && tpl.some((i) => i.label === ext.name && i.submenu.length === 2));
+  check('le menu contextuel d’Orbx contient ceux de l’extension', !!tpl && tpl.some((i) => i.label === ext.name && i.submenu.length === 2));
   await call('contextMenus.removeAll');
   check('contextMenus.removeAll', extApi.contextMenuItems(rtA.wc, { pageURL: base + '/a' }).length === 0);
   check('permissions.remove retire l’API optionnelle', await call('permissions.remove', { permissions: ['contextMenus'] }) === true && await call('permissions.contains', { permissions: ['contextMenus'] }) === false);
@@ -190,18 +190,18 @@ module.exports = async function extApiTest({ first: w, OrbeWindow, win, extApi, 
   await call('action.setBadgeText', { text: '9', tabId: created.id });
   await call('action.setTitle', { title: 'Titre changé' });
   let info = extHost.actionsFor(w).find((x) => x.id === ext.id);
-  check('action : pastille, couleur et titre lus par Orbe', info && info.badgeText === '7' && info.badgeColor === 'rgba(255, 0, 0, 1.000)' && info.title === 'Titre changé' && info.popup === ext.url + 'popup.html' && info.enabled, info);
+  check('action : pastille, couleur et titre lus par Orbx', info && info.badgeText === '7' && info.badgeColor === 'rgba(255, 0, 0, 1.000)' && info.title === 'Titre changé' && info.popup === ext.url + 'popup.html' && info.enabled, info);
   check('action : valeur propre à un onglet', await call('action.getBadgeText', { tabId: created.id }) === '9' && await call('action.getBadgeText', {}) === '7' && extApi.actionInfo(ses, ext.id, created.id).badgeText === '9');
   check('action.getBadgeBackgroundColor rend [r, v, b, a]', (await call('action.getBadgeBackgroundColor', {})).join() === '255,0,0,255');
 
   const pop = extHost.openPopup(w, ext.id, { x: 240, y: 60 }, { keepOpen: true });
   check('openPopup ouvre une fenêtre sur la page de l’extension', pop instanceof BrowserWindow);
   const seen = await until(() => pop.webContents.executeJavaScript('window.activeTab'), 'onglet actif vu par la fenêtre surgissante');
-  check('la fenêtre surgissante trouve l’onglet actif d’Orbe', seen.id === rtA.wc.id && seen.url === base + '/a' && seen.title === 'Page a', seen);
+  check('la fenêtre surgissante trouve l’onglet actif d’Orbx', seen.id === rtA.wc.id && seen.url === base + '/a' && seen.title === 'Page a', seen);
   check('…et n’apparaît pas elle-même parmi les onglets', (await pop.webContents.executeJavaScript('call("tabs.query", {})')).every((t) => t.id !== pop.webContents.id) && await pop.webContents.executeJavaScript('call("tabs.getCurrent")') === undefined);
   await until(() => pop.getContentSize()[0] === 300 && pop.getContentSize()[1] === 180, 'taille de la fenêtre surgissante').then(() => check('elle prend la taille de son contenu (300 × 180)', true), () => check('elle prend la taille de son contenu (300 × 180)', false, pop.getContentSize().join('×')));
   const wb = w.win.getContentBounds();
-  check('elle est ancrée dans la fenêtre d’Orbe', pop.getBounds().x === wb.x + 240 && pop.getBounds().y === wb.y + 60 && pop.getParentWindow() === w.win, pop.getBounds());
+  check('elle est ancrée dans la fenêtre d’Orbx', pop.getBounds().x === wb.x + 240 && pop.getBounds().y === wb.y + 60 && pop.getParentWindow() === w.win, pop.getBounds());
   check('le service worker voit la même fenêtre courante pendant ce temps', (await call('tabs.query', { active: true, lastFocusedWindow: true }))[0].id === rtA.wc.id);
   extHost.closePopup(w);
   await until(() => pop.isDestroyed(), 'fermeture de la fenêtre surgissante');
@@ -212,16 +212,16 @@ module.exports = async function extApiTest({ first: w, OrbeWindow, win, extApi, 
   await until(async () => (await events('action.onClicked')).length === 1, 'action.onClicked');
   check('action.onClicked reçoit l’onglet actif', (await events('action.onClicked'))[0].args[0].id === rtA.wc.id);
 
-  // Fenêtre d'Orbe fermée alors que la fenêtre surgissante est ouverte.
+  // Fenêtre d'Orbx fermée alors que la fenêtre surgissante est ouverte.
   await call('action.setPopup', { popup: 'popup.html' });
-  const w2 = new OrbeWindow();
+  const w2 = new OrbxWindow();
   await until(() => w2.win.isVisible(), 'seconde fenêtre');
   const pop2 = extHost.openPopup(w2, ext.id, null, { keepOpen: true });
   await until(() => pop2.webContents.executeJavaScript('document.readyState === "complete"'), 'seconde fenêtre surgissante');
   w2.win.close();
-  await until(() => pop2.isDestroyed() && OrbeWindow.all.length === 1, 'fermeture de la seconde fenêtre');
+  await until(() => pop2.isDestroyed() && OrbxWindow.all.length === 1, 'fermeture de la seconde fenêtre');
   await sleep(300);
-  check('fermer la fenêtre d’Orbe ferme sa fenêtre surgissante, sans erreur', extHost.popups.size === 0 && uncaught.length === 0, uncaught.join(' | '));
+  check('fermer la fenêtre d’Orbx ferme sa fenêtre surgissante, sans erreur', extHost.popups.size === 0 && uncaught.length === 0, uncaught.join(' | '));
   await until(async () => (await call('windows.getAll')).length === 1, 'windows.getAll');
   w.win.focus();
 
@@ -242,7 +242,7 @@ module.exports = async function extApiTest({ first: w, OrbeWindow, win, extApi, 
   const pb = shown.view.getBounds();
   check('le panneau est posé à droite des pages, sous son en-tête', pb.x === r1.x + r1.width + panel.GAP && pb.x + pb.width === winW - panel.PAD && pb.y === r1.y + panel.HEADER && pb.y + pb.height === r1.y + r1.height, pb);
   const seenP = await until(() => shown.wc.executeJavaScript('window.activeTab'), 'onglet actif vu par le panneau');
-  check('la page du panneau trouve l’onglet actif d’Orbe, sans être elle-même un onglet', seenP.id === rtA.wc.id && seenP.url === base + '/a' && await shown.wc.executeJavaScript('call("tabs.getCurrent")') === undefined, seenP);
+  check('la page du panneau trouve l’onglet actif d’Orbx, sans être elle-même un onglet', seenP.id === rtA.wc.id && seenP.url === base + '/a' && await shown.wc.executeJavaScript('call("tabs.getCurrent")') === undefined, seenP);
   check('…et dialogue avec la page (tabs.sendMessage)', await shown.wc.executeJavaScript(`call("tabs.sendMessage", ${rtA.wc.id}, "titre")`) === 'Page a');
   await until(() => shown.wc.executeJavaScript('document.readyState === "complete" && Array.isArray(window.received)'), 'panneau chargé');
   await sw({ type: 'call', path: 'runtime.sendMessage', args: [{ type: 'diffusion', texte: 'bonjour' }] });
@@ -255,12 +255,12 @@ module.exports = async function extApiTest({ first: w, OrbeWindow, win, extApi, 
   await until(async () => (await events('sidePanel.onOpened')).length === 1, 'sidePanel.onOpened');
   check('sidePanel.onOpened est émis', (await events('sidePanel.onOpened'))[0].args[0].windowId === w.win.id);
 
-  // En-tête d'Orbe : nom, largeur réglable à la souris, fermeture.
+  // En-tête d'Orbx : nom, largeur réglable à la souris, fermeture.
   const head = panel.records.get(w).chrome;
   const headTitle = await until(() => head.webContents.executeJavaScript('document.getElementById("title").textContent'), 'en-tête du panneau');
-  check('l’en-tête d’Orbe nomme l’extension', headTitle === ext.name && head.getBounds().x === pb.x - panel.GAP && head.getBounds().y === r1.y, headTitle);
+  check('l’en-tête d’Orbx nomme l’extension', headTitle === ext.name && head.getBounds().x === pb.x - panel.GAP && head.getBounds().y === r1.y, headTitle);
   const cb = w.win.getContentBounds();
-  await head.webContents.executeJavaScript(`orbePanel.send('resize', { screenX: ${cb.x + cb.width - panel.PAD - 320} }); orbePanel.send('resizeEnd')`);
+  await head.webContents.executeJavaScript(`orbxPanel.send('resize', { screenX: ${cb.x + cb.width - panel.PAD - 320} }); orbxPanel.send('resizeEnd')`);
   await until(() => PW() === 320, 'largeur du panneau');
   check('tirer le bord gauche règle la largeur (320)', w.contentRect().width === r0.width - 328 && shown.view.getBounds().width === 320 && viewA().width === r0.width - 328, shown.view.getBounds());
   panel.setWidth(w, 40);
@@ -318,7 +318,7 @@ module.exports = async function extApiTest({ first: w, OrbeWindow, win, extApi, 
   check('sidePanel.close', !panel.shownIn(w) && w.contentRect().width === r0.width);
 
   // Une extension qui ne déclare pas ces autorisations n'obtient rien.
-  // Copiée dans le profil d'essai : Orbe en modifiera le manifeste (« activeTab »).
+  // Copiée dans le profil d'essai : Orbx en modifiera le manifeste (« activeTab »).
   const bareDir = path.join(require('electron').app.getPath('userData'), 'ext-fixture-sans');
   require('fs').cpSync(path.join(__dirname, 'ext-fixture-sans'), bareDir, { recursive: true });
   let bare = await ses.extensions.loadExtension(bareDir);
@@ -334,7 +334,7 @@ module.exports = async function extApiTest({ first: w, OrbeWindow, win, extApi, 
   const bareSw = (msg) => barePage.webContents.executeJavaScript(`chrome.runtime.sendMessage(${JSON.stringify(msg)})`);
   check('avant le clic, l’injection est refusée (aucun accès aux sites)', access.needed(ses, bare.id) && (await bareSw({ type: 'marquer', tabId: rtA.wc.id })).some((r) => /^refus/.test(r)) && await rtA.wc.executeJavaScript('document.documentElement.dataset.marque') === undefined, await bareSw({ type: 'resultats' }));
   asked.length = 0;
-  check('premier clic : Orbe demande l’accord de l’utilisateur', extHost.openPopup(w, bare.id) === true);
+  check('premier clic : Orbx demande l’accord de l’utilisateur', extHost.openPopup(w, bare.id) === true);
   await until(() => access.widened(bare.id) && ses.extensions.getExtension(bare.id) && !access.needed(ses, bare.id), 'accès accordé, extension rechargée');
   await until(() => rtA.wc.executeJavaScript('document.documentElement.dataset.marque === "oui"'), 'page marquée');
   const bareManifest = JSON.parse(require('fs').readFileSync(path.join(bareDir, 'manifest.json'), 'utf8'));
@@ -369,7 +369,7 @@ module.exports = async function extApiTest({ first: w, OrbeWindow, win, extApi, 
   check('debugger.onEvent relaie les événements du protocole', true);
   check('debugger.getTargets', (await call('debugger.getTargets')).some((t) => t.tabId === rtA.wc.id && t.attached === true && t.type === 'page'));
   check('un second attachement est refusé', await call('debugger.attach', target, '1.3').then(() => false, (e) => /already attached/.test(e.message)));
-  const denied = await Promise.all([['Target.getTargets', {}], ['Browser.getVersion', {}], ['Page.navigate', { url: 'file:///etc/hosts' }], ['Page.navigate', { url: 'orbe://app/settings.html' }]].map(([m, p]) => call('debugger.sendCommand', target, m, p).then(() => 'accepté', (e) => e.message)));
+  const denied = await Promise.all([['Target.getTargets', {}], ['Browser.getVersion', {}], ['Page.navigate', { url: 'file:///etc/hosts' }], ['Page.navigate', { url: 'orbx://app/settings.html' }]].map(([m, p]) => call('debugger.sendCommand', target, m, p).then(() => 'accepté', (e) => e.message)));
   check('les commandes qui sortent de l’onglet sont refusées', denied.every((m) => /refusée/.test(m)), denied);
   const protoErr = await call('debugger.sendCommand', target, 'Runtime.inexistante').then(() => '', (e) => e.message);
   check('une erreur du protocole revient à l’extension', protoErr.length > 0 && !/refusée/.test(protoErr), protoErr);
@@ -411,14 +411,14 @@ module.exports = async function extApiTest({ first: w, OrbeWindow, win, extApi, 
 
   // Raccourcis des commandes (chrome.commands).
   const keysOf = Object.fromEntries((await call('commands.getAll')).map((c) => [c.name, c.shortcut]));
-  check('commands : raccourci attribué, sauf s’il est pris par Orbe', keysOf.essai === (process.platform === 'darwin' ? '⌥⇧Y' : 'Alt+Shift+Y') && keysOf.prise === '' && keysOf._execute_action !== '', keysOf);
+  check('commands : raccourci attribué, sauf s’il est pris par Orbx', keysOf.essai === (process.platform === 'darwin' ? '⌥⇧Y' : 'Alt+Shift+Y') && keysOf.prise === '' && keysOf._execute_action !== '', keysOf);
   const press = (keyCode) => { for (const type of ['keyDown', 'keyUp']) rtA.wc.sendInputEvent({ type, keyCode, modifiers: ['alt', 'shift'] }); };
   press('Y');
   await until(async () => (await events('commands.onCommand')).length === 1, 'commands.onCommand');
   const cmd = (await events('commands.onCommand'))[0].args;
   check('le raccourci, frappé dans la page, émet commands.onCommand avec l’onglet', cmd[0] === 'essai' && cmd[1].id === rtA.wc.id, cmd);
   const primary = process.platform === 'darwin' ? { meta: true, control: false } : { meta: false, control: true };
-  check('un raccourci d’Orbe ne va jamais à une extension', extHost.more.onKey(w, { type: 'keyDown', code: 'KeyT', alt: false, shift: false, ...primary }) === false && (await events('commands.onCommand')).length === 1);
+  check('un raccourci d’Orbx ne va jamais à une extension', extHost.more.onKey(w, { type: 'keyDown', code: 'KeyT', alt: false, shift: false, ...primary }) === false && (await events('commands.onCommand')).length === 1);
   press('U');
   await until(() => extHost.popups.size === 1, '_execute_action');
   check('« _execute_action » agit comme un clic sur le bouton', true);
@@ -434,7 +434,7 @@ module.exports = async function extApiTest({ first: w, OrbeWindow, win, extApi, 
   const mac = process.platform === 'darwin';
   const listed = rows();
   check('réglages : chaque commande d’extension est listée, avec son raccourci en vigueur et celui que l’extension propose',
-    Object.keys(listed).sort().join() === '_execute_action,essai,prise' && listed.essai.keys === (mac ? '⌥⇧Y' : 'Alt+Shift+Y') && listed.essai.label === 'Orbe — extension d\'essai — Commande d\'essai' && listed.essai.name === keyName('essai')
+    Object.keys(listed).sort().join() === '_execute_action,essai,prise' && listed.essai.keys === (mac ? '⌥⇧Y' : 'Alt+Shift+Y') && listed.essai.label === 'Orbx — extension d\'essai — Commande d\'essai' && listed.essai.name === keyName('essai')
     && listed.prise.keys === '' && listed.prise.defaultKeys !== '' && !listed.essai.changed && /bouton/.test(listed._execute_action.label), listed);
   const mine = mac ? 'Ctrl+Alt+F9' : 'Ctrl+Alt+F9';
   const set1 = await panes.handle('shortcuts:assign', { name: keyName('essai'), accel: mine });
@@ -445,13 +445,13 @@ module.exports = async function extApiTest({ first: w, OrbeWindow, win, extApi, 
   for (const type of ['keyDown', 'keyUp']) rtA.wc.sendInputEvent({ type, keyCode: 'F9', modifiers: ['control', 'alt'] });
   await until(async () => (await events('commands.onCommand')).length === 2, 'commande par le nouveau raccourci');
   check('l’ancien raccourci ne fait plus rien, le nouveau émet commands.onCommand', stillOne && (await events('commands.onCommand'))[1].args[0] === 'essai');
-  const orbeKey = mac ? 'Cmd+T' : 'Ctrl+T';
-  const clash = await panes.handle('shortcuts:assign', { name: keyName('essai'), accel: orbeKey });
+  const orbxKey = mac ? 'Cmd+T' : 'Ctrl+T';
+  const clash = await panes.handle('shortcuts:assign', { name: keyName('essai'), accel: orbxKey });
   const odd = await panes.handle('shortcuts:assign', { name: keyName('essai'), accel: mac ? 'Cmd+Tab' : 'Alt+Tab' });
   const noMod = await panes.handle('shortcuts:assign', { name: keyName('essai'), accel: 'J' });
   const ghost = await panes.handle('shortcuts:assign', { name: keyName('inconnue'), accel: 'Ctrl+Alt+K' });
   const alien = await panes.handle('shortcuts:assign', { name: 'ext:' + 'a'.repeat(32) + '/essai', accel: 'Ctrl+Alt+K' });
-  check('raccourci d’Orbe, du système, sans touche de modification, commande ou extension inconnue : refusés, rien ne change',
+  check('raccourci d’Orbx, du système, sans touche de modification, commande ou extension inconnue : refusés, rien ne change',
     (clash.conflict === 'newTab' || clash.error === 'reserved') && !!odd.error && noMod.error === 'modifier' && ghost.error === 'unknown' && alien.error === 'unknown' && (await shortcutNow('essai')) === (mac ? '⌃⌥F9' : 'Ctrl+Alt+F9'), { clash, odd, noMod, ghost, alien });
   const dup = await panes.handle('shortcuts:assign', { name: keyName('prise'), accel: mine });
   check('raccourci déjà donné à une autre commande d’extension : la question est posée, en la nommant', dup.conflict === keyName('essai') && /essai/.test(dup.label) && (await shortcutNow('prise')) === '', dup);
@@ -468,7 +468,7 @@ module.exports = async function extApiTest({ first: w, OrbeWindow, win, extApi, 
 
   // Zoom, téléchargements, réglages d'entreprise, quota de captures.
   await call('tabs.setZoom', rtA.wc.id, 1.5);
-  check('tabs.setZoom et getZoom agissent sur l’onglet d’Orbe', Math.abs(rtA.wc.getZoomFactor() - 1.5) < 0.01 && Math.abs(await call('tabs.getZoom', rtA.wc.id) - 1.5) < 0.01 && Math.abs(await call('tabs.getZoom') - 1.5) < 0.01);
+  check('tabs.setZoom et getZoom agissent sur l’onglet d’Orbx', Math.abs(rtA.wc.getZoomFactor() - 1.5) < 0.01 && Math.abs(await call('tabs.getZoom', rtA.wc.id) - 1.5) < 0.01 && Math.abs(await call('tabs.getZoom') - 1.5) < 0.01);
   await call('tabs.setZoom', 0);
   check('tabs.setZoom(0) remet le zoom par défaut', Math.abs(rtA.wc.getZoomFactor() - 1) < 0.01);
   const dl = await call('downloads.download', { url: base + '/fichier.txt', filename: '../../essai.txt' });
@@ -476,24 +476,24 @@ module.exports = async function extApiTest({ first: w, OrbeWindow, win, extApi, 
   const got = (await call('downloads.search', { id: dl }))[0];
   check('downloads.download puis search : fichier dans le dossier des téléchargements, sous le nom demandé', got.state === 'complete' && path.dirname(got.filename) === require('electron').app.getPath('downloads') && path.basename(got.filename) === 'essai.txt' && require('fs').readFileSync(got.filename, 'utf8') === 'bonjour', got);
   // Le nom imposé par l'extension change le chemin après « will-download » : la liste
-  // d'Orbe, la marque « venu d'Internet » et la mise en garde suivent le vrai fichier.
+  // d'Orbx, la marque « venu d'Internet » et la mise en garde suivent le vrai fichier.
   {
     const fs = require('fs');
     const rec = store.state.downloads.find((x) => x.path === got.filename);
-    // (L'extension apprend la fin dès que le fichier est écrit ; Orbe ne l'annonce qu'une fois la marque posée.)
+    // (L'extension apprend la fin dès que le fichier est écrit ; Orbx ne l'annonce qu'une fois la marque posée.)
     await until(() => rec && rec.state === 'completed', 'téléchargement marqué puis annoncé');
     let marked = !!rec && rec.marked === true;
     if (marked && process.platform === 'darwin') { try { marked = /^0081;/.test(require('child_process').execFileSync('/usr/bin/xattr', ['-p', 'com.apple.quarantine', got.filename]).toString()); } catch { marked = false; } }
     if (marked && process.platform === 'win32') { try { marked = /ZoneId=3/.test(fs.readFileSync(got.filename + ':Zone.Identifier', 'utf8')); } catch { marked = false; } }
-    check('téléchargement d’une extension sous un nom imposé : la liste d’Orbe décrit le fichier réellement écrit, et c’est lui qui est marqué « venu d’Internet »',
+    check('téléchargement d’une extension sous un nom imposé : la liste d’Orbx décrit le fichier réellement écrit, et c’est lui qui est marqué « venu d’Internet »',
       !!rec && rec.name === 'essai.txt' && rec.state === 'completed' && marked, JSON.stringify(rec || store.state.downloads.slice(0, 2)));
-    const dl2 = await call('downloads.download', { url: base + '/fichier.txt', filename: 'sous/dossier/orbe-essai-outil.command' });
+    const dl2 = await call('downloads.download', { url: base + '/fichier.txt', filename: 'sous/dossier/orbx-essai-outil.command' });
     await until(async () => (await events('downloads.onChanged')).some((e) => e.args[0].id === dl2 && e.args[0].state.current === 'complete'), 'second téléchargement');
     const got2 = (await call('downloads.search', { id: dl2 }))[0];
     const rec2 = store.state.downloads.find((x) => x.path === got2.filename);
     await until(() => rec2 && rec2.state === 'completed', 'second téléchargement marqué puis annoncé');
     check('extension, fichier exécutable sous un nom imposé : signalé comme tel (confirmation avant ouverture), rangé à plat dans le dossier des téléchargements',
-      !!rec2 && rec2.danger === true && /^orbe-essai-outil( \(\d+\))?\.command$/.test(rec2.name) && path.dirname(got2.filename) === require('electron').app.getPath('downloads') && rec2.marked === true, JSON.stringify(rec2 || got2));
+      !!rec2 && rec2.danger === true && /^orbx-essai-outil( \(\d+\))?\.command$/.test(rec2.name) && path.dirname(got2.filename) === require('electron').app.getPath('downloads') && rec2.marked === true, JSON.stringify(rec2 || got2));
     try { fs.unlinkSync(got2.filename); } catch {}
     if (rec2) store.state.downloads.splice(store.state.downloads.indexOf(rec2), 1);
   }
@@ -527,14 +527,14 @@ module.exports = async function extApiTest({ first: w, OrbeWindow, win, extApi, 
   rtA.wc.reload();
   await until(() => call('tabs.sendMessage', rtA.wc.id, 'titre').then((v) => v === 'Page a'), 'page a rechargée');
   await sleep(300);
-  check('storage.sync fonctionne aussi dans un script de contenu, et partage la zone des pages', await call('tabs.sendMessage', rtA.wc.id, 'sync') === 7 && (await call('storage.sync.get', 'contenu')).contenu === 7 && !Object.keys(await call('storage.local.get', null)).some((k) => /contenu|__orbe/.test(k)));
+  check('storage.sync fonctionne aussi dans un script de contenu, et partage la zone des pages', await call('tabs.sendMessage', rtA.wc.id, 'sync') === 7 && (await call('storage.sync.get', 'contenu')).contenu === 7 && !Object.keys(await call('storage.local.get', null)).some((k) => /contenu|__orbx/.test(k)));
   await call('storage.sync.remove', 'vu');
   await call('storage.sync.clear');
   check('storage.sync.clear ne touche pas à storage.local', Object.keys(await call('storage.sync.get', null)).length === 0 && (await call('storage.local.get', 'ici')).ici === 1);
   await call('runtime.openOptionsPage');
   const optRt = await until(() => win.live.get(w.activeId) && win.live.get(w.activeId).wc.getURL() === ext.url + 'options.html' && win.live.get(w.activeId), 'page d’options');
   await until(() => optRt.wc.executeJavaScript('typeof window.call === "function"'), 'page d’options chargée');
-  check('runtime.openOptionsPage ouvre la page dans un onglet d’Orbe', (await optRt.wc.executeJavaScript('call("tabs.getCurrent")')).id === optRt.wc.id);
+  check('runtime.openOptionsPage ouvre la page dans un onglet d’Orbx', (await optRt.wc.executeJavaScript('call("tabs.getCurrent")')).id === optRt.wc.id);
   check('un site web ne reçoit aucune API ajoutée', await rtA.wc.executeJavaScript('typeof chrome === "undefined" || typeof chrome.permissions === "undefined"'));
 
   // Service worker endormi (Chromium l'arrête après 30 s d'inactivité) : un
@@ -553,7 +553,7 @@ module.exports = async function extApiTest({ first: w, OrbeWindow, win, extApi, 
   } else console.log('  – réveil du service worker non vérifié : il ne s’est pas arrêté');
 
   // --- Interface : bouton épinglé, menu du bouton, options, mise à jour, retrait (EXT-1, EXT-3, EXT-5) ---
-  // L'extension d'essai est aussi posée comme une extension installée par Orbe (dossier Extensions du profil).
+  // L'extension d'essai est aussi posée comme une extension installée par Orbx (dossier Extensions du profil).
   {
     const fs = require('fs');
     const { app, dialog } = require('electron');
@@ -567,7 +567,7 @@ module.exports = async function extApiTest({ first: w, OrbeWindow, win, extApi, 
     const button = () => ui(`!!document.querySelector('#exts [data-ext="${ext.id}"]')`);
     w.activate(a.id);
     const one = extUi.list()[0];
-    check('réglages : l’extension installée est décrite (options, bouton épinglé, fenêtre)', extUi.list().length === 1 && one.id === ext.id && one.options && one.pinned && one.popup && one.enabled && one.name === 'Orbe — extension d\'essai', one);
+    check('réglages : l’extension installée est décrite (options, bouton épinglé, fenêtre)', extUi.list().length === 1 && one.id === ext.id && one.options && one.pinned && one.popup && one.enabled && one.name === 'Orbx — extension d\'essai', one);
     await until(button, 'bouton de l’extension dans la barre latérale');
     extUi.setPinned(ext.id, false);
     await until(async () => !(await button()), 'bouton détaché');
@@ -584,8 +584,8 @@ module.exports = async function extApiTest({ first: w, OrbeWindow, win, extApi, 
     await ui(`document.querySelector('#exts [data-ext="${ext.id}"]').dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }))`);
     await until(() => menus.length === 1, 'menu contextuel du bouton');
     const labels = menus[0].filter((i) => i.type !== 'separator').map((i) => i.label);
-    check('clic droit sur le bouton : nom, Options, Détacher, Désactiver, « Retirer d’Orbe… », Gérer',
-      labels.join('|') === ['Orbe — extension d\'essai', 'Options', 'Détacher de la barre latérale', 'Désactiver', 'Retirer d’Orbe…', 'Gérer les extensions…'].join('|') && menus[0][0].enabled === false, labels.join('|'));
+    check('clic droit sur le bouton : nom, Options, Détacher, Désactiver, « Retirer d’Orbx… », Gérer',
+      labels.join('|') === ['Orbx — extension d\'essai', 'Options', 'Détacher de la barre latérale', 'Désactiver', 'Retirer d’Orbx…', 'Gérer les extensions…'].join('|') && menus[0][0].enabled === false, labels.join('|'));
     const item = (label) => menus[0].find((i) => i.label === label);
     const tabsBefore = Object.keys(w.data.tabs).length;
     item('Options').click();
@@ -670,7 +670,7 @@ module.exports = async function extApiTest({ first: w, OrbeWindow, win, extApi, 
       w.extCycle = null;
       check('⌘E avec les extensions installées : chacune à son tour, puis le tour se referme et recommence ; passé quelques secondes il repart du début',
         ids.includes(ext.id) && seen.join() === ids.join() && end === '' && restart === ids[0] && late === ids[0] && opened.join() === [...ids, ids[0], ids[0]].join(), JSON.stringify({ ids, seen, end, restart, late, opened }));
-      check('⌘E est une commande d’Orbe : au menu Extensions, modifiable dans Réglages → Raccourcis, libre de tout conflit',
+      check('⌘E est une commande d’Orbx : au menu Extensions, modifiable dans Réglages → Raccourcis, libre de tout conflit',
         !!cmd && cmd.accel === require('../src/main/platform').accel('Cmd+E') && require('../src/main/shortcuts').keysOf('cycleExtensions') !== ''
         && [...commands.byName.values()].filter((c) => c.accel === cmd.accel).length === 1);
       const priv = { win: w.win, incognito: true };
@@ -696,27 +696,27 @@ module.exports = async function extApiTest({ first: w, OrbeWindow, win, extApi, 
       const again = extHost.backgroundGone(bg(home), { reason: 'oom' });
       check('extension qui plante : seule la perte de sa page d’arrière-plan compte (pas un arrêt normal, pas une autre page)', ignored.every((x) => x === false) && stillOn && toasts.length === 1);
       check('… elle est désactivée, un message la nomme et mène aux réglages ; une seule fois',
-        done === true && again === false && !extensions.isEnabled(ext.id) && toasts[0].text.includes('Orbe — extension d\'essai') && typeof toasts[0].action === 'function');
+        done === true && again === false && !extensions.isEnabled(ext.id) && toasts[0].text.includes('Orbx — extension d\'essai') && typeof toasts[0].action === 'function');
       w.toast = realToast;
       extensions.setEnabled(ext.id, true);
       await extensions.syncAll();
       await until(() => extensions.isEnabled(ext.id), 'extension réactivée');
     }
 
-    // « Retirer d'Orbe… » : question, puis désinstallation.
+    // « Retirer d'Orbx… » : question, puis désinstallation.
     const realBox = dialog.showMessageBox;
     const boxes = [];
     dialog.showMessageBox = async (...args) => { boxes.push(args[args.length - 1]); return { response: boxes.length === 1 ? 1 : 0 }; };
     await require('../src/main/panes').handle('shortcuts:assign', { name: keyName('essai'), accel: 'Ctrl+Alt+F9' });
     extUi.setPinned(ext.id, false);
-    await item('Retirer d’Orbe…').click();
+    await item('Retirer d’Orbx…').click();
     await until(() => boxes.length === 1, 'question posée');
     await sleep(100);
     const kept = !!extensions.get(ext.id);
-    await item('Retirer d’Orbe…').click();
+    await item('Retirer d’Orbx…').click();
     await until(() => !extensions.get(ext.id), 'extension retirée');
-    check('« Retirer d’Orbe… » : la question nomme l’extension ; « Annuler » garde tout ; confirmé, elle est désinstallée, ses raccourcis et son réglage d’épingle oubliés',
-      boxes[0].message === 'Retirer l’extension « Orbe — extension d\'essai » ?' && boxes[0].cancelId === 1 && kept && extUi.list().length === 0 && !fs.existsSync(path.join(dirExt, ext.id))
+    check('« Retirer d’Orbx… » : la question nomme l’extension ; « Annuler » garde tout ; confirmé, elle est désinstallée, ses raccourcis et son réglage d’épingle oubliés',
+      boxes[0].message === 'Retirer l’extension « Orbx — extension d\'essai » ?' && boxes[0].cancelId === 1 && kept && extUi.list().length === 0 && !fs.existsSync(path.join(dirExt, ext.id))
       && Object.keys(store.state.settings.extShortcuts).length === 0 && store.state.settings.extHidden.length === 0, boxes[0]);
     dialog.showMessageBox = realBox;
     w.popup = realPopup;

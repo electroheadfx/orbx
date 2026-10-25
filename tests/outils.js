@@ -82,7 +82,7 @@ async function mesurer(sonde) {
 // Session verrouillée, dit par le système.
 function verrouillee() {
   // macOS : l'état de la session figure au registre du système (powerMonitor ne le
-  // voit pas quand Orbe est lancé hors de la session graphique, par un terminal distant).
+  // voit pas quand Orbx est lancé hors de la session graphique, par un terminal distant).
   if (process.platform === 'darwin') {
     try {
       const out = require('child_process').execFileSync('/usr/sbin/ioreg', ['-n', 'Root', '-d1'], { encoding: 'utf8', timeout: 5000 });

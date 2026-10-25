@@ -1,5 +1,5 @@
 // Sensations : fichiers récents au survol de l'icône de la Bibliothèque (vraie
-// souris : survol, clic, glisser hors d'Orbe, clic droit), mouvement et cadence
+// souris : survol, clic, glisser hors d'Orbx, clic droit), mouvement et cadence
 // du panneau, « Réduire les animations ».
 // Les gestes du système (ouverture d'un fichier, glisser réel, menu natif) sont
 // remplacés par des témoins dans le processus principal.
@@ -37,7 +37,7 @@ module.exports = {
     for (const n of ['hostile.txt', 'photo.png', 'capture.png', 'rapport.pdf']) fs.writeFileSync(path.join(dossier, n), 'contenu de ' + n);
     await ctx.principal(({ req, store }, a) => {
       const rec = (file, name, extra = {}) => ({ id: 'r-' + file, name, path: a.dir + '/' + file, url: 'https://fichiers.exemple.fr/' + file, total: 20, received: 20, state: 'completed', at: Date.now() - 3 * 60e3, profile: 'default', marked: true, ...extra });
-      store.state.downloads = [rec('hostile.txt', a.hostile), rec('photo.png', 'photo.png'), rec('capture.png', 'Orbe 2026-10-09.png', { capture: true, url: '' }), rec('rapport.pdf', 'rapport.pdf', { at: Date.now() - 26 * 3600e3 }), rec('absent.txt', 'absent.txt')];
+      store.state.downloads = [rec('hostile.txt', a.hostile), rec('photo.png', 'photo.png'), rec('capture.png', 'Orbx 2026-10-09.png', { capture: true, url: '' }), rec('rapport.pdf', 'rapport.pdf', { at: Date.now() - 26 * 3600e3 }), rec('absent.txt', 'absent.txt')];
       const downloads = req('downloads.js');
       const library = req('library.js');
       global.__recents = { ouverts: [], glisses: [], menus: [], choix: null };
@@ -71,7 +71,7 @@ module.exports = {
         const b = document.getElementById('bottom').getBoundingClientRect();
         return { noms: [...document.querySelectorAll('#lib-peek .lp-name')].map((e) => e.textContent), subs: [...document.querySelectorAll('#lib-peek .lp-sub')].map((e) => e.textContent), dedans: p.left >= s.left && p.right <= s.right && p.top >= 0, ecart: Math.round(b.top - p.bottom), tete: document.querySelector('#lib-peek .lp-head span').textContent };
       });
-      assert.deepEqual(vu.noms, [HOSTILE, 'photo.png', 'Orbe 2026-10-09.png', 'rapport.pdf'], 'fichier absent du disque : pas montré');
+      assert.deepEqual(vu.noms, [HOSTILE, 'photo.png', 'Orbx 2026-10-09.png', 'rapport.pdf'], 'fichier absent du disque : pas montré');
       assert.equal(vu.tete, 'Récents');
       assert.ok(vu.dedans, 'le panneau tient dans la barre latérale');
       assert.ok(vu.ecart >= 0 && vu.ecart <= 12, 'juste au-dessus de la rangée du bas : ' + vu.ecart);
@@ -122,7 +122,7 @@ module.exports = {
       await jusqua(async () => (await panneau.count()) === 0, 'panneau refermé');
     });
 
-    await t.verifier('glisser une fiche à la souris : le système reçoit le vrai fichier (glisser hors d’Orbe), la barre latérale ne déplace rien', async () => {
+    await t.verifier('glisser une fiche à la souris : le système reçoit le vrai fichier (glisser hors d’Orbx), la barre latérale ne déplace rien', async () => {
       await shell.mouse.move(700, 300);
       await survoler();
       await posee();
@@ -154,7 +154,7 @@ module.exports = {
       assert.equal(await panneau.count(), 0, 'le clic droit n’ouvre pas le panneau');
       await shell.mouse.move(700, 300);
       await survoler();
-      assert.deepEqual(await panneau.locator('.lp-name').allTextContents(), ['photo.png', 'Orbe 2026-10-09.png']);
+      assert.deepEqual(await panneau.locator('.lp-name').allTextContents(), ['photo.png', 'Orbx 2026-10-09.png']);
       await quitter();
       // Remis : les trois sortes.
       await icone.click({ button: 'right' });
@@ -197,7 +197,7 @@ module.exports = {
 
     await t.verifier('Bibliothèque : chaque section porte son icône, le libellé reste du texte, la rangée tient dans la page', async () => {
       await jusqua(() => lib.evaluate(() => document.querySelectorAll('.tabs [data-tab].on').length === 1), 'section choisie');
-      if (process.env.ORBE_UI_SHOTS) await ctx.capture('bibliotheque-icones', lib);
+      if (process.env.ORBX_UI_SHOTS) await ctx.capture('bibliotheque-icones', lib);
       const vu = await lib.evaluate(() => { const bs = [...document.querySelectorAll('.tabs [data-tab]')]; return { icones: bs.filter((b) => b.querySelector('svg.ti')).length, textes: bs.map((b) => b.textContent), hauts: [...new Set([...document.querySelectorAll('.tabs button')].map((b) => Math.round(b.getBoundingClientRect().top)))].length, large: document.documentElement.scrollWidth <= innerWidth }; });
       assert.equal(vu.icones, 7);
       assert.deepEqual(vu.textes, ['Historique', 'Archive', 'Téléchargements', 'Médias', 'Tableaux', 'Espaces', 'Boosts']);
@@ -251,14 +251,14 @@ module.exports = {
     }, bureau.split(path.sep).join('/'));
     const lus = () => ctx.principal(() => global.__medias.lus);
 
-    await t.verifier('Bibliothèque → Médias : « Afficher les médias de : » propose Orbe, Téléchargements, Bureau, Documents ; tant qu’on ne choisit rien, aucun dossier n’est lu', async () => {
+    await t.verifier('Bibliothèque → Médias : « Afficher les médias de : » propose Orbx, Téléchargements, Bureau, Documents ; tant qu’on ne choisit rien, aucun dossier n’est lu', async () => {
       await lib.locator('.tabs [data-tab="media"]').click();
       await jusqua(() => lib.locator('#f-from').isVisible(), 'filtre des médias');
-      assert.deepEqual(await lib.locator('#f-from option').allTextContents(), ['Orbe (téléchargements et captures)', 'Dossier Téléchargements', 'Bureau', 'Documents']);
-      assert.equal(await lib.locator('#f-from').inputValue(), 'orbe');
+      assert.deepEqual(await lib.locator('#f-from option').allTextContents(), ['Orbx (téléchargements et captures)', 'Dossier Téléchargements', 'Bureau', 'Documents']);
+      assert.equal(await lib.locator('#f-from').inputValue(), 'orbx');
       assert.equal(await lib.locator('#from-label').textContent(), 'Afficher les médias de :');
       assert.equal(await lib.locator('#f-how').isVisible(), false);
-      assert.deepEqual((await lib.locator('#list .line .name').allTextContents()).sort(), ['Orbe 2026-10-09.png', 'photo.png']);
+      assert.deepEqual((await lib.locator('#list .line .name').allTextContents()).sort(), ['Orbx 2026-10-09.png', 'photo.png']);
       assert.deepEqual(await lus(), []);
     });
 
@@ -275,10 +275,10 @@ module.exports = {
       assert.equal(path.basename((await temoin()).ouverts[avant]), 'vacances.jpg');
     });
 
-    await t.verifier('Bibliothèque rouverte : le choix n’est pas retenu, les médias d’Orbe reviennent sans relire de dossier', async () => {
+    await t.verifier('Bibliothèque rouverte : le choix n’est pas retenu, les médias d’Orbx reviennent sans relire de dossier', async () => {
       await lib.reload();
       await jusqua(() => lib.evaluate(() => document.querySelector('.tabs [data-tab].on') && document.querySelector('.tabs [data-tab].on').dataset.tab === 'media' && !document.getElementById('f-from').hidden), 'section Médias rouverte');
-      assert.equal(await lib.locator('#f-from').inputValue(), 'orbe');
+      assert.equal(await lib.locator('#f-from').inputValue(), 'orbx');
       assert.deepEqual(await lus(), ['desktop']);
     });
 
@@ -306,7 +306,7 @@ module.exports = {
           }
         }
       } finally {
-        await ctx.principal(({ w, store, win }, a) => { store.state.settings.translucent = a.translucent; w.setTheme(a.theme); win.OrbeWindow.pushAll(); }, avant);
+        await ctx.principal(({ w, store, win }, a) => { store.state.settings.translucent = a.translucent; w.setTheme(a.theme); win.OrbxWindow.pushAll(); }, avant);
       }
     });
 
@@ -346,7 +346,7 @@ module.exports = {
     await t.verifier('accueil : le bouton de la musique se voit, un vrai clic la coupe, un second la remet', async () => {
       const bouton = accueil.locator('#music');
       assert.equal(await bouton.isVisible(), true);
-      if (process.env.ORBE_UI_SHOTS) { await sleep(1500); await ctx.capture('accueil', accueil); }
+      if (process.env.ORBX_UI_SHOTS) { await sleep(1500); await ctx.capture('accueil', accueil); }
       assert.equal(await bouton.getAttribute('aria-pressed'), 'true');
       await bouton.click();
       assert.equal(await bouton.getAttribute('aria-pressed'), 'false');
@@ -368,7 +368,7 @@ module.exports = {
     await accueil.locator('#skip').click();
     await jusqua(() => accueil.evaluate(() => document.querySelector('.step.on').dataset.step === 'ready'), 'dernière étape');
     await t.verifier('accueil, premiers gestes : chacune des six astuces a sa petite démonstration dessinée (aucune vidéo, aucune image)', async () => {
-      if (process.env.ORBE_UI_SHOTS) { await sleep(2600); await ctx.capture('accueil-gestes', accueil); }
+      if (process.env.ORBX_UI_SHOTS) { await sleep(2600); await ctx.capture('accueil-gestes', accueil); }
       const vu = await accueil.evaluate(() => ({ demos: [...document.querySelectorAll('.tips .line')].map((l) => { const d = l.querySelector('.demo'); return d ? d.className.replace('demo ', '') + ':' + Math.round(d.getBoundingClientRect().width) + 'x' + Math.round(d.getBoundingClientRect().height) : ''; }), medias: document.querySelectorAll('video, img, canvas').length, large: document.documentElement.scrollWidth <= innerWidth, textes: [...document.querySelectorAll('.tips .line .grow')].every((e) => e.textContent.length > 3 && e.getBoundingClientRect().width > 60) }));
       assert.deepEqual(vu.demos, ['d-tab:64x42', 'd-pin:64x42', 'd-space:64x42', 'd-split:64x42', 'd-side:64x42', 'd-little:64x42']);
       assert.equal(vu.medias, 0);

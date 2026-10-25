@@ -1,7 +1,7 @@
 // Mesures de vitesse et de mémoire (pas un test : rien n'y est affirmé).
 // Lancé par scripts/mesures.js, qui fournit le serveur local, le profil et
 // l'arbre de sources à mesurer :
-//   ORBE_BENCH=<mesure> ORBE_BENCH_BASE=http://127.0.0.1:<port> ORBE_SCENARIO=tests/mesures.js
+//   ORBX_BENCH=<mesure> ORBX_BENCH_BASE=http://127.0.0.1:<port> ORBX_SCENARIO=tests/mesures.js
 // Chaque mesure écrit une ligne « MESURE {json} » sur la sortie.
 const { app, WebContentsView } = require('electron');
 const os = require('os');
@@ -22,7 +22,7 @@ async function until(fn, timeout = 15000) {
   }
 }
 
-// Processus d'Orbe : nombre et mémoire (app.getAppMetrics, en Mo).
+// Processus d'Orbx : nombre et mémoire (app.getAppMetrics, en Mo).
 function processes() {
   const m = app.getAppMetrics();
   const mb = (list) => round(list.reduce((a, p) => a + p.memory.workingSetSize, 0) / 1024, 0);
@@ -96,8 +96,8 @@ const VARIANTES = {
 const BENCHES = {
   // Prépare un profil : un onglet, et au besoin un gros historique et beaucoup d'onglets.
   async prepare({ first: w, store, base }) {
-    const history = Number(process.env.ORBE_BENCH_HISTORY) || 0;
-    const tabs = Number(process.env.ORBE_BENCH_TABS) || 0;
+    const history = Number(process.env.ORBX_BENCH_HISTORY) || 0;
+    const tabs = Number(process.env.ORBX_BENCH_TABS) || 0;
     const now = Date.now();
     // Historique varié (hôtes et titres tirés d'un vocabulaire), pour que la recherche
     // ait le même genre de travail qu'avec un vrai historique.
@@ -109,8 +109,8 @@ const BENCHES = {
     // Forme d'un vrai profil ancien : les onglets sont répartis dans plusieurs Espaces (un dossier
     // de trois onglets épinglés, deux épinglés seuls, le reste dans « Aujourd'hui »), eux-mêmes
     // répartis dans plusieurs profils. Sans cela : tous dans le premier Espace.
-    const nSpaces = Number(process.env.ORBE_BENCH_SPACES) || 0;
-    const nProfiles = Number(process.env.ORBE_BENCH_PROFILES) || 0;
+    const nSpaces = Number(process.env.ORBX_BENCH_SPACES) || 0;
+    const nProfiles = Number(process.env.ORBX_BENCH_PROFILES) || 0;
     const d = w.data;
     for (let i = 1; i < nProfiles; i++) { const id = 'profil' + i; d.profiles.push({ id, name: 'Profil ' + (i + 1) }); d.favs[id] = []; }
     for (let i = 1; i < nSpaces; i++) { const sp = store.makeSpace('Espace ' + (i + 1), '✨'); if (nProfiles) sp.profileId = d.profiles[i % d.profiles.length].id; d.spaces.push(sp); }
@@ -252,15 +252,15 @@ const BENCHES = {
     w.hideModal();
     await sleep(3000);
     const ouvertes = processes();
-    const wait = Number(process.env.ORBE_BENCH_IDLE) || 0;
+    const wait = Number(process.env.ORBX_BENCH_IDLE) || 0;
     let apres = null;
     if (wait) { await sleep(wait); apres = processes(); }
     out({ bench: 'memoire', repos, ouvertes, apres, ouverture: t });
   },
 
-  // Coût d'Orbe par navigation : loadURL → did-finish-load, vue d'onglet ordinaire.
+  // Coût d'Orbx par navigation : loadURL → did-finish-load, vue d'onglet ordinaire.
   async navigation({ first: w, base }) {
-    const rounds = Number(process.env.ORBE_BENCH_ROUNDS) || 14;
+    const rounds = Number(process.env.ORBX_BENCH_ROUNDS) || 14;
     const pages = ['leger', 'cadres', 'ressources'];
     const view = new WebContentsView({ webPreferences: { session: w.session, sandbox: true, contextIsolation: true, nodeIntegrationInSubFrames: true } });
     w.win.contentView.addChildView(view);
@@ -525,7 +525,7 @@ const BENCHES = {
     out({ bench: 'divers', onglets: Object.keys(w.data.tabs).length, etatKo: round(fs.statSync(store.file).size / 1024, 0), sauvegardeMs: round(median(times), 2), bordMicrosecondes: round(bord, 2), ecritureEtatMs: round((performance.now() - t2) / 20, 2) });
   },
 
-  // Repos : ce que coûte Orbe quand rien ne se passe. Plusieurs périodes de `ORBE_BENCH_IDLE` ms
+  // Repos : ce que coûte Orbx quand rien ne se passe. Plusieurs périodes de `ORBX_BENCH_IDLE` ms
   // (20 s par défaut) : une page fixe ; la même avec un onglet qui joue hors de vue (lecteur
   // miniature) ; mise à jour annoncée ; fenêtre réduite dans le Dock ; fenêtre masquée. Pour chacune : secondes de
   // processeur par famille de processus (ms de calcul par seconde écoulée), réveils, états
@@ -533,7 +533,7 @@ const BENCHES = {
   async repos({ first: w, win, base }) {
     const fs = require('fs');
     const path = require('path');
-    const span = Number(process.env.ORBE_BENCH_IDLE) || 20000;
+    const span = Number(process.env.ORBX_BENCH_IDLE) || 20000;
     const rt = await until(() => w.activeRt);
     await until(() => !rt.wc.isLoading());
     const ui = w.ui.webContents;
@@ -590,26 +590,26 @@ const BENCHES = {
         fichiers: ours.map(([p, f]) => path.relative(dir, p) + '×' + f.n).join(' '),
       };
     };
-    // ORBE_BENCH_PERIODES=lecteur,masquee : seulement ces périodes. ORBE_BENCH_CSS : règles ajoutées à la
+    // ORBX_BENCH_PERIODES=lecteur,masquee : seulement ces périodes. ORBX_BENCH_CSS : règles ajoutées à la
     // coque avant la période « lecteur » (pour isoler le coût d'une animation en la coupant).
-    const only = (process.env.ORBE_BENCH_PERIODES || '').split(',').filter(Boolean);
+    const only = (process.env.ORBX_BENCH_PERIODES || '').split(',').filter(Boolean);
     const wanted = (name) => !only.length || only.includes(name);
     const res = {};
     if (wanted('fixe')) res.fixe = await period();
     // Une variante (voir VARIANTES) : page fixe, une animation posée dans la coque, une chose changée.
-    if (wanted('variante') && process.env.ORBE_BENCH_VARIANTE) {
-      const v = VARIANTES[process.env.ORBE_BENCH_VARIANTE];
-      if (!v) throw new Error('variante inconnue : ' + process.env.ORBE_BENCH_VARIANTE);
+    if (wanted('variante') && process.env.ORBX_BENCH_VARIANTE) {
+      const v = VARIANTES[process.env.ORBX_BENCH_VARIANTE];
+      if (!v) throw new Error('variante inconnue : ' + process.env.ORBX_BENCH_VARIANTE);
       if (v.main) await v.main(w);
       if (v.css) await ui.insertCSS(v.css);
       if (v.js) await ui.executeJavaScript(v.js);
       await sleep(1500);
-      // ORBE_BENCH_TRACE=<fichier> : trace du compositeur pendant 3 s (lue par scripts/trace-images.js).
-      if (process.env.ORBE_BENCH_TRACE) {
+      // ORBX_BENCH_TRACE=<fichier> : trace du compositeur pendant 3 s (lue par scripts/trace-images.js).
+      if (process.env.ORBX_BENCH_TRACE) {
         const { contentTracing } = require('electron');
         await contentTracing.startRecording({ included_categories: ['viz', 'gpu', 'cc', 'benchmark', 'disabled-by-default-viz.quads', 'disabled-by-default-viz.surface_id_flow', 'disabled-by-default-cc.debug'] });
         await sleep(3000);
-        await contentTracing.stopRecording(process.env.ORBE_BENCH_TRACE);
+        await contentTracing.stopRecording(process.env.ORBX_BENCH_TRACE);
       }
       const b = w.win.getBounds();
       res.variante = { ...(await period()), largeur: b.width, hauteur: b.height, vues: w.win.contentView.children.length, sansClavier: (await ui.executeJavaScript(`document.body.classList.contains('blurred')`)) ? 1 : 0 };
@@ -627,7 +627,7 @@ const BENCHES = {
       const note = win.hooks.updateNote;
       win.hooks.updateNote = () => ({ version: '9.9.9' });
       w.sendState();
-      await sleep(Number(process.env.ORBE_BENCH_NOTE_WAIT) || 6000); // l'annonce est là depuis un moment
+      await sleep(Number(process.env.ORBX_BENCH_NOTE_WAIT) || 6000); // l'annonce est là depuis un moment
       res.note = await period();
       win.hooks.updateNote = note;
       w.sendState();
@@ -639,13 +639,13 @@ const BENCHES = {
     await w.activeRt.wc.executeJavaScript('start()', true);
     await until(() => w.activeRt.wc.isCurrentlyAudible(), 8000).catch(() => {});
     w.activate(calm);
-    if (process.env.ORBE_BENCH_CSS) await ui.insertCSS(process.env.ORBE_BENCH_CSS);
+    if (process.env.ORBX_BENCH_CSS) await ui.insertCSS(process.env.ORBX_BENCH_CSS);
     // La carte du lecteur met un instant à paraître, son titre à défiler : sans cette attente, la
     // période commençait parfois avant le défilement et le comptait (107 ms/s au lieu de 11).
     await until(() => ui.executeJavaScript(`!!document.querySelector('#media .mp')`), 8000).catch(() => {});
     await sleep(800);
     // Régime établi : on laisse finir ce qui ne joue qu'une fois (40 s au plus ; un mouvement sans fin reste compté).
-    await until(() => ui.executeJavaScript(`document.getAnimations().filter((x) => x.playState === 'running').length === 0`), Number(process.env.ORBE_BENCH_REST) || 40000).catch(() => {});
+    await until(() => ui.executeJavaScript(`document.getAnimations().filter((x) => x.playState === 'running').length === 0`), Number(process.env.ORBX_BENCH_REST) || 40000).catch(() => {});
     if (wanted('lecteur')) { res.lecteur = await period(); res.lecteur.lecteurs = (w.players || []).length; }
     // Fenêtre entièrement recouverte par une autre (à lancer avec --naturel 1, sinon Chromium ne ralentit rien).
     if (wanted('recouverte')) {
@@ -667,8 +667,8 @@ const BENCHES = {
 };
 
 module.exports = async function mesures(ctx) {
-  const name = process.env.ORBE_BENCH || 'demarrage';
-  const base = process.env.ORBE_BENCH_BASE || '';
+  const name = process.env.ORBX_BENCH || 'demarrage';
+  const base = process.env.ORBX_BENCH_BASE || '';
   if (!BENCHES[name]) throw new Error('mesure inconnue : ' + name);
   await BENCHES[name]({ ...ctx, base });
 };

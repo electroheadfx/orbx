@@ -3,7 +3,7 @@
 // (scripts/pe-resources.js) et inscription au registre (src/main/win-default.js).
 //   node --test tests/pe-resources.test.js
 // Les tests sur un vrai exécutable prennent electron.exe : celui du moteur
-// installé sous Windows, ou ORBE_PE_SAMPLE=<chemin vers electron.exe>
+// installé sous Windows, ou ORBX_PE_SAMPLE=<chemin vers electron.exe>
 // (archive « electron-v…-win32-x64.zip » décompressée). Sans lui, ils sont sautés.
 const test = require('node:test');
 const assert = require('node:assert');
@@ -17,14 +17,14 @@ const { decodePng } = require('../scripts/make-ico');
 const winDefault = require('../src/main/win-default');
 
 const root = path.join(__dirname, '..');
-const ico = path.join(root, 'assets', 'orbe.ico');
-const runtime = process.env.ORBE_RUNTIME || path.join(os.homedir(), '.orbe-dev');
-const sample = [process.env.ORBE_PE_SAMPLE, path.join(runtime, 'node_modules', 'electron', 'dist', 'electron.exe')].find((f) => f && fs.existsSync(f));
-const real = { skip: sample ? false : 'electron.exe absent (voir ORBE_PE_SAMPLE)' };
+const ico = path.join(root, 'assets', 'orbx.ico');
+const runtime = process.env.ORBX_RUNTIME || path.join(os.homedir(), '.orbx-dev');
+const sample = [process.env.ORBX_PE_SAMPLE, path.join(runtime, 'node_modules', 'electron', 'dist', 'electron.exe')].find((f) => f && fs.existsSync(f));
+const real = { skip: sample ? false : 'electron.exe absent (voir ORBX_PE_SAMPLE)' };
 let cached = null;
 const exe = () => cached || (cached = fs.readFileSync(sample));
 
-const VERSION = { ProductName: 'Orbe', FileDescription: 'Orbe', CompanyName: 'PIXEWORK', FileVersion: '1.2.3', ProductVersion: '1.2.3', OriginalFilename: 'Orbe.exe' };
+const VERSION = { ProductName: 'Orbx', FileDescription: 'Orbx', CompanyName: 'Laurent Marques', FileVersion: '1.2.3', ProductVersion: '1.2.3', OriginalFilename: 'Orbx.exe' };
 
 // --- Fusibles -------------------------------------------------------------------
 test('fusibles : coupe RunAsNode, NODE_OPTIONS et --inspect, garde les autres', () => {
@@ -55,7 +55,7 @@ test('version : numéros', () => {
 test('version : bloc écrit puis relu, aligné sur 4 octets', () => {
   const fixed = Buffer.alloc(52);
   fixed.writeUInt32LE(0xfeef04bd, 0);
-  const info = { fixed, tables: [{ lang: '040c04b0', strings: [['ProductName', 'Orbe'], ['LegalCopyright', 'Logiciel libre — licence MIT'], ['Vide', '']] }], others: [] };
+  const info = { fixed, tables: [{ lang: '040c04b0', strings: [['ProductName', 'Orbx'], ['LegalCopyright', 'Logiciel libre — licence MIT'], ['Vide', '']] }], others: [] };
   const data = pe.buildVersion(info);
   assert.strictEqual(data.readUInt16LE(0), data.length);
   const back = pe.parseVersion(data);
@@ -81,7 +81,7 @@ test('icône : image classique (BMP et masque) à partir de pixels RVBA', () => 
   assert.strictEqual(dib[60], 0);
 });
 
-test('icône : assets/orbe.ico se relit, toutes tailles', () => {
+test('icône : assets/orbx.ico se relit, toutes tailles', () => {
   const images = pe.readIco(fs.readFileSync(ico));
   assert.deepStrictEqual(images.map((i) => i.width || 256), [16, 24, 32, 48, 64, 128, 256]);
   for (const im of images) assert.strictEqual(decodePng(im.data).width, im.width || 256);
@@ -191,7 +191,7 @@ test('electron.exe : icône et version, .reloc déplacée, tout reste cohérent'
   }
   // Version, et les autres ressources (curseurs, manifeste…) gardées telles quelles.
   const v = pe.getVersion(after);
-  assert.strictEqual(v.strings.ProductName, 'Orbe');
+  assert.strictEqual(v.strings.ProductName, 'Orbx');
   assert.strictEqual(v.strings.SquirrelAwareVersion, undefined);
   assert.deepStrictEqual(pe.listResources(after).filter((r) => r.type !== pe.RT_ICON && r.type !== pe.RT_GROUP_ICON && r.type !== pe.RT_VERSION), kept);
   const manifest = (t) => t.entries.find((e) => e.id === 24).dir.entries[0].dir.entries[0].data;
@@ -223,30 +223,31 @@ test('exécutable abîmé : somme de contrôle fausse détectée', real, () => {
 
 // --- Inscription comme navigateur (registre) ------------------------------------------
 test('registre : plan de l’inscription et fichier .reg', () => {
-  const p = winDefault.plan({ exe: 'C:\\Outils\\Orbe\\Orbe.exe' });
+  const p = winDefault.plan({ exe: 'C:\\Outils\\Orbx\\Orbx.exe' });
   const flat = Object.fromEntries(p.keys.map((k) => [k.key.replace('HKEY_CURRENT_USER\\', ''), k.values]));
-  assert.strictEqual(flat['Software\\Classes\\OrbeHTML\\shell\\open\\command'][''], '"C:\\Outils\\Orbe\\Orbe.exe" "%1"');
-  assert.strictEqual(flat['Software\\Clients\\StartMenuInternet\\Orbe\\shell\\open\\command'][''], '"C:\\Outils\\Orbe\\Orbe.exe"');
-  assert.deepStrictEqual(flat['Software\\Clients\\StartMenuInternet\\Orbe\\Capabilities\\URLAssociations'], { http: 'OrbeHTML', https: 'OrbeHTML' });
-  assert.strictEqual(flat['Software\\Clients\\StartMenuInternet\\Orbe\\Capabilities\\FileAssociations']['.html'], 'OrbeHTML');
-  assert.deepStrictEqual(p.values[0], { key: 'HKEY_CURRENT_USER\\Software\\RegisteredApplications', name: 'Orbe', value: 'Software\\Clients\\StartMenuInternet\\Orbe\\Capabilities' });
+  assert.strictEqual(flat['Software\\Classes\\OrbxHTML\\shell\\open\\command'][''], '"C:\\Outils\\Orbx\\Orbx.exe" "%1"');
+  assert.strictEqual(flat['Software\\Clients\\StartMenuInternet\\Orbx\\shell\\open\\command'][''], '"C:\\Outils\\Orbx\\Orbx.exe"');
+  assert.deepStrictEqual(flat['Software\\Clients\\StartMenuInternet\\Orbx\\Capabilities\\URLAssociations'], { http: 'OrbxHTML', https: 'OrbxHTML' });
+  assert.strictEqual(flat['Software\\Clients\\StartMenuInternet\\Orbx\\Capabilities\\FileAssociations']['.html'], 'OrbxHTML');
+  assert.strictEqual(flat['Software\\Classes\\OrbxHTML\\Application'].ApplicationCompany, 'Laurent Marques');
+  assert.deepStrictEqual(p.values[0], { key: 'HKEY_CURRENT_USER\\Software\\RegisteredApplications', name: 'Orbx', value: 'Software\\Clients\\StartMenuInternet\\Orbx\\Capabilities' });
   // Tout est sous HKEY_CURRENT_USER.
   assert.ok([...p.keys, ...p.values].every((k) => k.key.startsWith('HKEY_CURRENT_USER\\Software\\')));
 
   const reg = winDefault.regFile(p);
   assert.ok(reg.startsWith('Windows Registry Editor Version 5.00\r\n'));
-  assert.ok(reg.includes('[HKEY_CURRENT_USER\\Software\\Classes\\OrbeHTML\\shell\\open\\command]\r\n@="\\"C:\\\\Outils\\\\Orbe\\\\Orbe.exe\\" \\"%1\\""\r\n'));
+  assert.ok(reg.includes('[HKEY_CURRENT_USER\\Software\\Classes\\OrbxHTML\\shell\\open\\command]\r\n@="\\"C:\\\\Outils\\\\Orbx\\\\Orbx.exe\\" \\"%1\\""\r\n'));
   assert.ok(reg.includes('"IconsVisible"=dword:00000001'));
-  assert.ok(reg.includes('[HKEY_CURRENT_USER\\Software\\RegisteredApplications]\r\n"Orbe"="Software\\\\Clients\\\\StartMenuInternet\\\\Orbe\\\\Capabilities"'));
+  assert.ok(reg.includes('[HKEY_CURRENT_USER\\Software\\RegisteredApplications]\r\n"Orbx"="Software\\\\Clients\\\\StartMenuInternet\\\\Orbx\\\\Capabilities"'));
 
   const undo = winDefault.regFile(p, true);
-  assert.ok(undo.includes('[-HKEY_CURRENT_USER\\Software\\Classes\\OrbeHTML]'));
-  assert.ok(undo.includes('[-HKEY_CURRENT_USER\\Software\\Clients\\StartMenuInternet\\Orbe]'));
-  assert.ok(undo.includes('[HKEY_CURRENT_USER\\Software\\RegisteredApplications]\r\n"Orbe"=-'));
+  assert.ok(undo.includes('[-HKEY_CURRENT_USER\\Software\\Classes\\OrbxHTML]'));
+  assert.ok(undo.includes('[-HKEY_CURRENT_USER\\Software\\Clients\\StartMenuInternet\\Orbx]'));
+  assert.ok(undo.includes('[HKEY_CURRENT_USER\\Software\\RegisteredApplications]\r\n"Orbx"=-'));
   // L'annulation ne retire aucune clé partagée, seulement des valeurs.
   assert.deepStrictEqual(undo.match(/^\[-.*\]$/gm).length, 2);
 
   // En développement : le moteur suivi du dossier du projet.
-  const devPlan = winDefault.plan({ exe: 'C:\\e\\electron.exe', args: ['C:\\src\\orbe'], id: 'OrbeEssai' });
-  assert.strictEqual(devPlan.keys.find((k) => k.key.endsWith('OrbeEssaiHTML\\shell\\open\\command')).values[''], '"C:\\e\\electron.exe" "C:\\src\\orbe" "%1"');
+  const devPlan = winDefault.plan({ exe: 'C:\\e\\electron.exe', args: ['C:\\src\\orbx'], id: 'OrbxEssai' });
+  assert.strictEqual(devPlan.keys.find((k) => k.key.endsWith('OrbxEssaiHTML\\shell\\open\\command')).values[''], '"C:\\e\\electron.exe" "C:\\src\\orbx" "%1"');
 });

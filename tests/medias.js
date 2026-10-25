@@ -2,7 +2,7 @@
 // artiste et pochette annoncés par la page, précédent / suivant, ±15 s, recherche,
 // croix), données de la page tenues pour hostiles.
 // Appelé par tests/selftest.js, ou seul :
-//   ORBE_SCENARIO=tests/medias.js node scripts/dev.js --selftest
+//   ORBX_SCENARIO=tests/medias.js node scripts/dev.js --selftest
 // Le son des pages d'essai est une note à −58 dB : inaudible, mais comptée
 // comme un son par le moteur.
 const http = require('http');
@@ -119,7 +119,7 @@ module.exports = async function mediasTests(ctx) {
   check('lecteur : réponse hostile de la page remise au propre (types, longueurs, caractères de contrôle, adresse de pochette)',
     c.has === false && c.paused === true && c.duration === 0 && c.position === 360000 && c.track.length === mediaLib.LIMITS.text && !/[\u0000‮]/.test(c.track) && c.artist === '' && c.artSrc === '' && c.next && c.prev, JSON.stringify(c).slice(0, 200));
   check('lecteur : réponse absente ou d’un autre type → lecteur vide, sans erreur', [null, undefined, 'x', 42, []].every((v) => { const r = mediaLib.clean(v); return r.has === false && r.track === '' && r.duration === 0 && !r.prev && !r.next; }));
-  const kinds = ['javascript:alert(1)', 'file:///etc/passwd', 'blob:http://x/1', 'orbe://settings', 'data:text/html;base64,AAAA', 'data:image/svg+xml;base64,AAAA', 'data:image/png;base64,' + 'A'.repeat(mediaLib.LIMITS.dataUrl), 'http://' + 'a'.repeat(3000), '', 7].map(mediaLib.artworkKind);
+  const kinds = ['javascript:alert(1)', 'file:///etc/passwd', 'blob:http://x/1', 'orbx://settings', 'data:text/html;base64,AAAA', 'data:image/svg+xml;base64,AAAA', 'data:image/png;base64,' + 'A'.repeat(mediaLib.LIMITS.dataUrl), 'http://' + 'a'.repeat(3000), '', 7].map(mediaLib.artworkKind);
   check('pochette : seules http(s) et data:image (png, jpeg, webp, gif) bornées sont acceptées', kinds.every((k) => k === '') && mediaLib.artworkKind('https://exemple.test/a.png') === 'http' && mediaLib.artworkKind('data:image/png;base64,AAAA') === 'data', kinds.join('|'));
   const artLib = mediaLib.art;
   const page = base + '/';
@@ -129,7 +129,7 @@ module.exports = async function mediasTests(ctx) {
   const refused = [await mediaLib.loadArtwork(w.session, base + '/faux.png', page), await mediaLib.loadArtwork(w.session, base + '/menteur.png', page), await mediaLib.loadArtwork(w.session, base + '/enorme.png', page), await mediaLib.loadArtwork(w.session, 'file:///etc/hosts', page), await mediaLib.loadArtwork(w.session, 'data:image/png;base64,' + Buffer.from('pas une image').toString('base64'), page), await mediaLib.loadArtwork(w.session, base + '/pochette.png', 'file:///tmp/page.html'), await mediaLib.loadArtwork(w.session, base.replace('http://', 'http://moi:secret@') + '/pochette.png', page)];
   check('pochette refusée : pas une image, fausse image, trop lourde (plus de 2 Mo), autre protocole, page qui n’est pas du web, identifiants dans l’adresse', refused.every((r) => r === ''), refused.map((r) => r.length).join());
   const dataArt = await mediaLib.loadArtwork(w.session, 'data:image/png;base64,' + png(64).toString('base64'), page);
-  check('pochette en data:image : redessinée par Orbe', dataArt.startsWith('data:image/png;base64,') && nativeImage.createFromDataURL(dataArt).getSize().width === 64);
+  check('pochette en data:image : redessinée par Orbx', dataArt.startsWith('data:image/png;base64,') && nativeImage.createFromDataURL(dataArt).getSize().width === 64);
 
   // --- Image minuscule sur le fil, immense une fois décodée : jamais décodée -----------
   const decoded = [];
@@ -207,13 +207,13 @@ module.exports = async function mediasTests(ctx) {
   } else {
     check('l’onglet affiché qui joue n’a pas de lecteur', players().length === 0 && w.mediaId === null);
     w.activate(calme);
-    win.OrbeWindow.pushAll();
+    win.OrbxWindow.pushAll();
     const first = await until(() => { const p = players()[0]; return p && p.art && p.duration > 0 ? p : null; }, 'lecteur renseigné');
     check('onglet quitté pendant qu’il joue : un lecteur, en lecture', players().length === 1 && first.id === p1 && first.playing === true && w.mediaId === p1);
     check('titre et artiste annoncés par la page (bornés), durée et pochette recodée', first.title === HOSTILE.slice(0, mediaLib.LIMITS.text) && first.sub === 'Artiste 1' && Math.round(first.duration) === 60 && first.art.startsWith('data:image/png;base64,') && !('artSrc' in first), JSON.stringify({ ...first, art: first.art.slice(0, 30) }));
     check('piste précédente / suivante proposées : gestionnaires déclarés par la page dès son en-tête', first.prev === true && first.next === true && first.seek === true);
 
-    // La coque : le titre hostile reste du texte ; la pochette est l'image d'Orbe.
+    // La coque : le titre hostile reste du texte ; la pochette est l'image d'Orbx.
     const card = await until(() => ui(`(() => { const el = document.querySelector('#media .mp[data-id="${p1}"]'); if (!el || !el.querySelector('.mp-art img')) return null;
       return { titre: el.querySelector('.mp-title').textContent, enfants: el.querySelector('.mp-title span').childElementCount, img: el.querySelector('.mp-art img').src.slice(0, 22), sub: el.querySelector('.mp-sub').textContent, pwned: window.pwned === 1,
         prev: !el.querySelector('.mp-prev').hidden, next: !el.querySelector('.mp-next').hidden, bar: !el.querySelector('.mp-bar').hidden, visible: !document.getElementById('media').hidden }; })()`), 'carte du lecteur');
@@ -258,14 +258,14 @@ module.exports = async function mediasTests(ctx) {
     const okPrev = await w.mediaAct({ id: p1, act: 'prev' });
     check('piste suivante puis précédente : les gestionnaires de la page sont appelés', okNext === true && okPrev === true && (await js(p1, 'calls.join()')) === 'next,prev');
 
-    // Ce que la page peut voir du relevé de ses gestionnaires : rien qui trahisse Orbe.
+    // Ce que la page peut voir du relevé de ses gestionnaires : rien qui trahisse Orbx.
     const quiet = (code) => wcOf(p1).executeJavaScript(code, false);
     const seen = await quiet(`(() => { const ms = navigator.mediaSession; const f = ms.setActionHandler; const d = Object.getOwnPropertyDescriptor(MediaSession.prototype, 'setActionHandler');
       let wrong = ''; try { ms.setActionHandler('0'.repeat(32), null); } catch (e) { wrong = e.name; }
       let bad = ''; try { f.call({}, 'play', null); } catch (e) { bad = e.name; }
-      return { own: Object.getOwnPropertyNames(ms).concat(Object.getOwnPropertySymbols(ms).map(String)).join(), old: '__orbeActions' in ms, name: f.name, length: f.length,
-        text: Function.prototype.toString.call(f), flags: [d.enumerable, d.writable, d.configurable, 'get' in d].join(), wrong, bad, globals: Object.keys(window).filter((k) => /orbe/i.test(k)).join() }; })()`);
-    check('gestionnaires de la page : rien de posé sur `navigator.mediaSession` (plus de `__orbeActions`), aucune variable d’Orbe dans la page', seen.own === '' && seen.old === false && seen.globals === '', JSON.stringify(seen));
+      return { own: Object.getOwnPropertyNames(ms).concat(Object.getOwnPropertySymbols(ms).map(String)).join(), old: '__orbxActions' in ms, name: f.name, length: f.length,
+        text: Function.prototype.toString.call(f), flags: [d.enumerable, d.writable, d.configurable, 'get' in d].join(), wrong, bad, globals: Object.keys(window).filter((k) => /orbx/i.test(k)).join() }; })()`);
+    check('gestionnaires de la page : rien de posé sur `navigator.mediaSession` (plus de `__orbxActions`), aucune variable d’Orbx dans la page', seen.own === '' && seen.old === false && seen.globals === '', JSON.stringify(seen));
     check('`setActionHandler` garde l’allure de la fonction d’origine : nom, nombre d’arguments, texte « [native code] », mêmes attributs, mêmes erreurs',
       seen.name === 'setActionHandler' && seen.length === 2 && /\[native code\]/.test(seen.text) && !/table|KEY|apply/.test(seen.text) && seen.flags === 'true,true,true,false' && seen.wrong === 'TypeError' && seen.bad === 'TypeError', JSON.stringify(seen));
     // Un autre cadre qui emprunte la fonction n'écrit ni ne lit la table du cadre principal.
@@ -300,7 +300,7 @@ module.exports = async function mediasTests(ctx) {
 
     // Page qui change de pochette sans arrêt : une recherche en cours au plus, puis une attente.
     // (Le moteur va lui aussi chercher ces images, pour les commandes du système : ce sont
-    // les recherches d'Orbe que l'on compte, par ses décodages.)
+    // les recherches d'Orbx que l'on compte, par ses décodages.)
     const rt1 = win.live.get(p1);
     const every0 = artLib.ART.every;
     await until(() => !rt1.artBusy, 'aucune pochette en cours');
@@ -325,7 +325,7 @@ module.exports = async function mediasTests(ctx) {
     check('délai passé : la dernière pochette annoncée s’affiche ; image déjà cherchée : rendue de mémoire, sans nouveau décodage', mid <= 3 && decodes === mid && rt1.media.art === seenArt && rt1.media.artSrc.endsWith('n=11'), [mid, decodes].join());
     artLib.ART.every = every0;
     artLib.hooks.decode = decode0;
-    // Textes et pochette démesurés : coupés dans la page, avant de traverser vers Orbe.
+    // Textes et pochette démesurés : coupés dans la page, avant de traverser vers Orbx.
     await quiet(`(() => { navigator.mediaSession.metadata = new MediaMetadata({ title: 'T'.repeat(3e6), artist: 'A'.repeat(3e6), artwork: [{ src: 'data:image/png;base64,' + 'A'.repeat(1e6), sizes: '300x300', type: 'image/png' }] }); return true; })()`);
     const big = await quiet(mediaLib.infoCode(mediaLib.keyOf(wcOf(p1))));
     check('titre, artiste et pochette de plusieurs méga-octets : tronqués par la question posée à la page (320 caractères, pochette écartée)', big.title.length === mediaLib.LIMITS.raw && big.artist.length === mediaLib.LIMITS.raw && big.art === '' && JSON.stringify(big).length < 2000, [big.title.length, big.artist.length, big.art.length].join());
@@ -354,7 +354,7 @@ module.exports = async function mediasTests(ctx) {
     await js(p2, 'start("Deuxième morceau")');
     await until(() => wcOf(p2).isCurrentlyAudible(), 'second onglet audible');
     w.activate(calme);
-    win.OrbeWindow.pushAll();
+    win.OrbxWindow.pushAll();
     await until(() => players().length === 2 && players()[0].title === 'Deuxième morceau', 'deux lecteurs');
     check('deux onglets qui jouent : deux lecteurs empilés, le plus récent en tête', players().map((p) => p.id).join() === [p2, p1].join());
     await until(() => ui('document.querySelectorAll("#media .mp:not(.out)").length === 2'), 'deux cartes');
@@ -387,7 +387,7 @@ module.exports = async function mediasTests(ctx) {
     // Retour à l'onglet : son lecteur disparaît.
     w.mediaAct({ id: p1, act: 'open' });
     check('« Revenir à l’onglet » : l’onglet s’affiche, son lecteur disparaît', w.activeId === p1 && players().length === 0);
-    win.OrbeWindow.pushAll();
+    win.OrbxWindow.pushAll();
     await until(() => ui('document.getElementById("media").hidden === true && !document.querySelector("#media .mp")'), 'lecteurs retirés de la barre');
     // Onglet fermé pendant qu'il a un lecteur : le lecteur part avec lui.
     w.activate(calme);
@@ -398,7 +398,7 @@ module.exports = async function mediasTests(ctx) {
   }
   for (const id of [p1, calme]) if (d.tabs[id]) w.close(id, { silent: true, ask: false });
   store.state.settings.mediaControls = mediaControls0;
-  win.OrbeWindow.pushAll();
+  win.OrbxWindow.pushAll();
   await sleep(50);
   // Carte neuve dont la durée est connue d'emblée : l'avancement démarre quand même (elle est
   // remplie avant d'être posée dans la barre ; il restait figé une fois sur trois).

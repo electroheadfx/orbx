@@ -1,6 +1,6 @@
 // Vue scindée, petite fenêtre, aperçu, Boosts, menus de page et raccourcis divers.
 // Appelé par tests/selftest.js, ou seul :
-//   ORBE_SCENARIO=tests/fenetres.js node scripts/dev.js --selftest
+//   ORBX_SCENARIO=tests/fenetres.js node scripts/dev.js --selftest
 const http = require('http');
 const { clipboard, Menu } = require('electron');
 
@@ -13,7 +13,7 @@ function serve() {
     res.setHeader('content-type', 'text/html; charset=utf-8');
     res.setHeader('cache-control', 'no-store');
     const m = /^\/p\/(\w+)$/.exec(url.pathname);
-    if (m) return res.end(page('Page ' + m[1], `<h1>${m[1]}</h1><p class="texte">orbe</p>`));
+    if (m) return res.end(page('Page ' + m[1], `<h1>${m[1]}</h1><p class="texte">orbx</p>`));
     if (url.pathname === '/liens') return res.end(page('Liens', `<a id="lien" href="/p/cible" style="position:fixed;left:0;top:0;width:300px;height:120px;background:#def;display:block">vers la cible</a><input id="champ" style="position:fixed;left:0;top:200px">`));
     if (url.pathname === '/boost') return res.end(page('Boost', '<h1 id="t">Titre</h1><p class="pub">publicité</p><p id="reste">reste</p><iframe id="cadre" src="/p/cadre" style="width:200px;height:80px"></iframe>'));
     if (url.pathname === '/video') return res.end(page('Vidéo', `<video id="v" style="position:fixed;left:0;top:0;width:320px;height:180px;background:#000" playsinline muted></video><script>
@@ -243,7 +243,7 @@ module.exports = async function fenetresTests(ctx) {
       rt.hoverUrl = base + '/p/cible';
     }
     key('keyDown', true);
-    await until(() => rt.alt === true, '⌥ vue par Orbe');
+    await until(() => rt.alt === true, '⌥ vue par Orbx');
     const count = space.today.length;
     mouse('mouseDown');
     mouse('mouseUp');
@@ -264,7 +264,7 @@ module.exports = async function fenetresTests(ctx) {
     mouse('mouseUp');
     await until(() => d.tabs[L].title === 'Page cible', 'clic ordinaire : lien suivi');
     check('sans ⌥, le clic suit le lien dans la page', w.visibleIds().length === 1 && d.tabs[L].url === base + '/p/cible');
-    check('adresse survolée venue d’ailleurs que du Web : ⌥clic sans effet', w.splitLink(L, 'file:///etc/passwd') === undefined && w.splitLink(L, 'orbe://app/settings.html') === undefined && w.splitLink('inconnu', base + '/p/a') === undefined && w.visibleIds().length === 1);
+    check('adresse survolée venue d’ailleurs que du Web : ⌥clic sans effet', w.splitLink(L, 'file:///etc/passwd') === undefined && w.splitLink(L, 'orbx://app/settings.html') === undefined && w.splitLink('inconnu', base + '/p/a') === undefined && w.visibleIds().length === 1);
     w.close(L, { silent: true, ask: false });
   }
 
@@ -339,7 +339,7 @@ module.exports = async function fenetresTests(ctx) {
     check('Zap : rien n’est rangé pour un autre site que celui affiché', await boosts.zap(wc, 'autre.example') === null);
 
     // JavaScript : coupé par défaut, trois accords, page seulement
-    const script = 'document.documentElement.dataset.boost = [typeof window.orbe, typeof require, typeof process, window.top === window, location.host].join("|"); window.__boostRuns = (window.__boostRuns || 0) + 1;';
+    const script = 'document.documentElement.dataset.boost = [typeof window.orbx, typeof require, typeof process, window.top === window, location.host].join("|"); window.__boostRuns = (window.__boostRuns || 0) + 1;';
     boosts.set(host, { js: script, jsOn: true });
     const runs0 = boosts.ran.count;
     await reload();
@@ -347,7 +347,7 @@ module.exports = async function fenetresTests(ctx) {
     set({ boostsJs: true });
     await reload();
     await until(() => js('!!document.documentElement.dataset.boost'), 'script du Boost exécuté');
-    check('JavaScript d’un Boost : exécuté dans la page, avec les droits de la page (ni window.orbe, ni require, ni process)', await js('document.documentElement.dataset.boost') === `undefined|undefined|undefined|true|127.0.0.1:${port}` && boosts.ran.count === runs0 + 1, await js('document.documentElement.dataset.boost'));
+    check('JavaScript d’un Boost : exécuté dans la page, avec les droits de la page (ni window.orbx, ni require, ni process)', await js('document.documentElement.dataset.boost') === `undefined|undefined|undefined|true|127.0.0.1:${port}` && boosts.ran.count === runs0 + 1, await js('document.documentElement.dataset.boost'));
     check('JavaScript d’un Boost : une fois par chargement, pas dans les cadres', await js('window.__boostRuns') === 1 && await js('document.getElementById("cadre").contentDocument.documentElement.dataset.boost') === undefined);
     await boosts.apply(wc);
     boosts.set(host, { css: 'h1 { color: rgb(9, 9, 9) }' });
@@ -369,7 +369,7 @@ module.exports = async function fenetresTests(ctx) {
     // Page interne, aperçu, petite fenêtre : jamais.
     const inner = w.openInternal('shortcuts.html');
     await until(() => win.live.get(inner.id) && !win.live.get(inner.id).loading, 'page interne');
-    check('JavaScript d’un Boost : jamais dans une page interne d’Orbe', await boosts.runScript(win.live.get(inner.id).wc) === false && boosts.hooks.canScript(win.live.get(inner.id).wc) === false && boosts.hostOf('orbe://app/shortcuts.html') === '');
+    check('JavaScript d’un Boost : jamais dans une page interne d’Orbx', await boosts.runScript(win.live.get(inner.id).wc) === false && boosts.hooks.canScript(win.live.get(inner.id).wc) === false && boosts.hostOf('orbx://app/shortcuts.html') === '');
     w.close(inner.id, { silent: true, ask: false });
     w.activate(T);
     const before = boosts.ran.count;
@@ -466,7 +466,7 @@ module.exports = async function fenetresTests(ctx) {
     check('liste des Boosts : un par site, avec ce qu’il contient', await ed(`[...document.querySelectorAll('#list-items .item')].map((i) => i.dataset.host + ':' + i.querySelector('.what').textContent).join(' / ')`) === `${host}:${t('boost.look')} · CSS · ${t('boost.jsIdle')} / exemple.org:CSS`, await ed(`[...document.querySelectorAll('#list-items .item')].map((i) => i.dataset.host + ':' + i.querySelector('.what').textContent).join(' / ')`));
     await ed(`document.querySelector('#list-items .item[data-host="exemple.org"] input').click()`);
     await until(() => boosts.get('exemple.org').enabled === false, 'Boost coupé depuis la liste');
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-boosts-'));
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-boosts-'));
     const file = path.join(tmp, 'boosts.json');
     const dialogs = { save: dialog.showSaveDialog, open: dialog.showOpenDialog };
     dialog.showSaveDialog = async () => ({ canceled: false, filePath: file });
@@ -474,7 +474,7 @@ module.exports = async function fenetresTests(ctx) {
     await until(() => fs.existsSync(file) && fs.statSync(file).size > 10, 'fichier exporté');
     await sleep(60);
     const exported = JSON.parse(fs.readFileSync(file, 'utf8'));
-    check('export : un fichier JSON avec chaque Boost (site, nom, CSS, Zap, apparence, script), sans son état', exported.orbeBoosts === 1 && exported.boosts.map((b) => b.host).join() === [host, 'exemple.org'].sort().join() && exported.boosts.every((b) => !('enabled' in b) && !('jsOn' in b)) && exported.boosts.find((b) => b.host === host).js === script);
+    check('export : un fichier JSON avec chaque Boost (site, nom, CSS, Zap, apparence, script), sans son état', exported.orbxBoosts === 1 && exported.boosts.map((b) => b.host).join() === [host, 'exemple.org'].sort().join() && exported.boosts.every((b) => !('enabled' in b) && !('jsOn' in b)) && exported.boosts.find((b) => b.host === host).js === script);
     await ed(`document.querySelector('#list-items .item[data-host="exemple.org"] [data-act="delete"]').click()`);
     await until(() => !boosts.has('exemple.org'), 'Boost supprimé depuis la liste');
     // La liste se redessine un instant après la suppression : on attend son nouvel état.
@@ -482,7 +482,7 @@ module.exports = async function fenetresTests(ctx) {
     check('liste des Boosts : supprimer', listed);
     // Fichier importé : données non fiables
     const hostile = {
-      orbeBoosts: 1,
+      orbxBoosts: 1,
       boosts: [
         { host: 'exemple.org', name: 'x'.repeat(500), css: 'a { color: red }', zaps: ['ok > p', 'a{} body{display:none}', 7, 'a, b'], look: { color: 'red;}', size: 9999, font: '__proto__' }, js: 'window.__importe = 1', jsOn: true, enabled: true, autre: { a: 1 } },
         { host, css: 'remplacé' },
@@ -504,7 +504,7 @@ module.exports = async function fenetresTests(ctx) {
     check('import : un Boost existant n’est jamais remplacé ; hôtes invalides et entrées vides refusés', boosts.get(host).css === 'p { margin: 2px }' && !boosts.has('evil.example/chemin') && !Object.hasOwn(store.state.boosts, '__proto__') && !boosts.has('vide.example') && Object.keys(store.state.boosts).sort().join() === [host, 'exemple.org'].sort().join());
     await until(() => ed(`!document.getElementById('list-note').hidden && document.querySelectorAll('#list-items .item').length === 2`), 'compte rendu de l’import');
     check('import : compte rendu affiché (importés, déjà présents, refusés)', (await ed(`document.getElementById('list-note').textContent`)) === [t('boost.imported', { n: 1 }), t('boost.importSkipped', { n: 2 }), t('boost.importRejected', { n: 4 })].join(' '), await ed(`document.getElementById('list-note').textContent`));
-    check('import : fichier illisible, trop gros ou d’un autre format refusé', boosts.importText('{').error === 'format' && boosts.importText(JSON.stringify({ boosts: [] })).error === 'format' && boosts.importText('x'.repeat(boosts.FILE_MAX + 1)).error === 'size' && boosts.importData(null).error === 'format' && boosts.importData({ orbeBoosts: 1, boosts: 'x' }).error === 'format');
+    check('import : fichier illisible, trop gros ou d’un autre format refusé', boosts.importText('{').error === 'format' && boosts.importText(JSON.stringify({ boosts: [] })).error === 'format' && boosts.importText('x'.repeat(boosts.FILE_MAX + 1)).error === 'size' && boosts.importData(null).error === 'format' && boosts.importData({ orbxBoosts: 1, boosts: 'x' }).error === 'format');
     dialog.showSaveDialog = dialogs.save;
     dialog.showOpenDialog = dialogs.open;
     fs.rmSync(tmp, { recursive: true, force: true });
@@ -539,9 +539,9 @@ module.exports = async function fenetresTests(ctx) {
       ['https://www.amazon.fr/Un-Produit-Long/dp/B0ABCDEFGH/ref=sr_1_1?crid=1&keywords=x&qid=2', 'https://www.amazon.fr/dp/B0ABCDEFGH'],
       ['https://www.amazon.com/gp/product/B0ABCDEFGH?psc=1', 'https://www.amazon.com/dp/B0ABCDEFGH'],
       ['https://youtu.be/abc?si=jeton&t=10', 'https://youtu.be/abc?t=10'],
-      ['https://exemple.org/recherche?si=utile&q=orbe', 'https://exemple.org/recherche?si=utile&q=orbe'],
+      ['https://exemple.org/recherche?si=utile&q=orbx', 'https://exemple.org/recherche?si=utile&q=orbx'],
       ['https://exemple.org/a?b=1', 'https://exemple.org/a?b=1'],
-      ['orbe://app/library.html?utm_source=x', 'orbe://app/library.html?utm_source=x'],
+      ['orbx://app/library.html?utm_source=x', 'orbx://app/library.html?utm_source=x'],
       ['pas une adresse', 'pas une adresse'],
     ];
     check('copie d’adresse : paramètres de pistage retirés (utm_*, fbclid, igshid…), fiche Amazon réduite au produit, le reste intact', cases.every(([a, b]) => cleanUrl(a) === b), JSON.stringify(cases.filter(([a, b]) => cleanUrl(a) !== b).map(([a]) => [a, cleanUrl(a)])));
@@ -607,11 +607,11 @@ module.exports = async function fenetresTests(ctx) {
     little.LittleWindow.all[lw0].win.close();
     for (const id of [bg, sv[1]]) w.close(id, { silent: true, ask: false });
     w.activate(P.id);
-    const selMenu = menu({ selectionText: 'orbe' });
-    check('menu de page, sélection : copier, rechercher, copier en citation', labels(selMenu).join('|') === [t('edit.copy'), t('ctx.searchFor', { text: 'orbe' }), t('edit.copyUrlQuote'), t('ctx.inspect')].join('|'), labels(selMenu).join('|'));
+    const selMenu = menu({ selectionText: 'orbx' });
+    check('menu de page, sélection : copier, rechercher, copier en citation', labels(selMenu).join('|') === [t('edit.copy'), t('ctx.searchFor', { text: 'orbx' }), t('edit.copyUrlQuote'), t('ctx.inspect')].join('|'), labels(selMenu).join('|'));
     await pwc.executeJavaScript('getSelection().selectAllChildren(document.querySelector(".texte")); true');
     item(selMenu, 'edit.copyUrlQuote').click();
-    await until(async () => (await clipboard.readText()) === `> orbe\n>\n> — [Page suivi](${base}/p/suivi?id=7)`, 'citation copiée');
+    await until(async () => (await clipboard.readText()) === `> orbx\n>\n> — [Page suivi](${base}/p/suivi?id=7)`, 'citation copiée');
     check('menu de page : « Copier la sélection en citation » (texte, titre et adresse de la page, sans pistage)', true);
     await clipboard.writeText(clip);
     const img = menu({ mediaType: 'image', srcURL: base + '/image.png' });
@@ -698,7 +698,7 @@ module.exports = async function fenetresTests(ctx) {
     const settings = store.state.settings;
     const before = { externalLinks: settings.externalLinks, routes: settings.routes, size: store.state.window.littleSize };
     const calls = [];
-    const openInOrbe = little.hooks.openInOrbe;
+    const openInOrbx = little.hooks.openInOrbx;
 
     // Liens venus d'autres applications
     settings.externalLinks = 'little';
@@ -737,7 +737,7 @@ module.exports = async function fenetresTests(ctx) {
     l1.url = base + '/p/externe';
     const extra = store.makeSpace('Été à Paris', '🌞', '#f59e0b');
     d.spaces.push(extra);
-    little.hooks.openInOrbe = (url, spaceId) => calls.push([url, spaceId]);
+    little.hooks.openInOrbx = (url, spaceId) => calls.push([url, spaceId]);
     await lui(`document.getElementById('open-in').click()`);
     await until(() => lui(`!document.getElementById('spaces').hidden && document.querySelectorAll('#space-list button').length`).then((n) => n === d.spaces.length), 'menu des Espaces');
     const kids = l1.win.contentView.children;
@@ -755,7 +755,7 @@ module.exports = async function fenetresTests(ctx) {
     await lui(`(() => { const s = document.getElementById('space-search'); s.value = 'paris'; s.dispatchEvent(new Event('input', { bubbles: true })); s.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); })()`);
     await until(() => calls.length === 1 && count() === 0, 'page envoyée dans l’Espace choisi');
     check('⌥⌘O, recherche, Entrée : la page part dans l’Espace trouvé et la petite fenêtre se ferme', calls[0][0] === base + '/p/externe' && calls[0][1] === extra.id);
-    little.hooks.openInOrbe = openInOrbe;
+    little.hooks.openInOrbx = openInOrbx;
     d.spaces.splice(d.spaces.indexOf(extra), 1);
 
     // Taille mémorisée
@@ -770,12 +770,12 @@ module.exports = async function fenetresTests(ctx) {
     check('taille enregistrée illisible ou hors bornes : taille par défaut, puis bornée', JSON.stringify(little.savedSize()) === JSON.stringify({ width: 860, height: 640 }) && (store.state.window.littleSize = { width: 10, height: 99999 }) && JSON.stringify(little.savedSize()) === JSON.stringify({ width: 380, height: 3000 }));
     if (before.size) store.state.window.littleSize = before.size; else delete store.state.window.littleSize;
 
-    // Jamais une page d'Orbe dans une petite fenêtre
-    l3.load('orbe://app/settings.html');
-    check('petite fenêtre : une adresse interne d’Orbe n’y est jamais chargée', !l3.view && l3.url === '' && new LittleWindow('orbe://app/library.html').url === '');
+    // Jamais une page d'Orbx dans une petite fenêtre
+    l3.load('orbx://app/settings.html');
+    check('petite fenêtre : une adresse interne d’Orbx n’y est jamais chargée', !l3.view && l3.url === '' && new LittleWindow('orbx://app/library.html').url === '');
     l3.load(base + '/p/garde');
     await until(() => l3.title === 'Page garde', 'page de la petite fenêtre');
-    await l3.view.webContents.executeJavaScript(`location.href = 'orbe://app/settings.html'; true`).catch(() => {});
+    await l3.view.webContents.executeJavaScript(`location.href = 'orbx://app/settings.html'; true`).catch(() => {});
     await sleep(300);
     check('… ni atteinte par une navigation de la page', l3.view.webContents.getURL() === base + '/p/garde' && !win.trusted.has(l3.view.webContents));
     const asked = [];
@@ -865,7 +865,7 @@ module.exports = async function fenetresTests(ctx) {
     require('../src/main/menu').refresh(true);
     check('barre de menus : « Agrandir ce volet », « Séparer tous les onglets… », « Afficher les Boosts… »' + (process.platform === 'darwin' ? ', « Partager… »' : ''), ['view.expandSplit', 'view.separateAll', 'boost.list', ...(process.platform === 'darwin' ? ['tb.share'] : [])].every(menuHas), ['view.expandSplit', 'view.separateAll', 'boost.list', 'tb.share'].filter((k) => !menuHas(k)).join());
     // Enregistrer la page (⇧⌘S)
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-page-'));
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-page-'));
     const file = path.join(tmp, 'page.html');
     const save = dialog.showSaveDialog;
     let proposed = '';

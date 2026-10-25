@@ -23,7 +23,7 @@ test('hostOf : extrait l\'hôte des URL http(s) et ws(s) seulement', () => {
   assert.equal(hostOf('HTTPS://PUB.TEST/'), 'pub.test');
   assert.equal(hostOf('http://[::1]:3000/x'), '[::1]');
   assert.equal(hostOf('http://127.0.0.1:3000/x'), '127.0.0.1');
-  for (const url of ['orbe://app/index.html', 'file:///tmp/a.html', 'devtools://devtools/x', 'chrome-extension://abc/x.js', 'data:text/html,<p>', 'blob:https://pub.test/1', 'about:blank', '', null, undefined]) {
+  for (const url of ['orbx://app/index.html', 'file:///tmp/a.html', 'devtools://devtools/x', 'chrome-extension://abc/x.js', 'data:text/html,<p>', 'blob:https://pub.test/1', 'about:blank', '', null, undefined]) {
     assert.equal(hostOf(url), '', String(url));
   }
 });
@@ -80,11 +80,11 @@ test('deux sites sous un même suffixe public restent des tiers', () => {
 });
 
 test('ignore les schémas internes et locaux', () => {
-  for (const url of ['orbe://pub.test/x', 'file:///pub.test/x', 'devtools://pub.test/x', 'chrome-extension://pub.test/x.js', 'data:text/plain,pub.test', 'blob:https://pub.test/42']) {
+  for (const url of ['orbx://pub.test/x', 'file:///pub.test/x', 'devtools://pub.test/x', 'chrome-extension://pub.test/x.js', 'data:text/plain,pub.test', 'blob:https://pub.test/42']) {
     assert.equal(shouldBlock(url, from(PAGE)), false, url);
   }
   // Page interne ou origine inconnue : aucune exception « même site » possible.
-  assert.equal(shouldBlock('https://pub.test/ad.js', from('orbe://app/nouvel-onglet.html')), true);
+  assert.equal(shouldBlock('https://pub.test/ad.js', from('orbx://app/nouvel-onglet.html')), true);
   assert.equal(shouldBlock('https://pub.test/ad.js'), true);
 });
 
@@ -121,7 +121,7 @@ test('shouldBlockPopup : refuse une ouverture vers un domaine publicitaire list�
   assert.equal(shouldBlockPopup('https://pub.test/pop.html', 'https://autre.fr/'), false);
   adblock.setEnabled(true);
   // Schémas non http(s)/ws(s) : jamais bloqués, quel que soit l'hôte apparent.
-  for (const url of ['orbe://pub.test/x', 'file:///pub.test/x', 'chrome-extension://pub.test/x.js', 'data:text/plain,pub.test', 'blob:https://pub.test/42', '']) {
+  for (const url of ['orbx://pub.test/x', 'file:///pub.test/x', 'chrome-extension://pub.test/x.js', 'data:text/plain,pub.test', 'blob:https://pub.test/42', '']) {
     assert.equal(shouldBlockPopup(url, PAGE), false, url);
   }
 });
@@ -257,7 +257,7 @@ test('la liste fournie se charge et couvre les grandes régies', async () => {
   for (const url of ['https://securepubads.g.doubleclick.net/tag/js/gpt.js', 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js', 'https://www.google-analytics.com/analytics.js', 'https://static.criteo.net/js/ld/publishertag.js', 'https://cdn.taboola.com/libtrc/loader.js']) {
     assert.equal(shouldBlock(url, from(PAGE)), true, url);
   }
-  for (const url of ['https://www.google.com/search?q=orbe', 'https://fonts.googleapis.com/css2', 'https://fr.wikipedia.org/wiki/Orbe', 'https://cdn.jsdelivr.net/npm/x', 'https://www.youtube.com/embed/x']) {
+  for (const url of ['https://www.google.com/search?q=orbx', 'https://fonts.googleapis.com/css2', 'https://fr.wikipedia.org/wiki/Orbx', 'https://cdn.jsdelivr.net/npm/x', 'https://www.youtube.com/embed/x']) {
     assert.equal(shouldBlock(url, from(PAGE)), false, url);
   }
   assert.equal(shouldBlock('https://ad.doubleclick.net/', from('', 'mainFrame')), false);

@@ -1,18 +1,18 @@
-// Scénario Windows : inscription d'Orbe comme navigateur, puis retrait.
-//   ORBE_SCENARIO=tests/win-default.js ORBE_USER_DATA=<dossier> Orbe.exe --selftest --orbe-test
-// Passe par les vraies commandes (« Définir Orbe par défaut », puis
-// « Retirer Orbe des navigateurs de Windows ») et relit le registre avec
+// Scénario Windows : inscription d'Orbx comme navigateur, puis retrait.
+//   ORBX_SCENARIO=tests/win-default.js ORBX_USER_DATA=<dossier> Orbx.exe --selftest --orbx-test
+// Passe par les vraies commandes (« Définir Orbx par défaut », puis
+// « Retirer Orbx des navigateurs de Windows ») et relit le registre avec
 // « reg query ». L'ouverture des Paramètres de Windows est interceptée.
-// ORBE_WIN_DEFAULT_STEP=register ou unregister : une seule moitié, pour que
+// ORBX_WIN_DEFAULT_STEP=register ou unregister : une seule moitié, pour que
 // l'intégration continue relise le registre entre les deux.
-// À ne lancer que sur une machine d'essai : l'inscription réelle d'Orbe est retirée.
+// À ne lancer que sur une machine d'essai : l'inscription réelle d'Orbx est retirée.
 const path = require('path');
 
 module.exports = async function winDefault({ commands }) {
   const { app, shell } = require('electron');
   if (process.platform !== 'win32') throw new Error('Scénario réservé à Windows.');
   const wd = require(path.join(app.getAppPath(), 'src', 'main', 'win-default.js'));
-  const step = process.env.ORBE_WIN_DEFAULT_STEP || 'cycle';
+  const step = process.env.ORBX_WIN_DEFAULT_STEP || 'cycle';
   let n = 0;
   const ok = (cond, label) => { if (!cond) throw new Error('Échec : ' + label); n++; console.log('  ✓ ' + label); };
   const exists = (key, value) => wd.reg(['query', key, ...(value === undefined ? [] : value === '' ? ['/ve'] : ['/v', value])]).then(() => true, () => false);
@@ -48,7 +48,7 @@ module.exports = async function winDefault({ commands }) {
     ok(true, `${plan.keys.length} clés et ${values} valeurs écrites sous HKCU, relues à l’identique`);
     for (const v of plan.values) ok((await read(v.key, v.name)) === v.value, `${v.key.replace('HKEY_CURRENT_USER', 'HKCU')} : ${v.name}`);
     ok((await read(plan.roots[0] + '\\shell\\open\\command', '')) === `"${exe}"${app.isPackaged ? '' : ` "${app.getAppPath()}"`} "%1"`, 'la commande d’ouverture désigne cet exécutable : ' + exe);
-    ok(await wd.registered(), 'Orbe figure dans RegisteredApplications, avec ses capacités http et https');
+    ok(await wd.registered(), 'Orbx figure dans RegisteredApplications, avec ses capacités http et https');
     // Refaire l'inscription ne casse rien (dossier déplacé, second clic).
     await commands.makeDefault();
     ok(await wd.registered(), 'un second clic laisse l’inscription en place');
@@ -56,16 +56,16 @@ module.exports = async function winDefault({ commands }) {
 
   if (step !== 'register') {
     const undo = commands.byName.get('undoDefaultBrowser');
-    ok(!!undo, 'la commande « Retirer Orbe des navigateurs de Windows » existe');
+    ok(!!undo, 'la commande « Retirer Orbx des navigateurs de Windows » existe');
     const shared = 'HKEY_CURRENT_USER\\Software\\RegisteredApplications';
-    await wd.reg(['add', shared, '/v', 'OrbeTemoin', '/d', 'temoin', '/f']);
+    await wd.reg(['add', shared, '/v', 'OrbxTemoin', '/d', 'temoin', '/f']);
     await undo.run(null);
     for (const root of plan.roots) ok(!(await exists(root)), 'clé retirée : ' + root.replace('HKEY_CURRENT_USER', 'HKCU'));
     for (const v of plan.values) ok(!(await exists(v.key, v.name)), `valeur retirée : ${v.key.replace('HKEY_CURRENT_USER', 'HKCU')} [${v.name}]`);
-    ok(!(await wd.registered()), 'Orbe ne figure plus dans RegisteredApplications');
-    // Les clés partagées, elles, restent : seule la valeur d'Orbe est partie.
-    ok(await exists(shared, 'OrbeTemoin'), 'les autres inscriptions de RegisteredApplications sont intactes');
-    await wd.reg(['delete', shared, '/v', 'OrbeTemoin', '/f']);
+    ok(!(await wd.registered()), 'Orbx ne figure plus dans RegisteredApplications');
+    // Les clés partagées, elles, restent : seule la valeur d'Orbx est partie.
+    ok(await exists(shared, 'OrbxTemoin'), 'les autres inscriptions de RegisteredApplications sont intactes');
+    await wd.reg(['delete', shared, '/v', 'OrbxTemoin', '/f']);
     await undo.run(null);
     ok(!(await wd.registered()), 'retirer deux fois ne fait pas d’erreur');
   }

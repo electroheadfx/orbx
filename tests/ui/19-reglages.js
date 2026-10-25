@@ -118,10 +118,10 @@ module.exports = {
       await jusqua(() => r.locator('#route-msg').isVisible(), 'refus expliqué');
       assert.equal((await reglage('routes')).length, 0, 'rien n’est enregistré');
       await r.locator('#route-match').fill('');
-      await r.keyboard.type('https://www.GitHub.com/Orbe/', { delay: 10 });
+      await r.keyboard.type('https://www.GitHub.com/Orbx/', { delay: 10 });
       await r.keyboard.press('Enter');
       await jusqua(async () => (await reglage('routes')).length === 1, 'règle enregistrée');
-      assert.equal((await reglage('routes'))[0].match, 'github.com/orbe');
+      assert.equal((await reglage('routes'))[0].match, 'github.com/orbx');
       assert.equal(await r.locator('#route-msg').isVisible(), false);
       await r.locator('#routes .line .btn').first().click();
       await jusqua(async () => (await reglage('routes')).length === 0, 'règle supprimée');
@@ -188,10 +188,10 @@ module.exports = {
       await jusqua(() => r.locator('#never-sleep-msg').isVisible(), 'refus affiché');
       assert.deepEqual(await reglage('neverSleep'), []);
       await r.fill('#never-sleep-site', '');
-      await r.keyboard.type('https://www.GitHub.com/Orbe/', { delay: 8 });
+      await r.keyboard.type('https://www.GitHub.com/Orbx/', { delay: 8 });
       await r.keyboard.press('Enter');
-      await jusqua(async () => (await reglage('neverSleep')).join() === 'github.com/orbe', 'site enregistré sous sa forme normale');
-      await jusqua(async () => (await r.locator('#never-sleep-list .line .name').allTextContents()).join() === 'github.com/orbe', 'site listé');
+      await jusqua(async () => (await reglage('neverSleep')).join() === 'github.com/orbx', 'site enregistré sous sa forme normale');
+      await jusqua(async () => (await r.locator('#never-sleep-list .line .name').allTextContents()).join() === 'github.com/orbx', 'site listé');
       assert.equal(await r.locator('#never-sleep-msg').isVisible(), false);
       assert.equal(await r.inputValue('#never-sleep-site'), '');
       await jusqua(sansDefilement, 'la fenêtre suit la liste');
@@ -324,10 +324,10 @@ module.exports = {
     // --- Liens : clics modifiés ------------------------------------------------------
     const pageL = await ctx.ouvrir('/liens', 'Page à liens');
     const boite = await pageL.locator('#dehors').boundingBox();
-    // Orbe suit la touche ⌥ par les événements clavier de la fenêtre, que les
+    // Orbx suit la touche ⌥ par les événements clavier de la fenêtre, que les
     // frappes de Playwright n'empruntent pas : ⌥ est donc envoyée par Electron
     // (comme une vraie touche), le clic et les autres touches par Playwright.
-    // Avec ⌥, Orbe regarde aussi si une autre touche de modification est tenue (⌥ seule ouvre une
+    // Avec ⌥, Orbx regarde aussi si une autre touche de modification est tenue (⌥ seule ouvre une
     // vue scindée, ⌥⌘ une petite fenêtre) : celle-ci lui est donc envoyée de la même façon.
     const alt = (type, avecMeta) => ctx.principal(({ w, win }, a) => {
       const wc = win.live.get(w.activeId).wc;

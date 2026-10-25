@@ -1,6 +1,6 @@
 // Mises à jour (src/main/updates.js) : GitHub est remplacé par un serveur local.
 // Appelé par tests/selftest.js, ou seul :
-//   ORBE_SCENARIO=tests/mises-a-jour.js node scripts/dev.js --selftest
+//   ORBX_SCENARIO=tests/mises-a-jour.js node scripts/dev.js --selftest
 // Aucune requête ne part vers Internet.
 const crypto = require('crypto');
 const http = require('http');
@@ -16,7 +16,7 @@ module.exports = async function majTests(ctx) {
   let failed = 0;
   const check = ctx.check || ((name, ok, detail = '') => { if (!ok) failed += 1; console.log(`${ok ? '  ✓' : '  ✗'} ${name}${ok || !detail ? '' : ' — ' + detail}`); });
   const ui = (js) => w.ui.webContents.executeJavaScript(js);
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-maj-'));
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-maj-'));
   const mine = updates.assetName('9.9.9');
   const zip = Buffer.concat([Buffer.from('PK\u0003\u0004'), crypto.randomBytes(70000)]);
   const sha = crypto.createHash('sha256').update(zip).digest('hex');
@@ -31,7 +31,7 @@ module.exports = async function majTests(ctx) {
     if (req.url.startsWith('/releases/download/')) {
       // `hop` : ce que fait le serveur de l'archive (redirections, silence), pour les essais de refus.
       if (hop === 'ailleurs') { res.statusCode = 302; res.setHeader('location', `http://localhost:${server.address().port}/vol`); return res.end(); }
-      if (hop === 'http') { res.statusCode = 302; res.setHeader('location', 'http://objects.githubusercontent.com/orbe-essai-jamais-demande'); return res.end(); }
+      if (hop === 'http') { res.statusCode = 302; res.setHeader('location', 'http://objects.githubusercontent.com/orbx-essai-jamais-demande'); return res.end(); }
       if (hop === 'relais') { res.statusCode = 302; res.setHeader('location', `/relais/${path.basename(req.url)}`); return res.end(); }
       res.setHeader('content-type', 'application/zip');
       if (hop === 'muet') { res.setHeader('content-length', served.length); res.write(served.subarray(0, 2000)); return undefined; }
@@ -44,7 +44,7 @@ module.exports = async function majTests(ctx) {
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   const base = `http://127.0.0.1:${server.address().port}`;
   const release = (over = {}) => ({
-    tag_name: 'v9.9.9', name: 'Orbe 9.9.9', draft: false, prerelease: false, published_at: '2026-10-01T10:00:00Z',
+    tag_name: 'v9.9.9', name: 'Orbx 9.9.9', draft: false, prerelease: false, published_at: '2026-10-01T10:00:00Z',
     html_url: 'https://exemple.invalid/ailleurs',
     body: 'Nouveautés\r\n- import depuis Chrome\n<img src=x onerror="document.title=\'piégé\'"><script>document.title="piégé"</script>‮',
     assets: mine ? [{ name: mine, size: zip.length, digest: 'sha256:' + sha, browser_download_url: 'https://pirate.example/ignoree.zip' }] : [],
@@ -57,12 +57,12 @@ module.exports = async function majTests(ctx) {
     updates.compare('0.12.1', '0.12.0') > 0 && updates.compare('0.9.0', '0.12.0') < 0 && updates.compare('v1.0.0', '0.99.99') > 0 && updates.compare('0.12.0', 'v0.12.0') === 0
     && updates.compare('1.0.0-beta', '0.1.0') === 0 && updates.compare('abc', '0.1.0') === 0 && updates.compare('', '') === 0);
   const gh = (over) => updates.parseRelease({ tag_name: 'v1.2.3', body: 'x', assets: [], ...over }, { platform: 'darwin', arch: 'arm64' });
-  const macAsset = { name: 'Orbe-1.2.3-mac-arm64.zip', size: 10, browser_download_url: 'https://github.com/amadoubaui/orbe/releases/download/v1.2.3/Orbe-1.2.3-mac-arm64.zip' };
+  const macAsset = { name: 'Orbx-1.2.3-mac-arm64.zip', size: 10, browser_download_url: 'https://github.com/electroheadfx/orbx/releases/download/v1.2.3/Orbx-1.2.3-mac-arm64.zip' };
   const dg = 'sha256:' + 'a'.repeat(64);
-  const good = gh({ assets: [{ ...macAsset, digest: dg }, { ...macAsset, name: 'Orbe-1.2.3-windows-x64.zip', digest: dg }], html_url: 'https://pirate.example/' });
-  check('version publiée : numéro, page reconstruite dans le dépôt d’Orbe, archive de ce système',
-    good.version === '1.2.3' && good.url === 'https://github.com/amadoubaui/orbe/releases/tag/v1.2.3' && good.asset.name === 'Orbe-1.2.3-mac-arm64.zip' && good.asset.digest === 'a'.repeat(64)
-    && updates.parseRelease({ tag_name: '1.2.3', assets: [{ ...macAsset, name: 'Orbe-1.2.3-windows-x64.zip', digest: dg }] }, { platform: 'win32', arch: 'x64' }).asset.name === 'Orbe-1.2.3-windows-x64.zip'
+  const good = gh({ assets: [{ ...macAsset, digest: dg }, { ...macAsset, name: 'Orbx-1.2.3-windows-x64.zip', digest: dg }], html_url: 'https://pirate.example/' });
+  check('version publiée : numéro, page reconstruite dans le dépôt d’Orbx, archive de ce système',
+    good.version === '1.2.3' && good.url === 'https://github.com/electroheadfx/orbx/releases/tag/v1.2.3' && good.asset.name === 'Orbx-1.2.3-mac-arm64.zip' && good.asset.digest === 'a'.repeat(64)
+    && updates.parseRelease({ tag_name: '1.2.3', assets: [{ ...macAsset, name: 'Orbx-1.2.3-windows-x64.zip', digest: dg }] }, { platform: 'win32', arch: 'x64' }).asset.name === 'Orbx-1.2.3-windows-x64.zip'
     && updates.parseRelease({ tag_name: '1.2.3', assets: [{ ...macAsset, digest: dg }] }, { platform: 'linux', arch: 'x64' }).asset === null, JSON.stringify(good));
   check('brouillon, préversion, numéro illisible ou réponse qui n’est pas un objet : ignorés',
     gh({ draft: true }) === null && gh({ prerelease: true }) === null && gh({ tag_name: 'v1.2' }) === null && gh({ tag_name: '1.2.3; rm -rf' }) === null && gh({ tag_name: 12 }) === null
@@ -70,32 +70,32 @@ module.exports = async function majTests(ctx) {
   // L'adresse de l'archive n'est jamais reprise de la réponse : elle est reconstruite (finding 4).
   const real0 = updates.internals();
   updates.configure({ test: false });
-  const rebuilt = 'https://github.com/amadoubaui/orbe/releases/download/v1.2.3/Orbe-1.2.3-mac-arm64.zip';
+  const rebuilt = 'https://github.com/electroheadfx/orbx/releases/download/v1.2.3/Orbx-1.2.3-mac-arm64.zip';
   const urlOf = (u) => { const r = gh({ assets: [{ ...macAsset, digest: dg, browser_download_url: u }] }); return r.asset && r.asset.url; };
   check('adresse de l’archive reconstruite à partir de l’étiquette et du nom : ce que dit la réponse (autre dépôt, « ../ », HTTP, autre hôte) est ignoré',
-    urlOf('https://github.com/amadoubaui/orbe/releases/download/../../../../pirate/depot/releases/download/v1.2.3/Orbe-1.2.3-mac-arm64.zip') === rebuilt
-    && urlOf('https://github.com/pirate/orbe/releases/download/v1.2.3/Orbe-1.2.3-mac-arm64.zip') === rebuilt && urlOf('http://github.com/amadoubaui/orbe/releases/download/v1.2.3/x.zip') === rebuilt
+    urlOf('https://github.com/electroheadfx/orbx/releases/download/../../../../pirate/depot/releases/download/v1.2.3/Orbx-1.2.3-mac-arm64.zip') === rebuilt
+    && urlOf('https://github.com/pirate/orbx/releases/download/v1.2.3/Orbx-1.2.3-mac-arm64.zip') === rebuilt && urlOf('http://github.com/electroheadfx/orbx/releases/download/v1.2.3/x.zip') === rebuilt
     && urlOf('https://github.com.pirate.example/x.zip') === rebuilt && urlOf(42) === rebuilt && updates.parseRelease({ tag_name: '1.2.3', assets: [{ ...macAsset, digest: dg }] }, { platform: 'darwin', arch: 'arm64' }).asset.url === rebuilt.replace('/v1.2.3/', '/1.2.3/')
-    && updates.assetUrl('v1.2.3/../x', 'Orbe-1.2.3-mac-arm64.zip') === '' && updates.assetUrl('v1.2.3', '../x.zip') === '' && updates.assetUrl('v1.2.3', 'a/b.zip') === '');
+    && updates.assetUrl('v1.2.3/../x', 'Orbx-1.2.3-mac-arm64.zip') === '' && updates.assetUrl('v1.2.3', '../x.zip') === '' && updates.assetUrl('v1.2.3', 'a/b.zip') === '');
   check('archive de taille folle, d’un autre nom, ou sans empreinte publiée : pas de téléchargement proposé (la page de la version reste)',
     gh({ assets: [{ ...macAsset, digest: dg, size: 5e12 }] }).asset === null && gh({ assets: [{ ...macAsset, digest: dg, size: -1 }] }).asset === null && gh({ assets: [{ ...macAsset, digest: dg, size: '10' }] }).asset === null
-    && gh({ assets: [{ ...macAsset, digest: dg, name: 'Orbe-1.2.3-mac-arm64.zip.exe' }] }).asset === null && gh({ assets: 'x' }).asset === null && gh({ assets: [null, 4, 'a'] }).asset === null
+    && gh({ assets: [{ ...macAsset, digest: dg, name: 'Orbx-1.2.3-mac-arm64.zip.exe' }] }).asset === null && gh({ assets: 'x' }).asset === null && gh({ assets: [null, 4, 'a'] }).asset === null
     && gh({ assets: [macAsset] }).asset === null && gh({ assets: [{ ...macAsset, digest: 'sha256:xyz' }] }).asset === null && gh({ assets: [{ ...macAsset, digest: 'md5:' + 'a'.repeat(32) }] }).asset === null
-    && gh({ assets: [macAsset] }).url === 'https://github.com/amadoubaui/orbe/releases/tag/v1.2.3');
+    && gh({ assets: [macAsset] }).url === 'https://github.com/electroheadfx/orbx/releases/tag/v1.2.3');
   // Chaque requête, chaque saut de redirection : HTTPS et hôte exact (finding 1).
   const hopOk = updates.hopAllowed;
   check('requêtes permises à la session des mises à jour : HTTPS vers api.github.com et les hôtes de fichiers de GitHub, rien d’autre',
     hopOk(updates.ENDPOINT) && hopOk(rebuilt) && hopOk('https://objects.githubusercontent.com/x') && hopOk('https://release-assets.githubusercontent.com/x?sig=1')
-    && !hopOk('http://github.com/amadoubaui/orbe/releases/download/v1/x.zip') && !hopOk('http://objects.githubusercontent.com/x') && !hopOk('https://pirate.example/x') && !hopOk('https://github.com.pirate.example/x')
+    && !hopOk('http://github.com/electroheadfx/orbx/releases/download/v1/x.zip') && !hopOk('http://objects.githubusercontent.com/x') && !hopOk('https://pirate.example/x') && !hopOk('https://github.com.pirate.example/x')
     && !hopOk('https://sub.objects.githubusercontent.com/x') && !hopOk('https://github.com:8443/x') && !hopOk('https://u:p@github.com/x') && !hopOk('http://127.0.0.1:8080/x') && !hopOk('file:///etc/passwd') && !hopOk('data:text/plain,x') && !hopOk(''));
   updates.configure(real0);
   const long = gh({ body: 'é'.repeat(50000), name: 'n'.repeat(900) });
   const dirty = gh({ body: 'a\u0000b‮c\u0007d\r\ne', name: 7 });
   check('notes de version : longueur bornée, caractères de contrôle et d’inversion retirés',
     long.notes.length === updates.MAX_NOTES && long.name.length === 120 && dirty.notes === 'abcd\ne' && dirty.name === '');
-  check('seul api.github.com, en HTTPS et sur le dépôt d’Orbe, est accepté pour la question',
-    updates.endpointOk(updates.ENDPOINT) && !updates.endpointOk('http://api.github.com/repos/amadoubaui/orbe/releases/latest') && !updates.endpointOk('https://api.github.com/repos/pirate/orbe/releases/latest')
-    && !updates.endpointOk('https://api.github.com.pirate.example/repos/amadoubaui/orbe/releases/latest') && !updates.endpointOk('https://pirate.example/') && !updates.endpointOk('file:///etc/passwd') && !updates.endpointOk(''));
+  check('seul api.github.com, en HTTPS et sur le dépôt d’Orbx, est accepté pour la question',
+    updates.endpointOk(updates.ENDPOINT) && !updates.endpointOk('http://api.github.com/repos/electroheadfx/orbx/releases/latest') && !updates.endpointOk('https://api.github.com/repos/pirate/orbx/releases/latest')
+    && !updates.endpointOk('https://api.github.com.pirate.example/repos/electroheadfx/orbx/releases/latest') && !updates.endpointOk('https://pirate.example/') && !updates.endpointOk('file:///etc/passwd') && !updates.endpointOk(''));
 
   // --- Vérification, contre le serveur local ----------------------------------------
   const before = { ...store.state.updates };
@@ -110,23 +110,23 @@ module.exports = async function majTests(ctx) {
   const pinned = updates.internals().endpoint;
   updates.configure({ test: true, endpoint: 'http://192.168.1.10/latest' });
   check('hors test, ou vers une autre machine, une adresse de substitution est ignorée : la question reste pour GitHub',
-    pinned === updates.ENDPOINT && updates.internals().endpoint === updates.ENDPOINT && pinned === 'https://api.github.com/repos/amadoubaui/orbe/releases/latest');
+    pinned === updates.ENDPOINT && updates.internals().endpoint === updates.ENDPOINT && pinned === 'https://api.github.com/repos/electroheadfx/orbx/releases/latest');
   store.state.updates = {};
-  updates.configure({ test: true, endpoint: `${base}/repos/amadoubaui/orbe/releases/latest`, version: '0.12.0', downloadsDir: () => tmp, reveal: (f) => revealed.push(f), open: (u) => opened.push(u), show: () => { shown += 1; }, now: () => now });
+  updates.configure({ test: true, endpoint: `${base}/repos/electroheadfx/orbx/releases/latest`, version: '0.12.0', downloadsDir: () => tmp, reveal: (f) => revealed.push(f), open: (u) => opened.push(u), show: () => { shown += 1; }, now: () => now });
 
   reply = json(release());
   const r1 = await updates.check({ manual: true });
   const st1 = updates.status();
   const h = seen[0] ? seen[0].headers : {};
   check('une version plus récente est annoncée, avec ses notes', r1.state === 'available' && st1.available && st1.latest.version === '9.9.9' && st1.latest.notes.startsWith('Nouveautés\n- import depuis Chrome') && !/‮/.test(st1.latest.notes)
-    && st1.latest.url === 'https://github.com/amadoubaui/orbe/releases/tag/v9.9.9' && st1.checkedAt === now, JSON.stringify(st1));
-  check('la question ne porte aucun identifiant : ni cookie, ni référent, ni version, agent « Orbe »',
-    seen.length === 1 && seen[0].url === '/repos/amadoubaui/orbe/releases/latest' && h['user-agent'] === 'Orbe' && !h.cookie && !h.referer && !h.authorization && !/\?/.test(seen[0].url)
+    && st1.latest.url === 'https://github.com/electroheadfx/orbx/releases/tag/v9.9.9' && st1.checkedAt === now, JSON.stringify(st1));
+  check('la question ne porte aucun identifiant : ni cookie, ni référent, ni version, agent « Orbx »',
+    seen.length === 1 && seen[0].url === '/repos/electroheadfx/orbx/releases/latest' && h['user-agent'] === 'Orbx' && !h.cookie && !h.referer && !h.authorization && !/\?/.test(seen[0].url)
     && !JSON.stringify(h).includes('0.12') && !/electron|chrome/i.test(h['user-agent']), JSON.stringify(h));
 
   // Note de la barre latérale.
   await until(() => ui('!document.getElementById("update-note").hidden'), 'note de mise à jour affichée');
-  check('barre latérale : une ligne discrète annonce la version', (await ui('document.getElementById("update-open").textContent')) === 'Orbe 9.9.9 est disponible');
+  check('barre latérale : une ligne discrète annonce la version', (await ui('document.getElementById("update-open").textContent')) === 'Orbx 9.9.9 est disponible');
   check('le cœur de la note bat quelques fois puis se repose : pas d’animation sans fin (ENER-2)',
     Number(await ui('getComputedStyle(document.getElementById("update-open"), "::before").animationIterationCount')) <= 5);
   await ui('document.getElementById("update-open").click()');
@@ -181,7 +181,7 @@ module.exports = async function majTests(ctx) {
   const same = await updates.check({ manual: true });
   reply = json(release({ tag_name: 'v0.11.9' }));
   const older = await updates.check({ manual: true });
-  check('même version ou version plus ancienne : Orbe est à jour, aucune note', same.state === 'upToDate' && older.state === 'upToDate' && !updates.status().available && updates.note() === null && updates.status().error === '');
+  check('même version ou version plus ancienne : Orbx est à jour, aucune note', same.state === 'upToDate' && older.state === 'upToDate' && !updates.status().available && updates.note() === null && updates.status().error === '');
   await until(() => ui('document.getElementById("update-note").hidden'), 'note retirée');
 
   // --- Réglages : carte des mises à jour --------------------------------------------
@@ -199,11 +199,11 @@ module.exports = async function majTests(ctx) {
     dl: !document.getElementById('update-download').hidden, page: document.getElementById('update-page').textContent, check: document.getElementById('update-check').textContent,
   })`));
   check('réglages : version en cours, version disponible, notes de version',
-    card.version === 'Orbe 0.12.0' && card.state === 'Orbe 9.9.9 est disponible' && card.head.startsWith('Orbe 9.9.9 est disponible') && card.notes.includes('import depuis Chrome') && card.box === true && card.page === 'Page de téléchargement' && card.check === 'Rechercher' && card.dl === !!mine, JSON.stringify(card));
+    card.version === 'Orbx 0.12.0' && card.state === 'Orbx 9.9.9 est disponible' && card.head.startsWith('Orbx 9.9.9 est disponible') && card.notes.includes('import depuis Chrome') && card.box === true && card.page === 'Page de téléchargement' && card.check === 'Rechercher' && card.dl === !!mine, JSON.stringify(card));
   check('les notes venues de GitHub sont du texte : aucune balise n’est interprétée', card.html === 0 && card.notes.includes('<img src=x onerror=') && card.title !== 'piégé');
   await js('document.getElementById("update-page").click()');
   await until(() => opened.length === 1, 'page de téléchargement demandée');
-  check('« Page de téléchargement » ouvre la page de la version, dans le dépôt d’Orbe', opened[0] === 'https://github.com/amadoubaui/orbe/releases/tag/v9.9.9');
+  check('« Page de téléchargement » ouvre la page de la version, dans le dépôt d’Orbx', opened[0] === 'https://github.com/electroheadfx/orbx/releases/tag/v9.9.9');
   await js('document.getElementById("updateCheck").click()');
   await until(() => store.state.settings.updateCheck === false, 'réglage coupé depuis la carte');
   await js('document.getElementById("updateCheck").click()');
@@ -219,7 +219,7 @@ module.exports = async function majTests(ctx) {
     await updates.check({ manual: true });
     await until(() => js('document.getElementById("update-download").hidden'), 'pas de bouton « Télécharger » sans empreinte');
     const refusedDl = await updates.fetchAsset();
-    check('version publiée sans empreinte SHA-256 : Orbe ne télécharge pas lui-même, seule la page de la version est proposée',
+    check('version publiée sans empreinte SHA-256 : Orbx ne télécharge pas lui-même, seule la page de la version est proposée',
       updates.status().available && updates.status().latest.asset === null && refusedDl.error === 'noAsset' && !(await js('document.getElementById("update-page").hidden')) && fs.readdirSync(tmp).length === 0);
     reply = json(release());
     await updates.check({ manual: true });
@@ -239,7 +239,7 @@ module.exports = async function majTests(ctx) {
       d.path === path.join(tmp, mine) && fs.readFileSync(d.path).equals(zip) && d.verified && revealed.length === 1 && revealed[0] === d.path && !fs.existsSync(d.path + '.part')
       && (await js('!document.getElementById("update-reveal").hidden && document.getElementById("update-download").hidden')), JSON.stringify(d));
     const dlReq = seen.filter((x) => x.url.startsWith('/releases/download/')).pop();
-    check('le téléchargement non plus ne porte ni cookie ni référent', !!dlReq && !dlReq.headers.cookie && !dlReq.headers.referer && dlReq.headers['user-agent'] === 'Orbe');
+    check('le téléchargement non plus ne porte ni cookie ni référent', !!dlReq && !dlReq.headers.cookie && !dlReq.headers.referer && dlReq.headers['user-agent'] === 'Orbx');
     const again2 = await updates.fetchAsset();
     check('second téléchargement : rangé à côté, sans écraser le premier', again2.ok && again2.path === path.join(tmp, mine.replace('.zip', ' (1).zip')) && fs.existsSync(path.join(tmp, mine)));
     served = Buffer.concat([zip.subarray(0, zip.length - 1), Buffer.from([zip[zip.length - 1] ^ 1])]);
@@ -259,7 +259,7 @@ module.exports = async function majTests(ctx) {
     const kept = path.join(tmp, mine);
     if (process.platform === 'darwin') {
       const q = require('child_process').execFileSync('/usr/bin/xattr', ['-p', 'com.apple.quarantine', kept], { encoding: 'utf8' }).trim();
-      check('macOS : l’archive porte l’attribut de quarantaine (Gatekeeper et XProtect la contrôleront)', /^0081;[0-9a-f]{8};Orbe;$/.test(q) && q === updates.quarantineValue(now), q);
+      check('macOS : l’archive porte l’attribut de quarantaine (Gatekeeper et XProtect la contrôleront)', /^0081;[0-9a-f]{8};Orbx;$/.test(q) && q === updates.quarantineValue(now), q);
     } else if (process.platform === 'win32') {
       let zone = '';
       try { zone = fs.readFileSync(kept + ':Zone.Identifier', 'utf8'); } catch (err) { zone = String(err.message); }
@@ -271,7 +271,7 @@ module.exports = async function majTests(ctx) {
     const unmarkedState = updates.status().download.error;
     updates.configure({ mark: null });
     check('marque impossible à poser : l’archive n’est pas gardée, la page de la version s’ouvre à la place',
-      unmarked.error === 'mark' && fs.readdirSync(tmp).length === 2 && opened.length === openedBefore + 1 && opened[opened.length - 1] === 'https://github.com/amadoubaui/orbe/releases/tag/v9.9.9' && unmarkedState === 'mark', JSON.stringify(unmarked));
+      unmarked.error === 'mark' && fs.readdirSync(tmp).length === 2 && opened.length === openedBefore + 1 && opened[opened.length - 1] === 'https://github.com/electroheadfx/orbx/releases/tag/v9.9.9' && unmarkedState === 'mark', JSON.stringify(unmarked));
 
     // Redirections : chaque saut est contrôlé par la session (finding 1).
     const count = (pred) => seen.filter(pred).length;
@@ -285,7 +285,7 @@ module.exports = async function majTests(ctx) {
       elsewhere.error === 'network' && count((x) => x.url === '/vol') === 0 && count((x) => /^localhost/.test(x.headers.host || '')) === 0 && fs.readdirSync(tmp).length === 2, JSON.stringify(elsewhere));
     hop = 'http';
     const downgrade = await updates.fetchAsset();
-    check('redirection vers du HTTP, même chez un hôte de GitHub : refusée', downgrade.error === 'network' && fs.readdirSync(tmp).length === 2 && !updates.hopAllowed('http://objects.githubusercontent.com/orbe-essai-jamais-demande'), JSON.stringify(downgrade));
+    check('redirection vers du HTTP, même chez un hôte de GitHub : refusée', downgrade.error === 'network' && fs.readdirSync(tmp).length === 2 && !updates.hopAllowed('http://objects.githubusercontent.com/orbx-essai-jamais-demande'), JSON.stringify(downgrade));
 
     // Serveur muet, annulation (finding 6).
     hop = 'muet';

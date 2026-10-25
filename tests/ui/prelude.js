@@ -1,11 +1,11 @@
-// Chargé dans le processus principal avant Orbe (option -r d'Electron), pendant
+// Chargé dans le processus principal avant Orbx (option -r d'Electron), pendant
 // les tests d'interface uniquement.
 //
 // Les fenêtres s'ouvrent sans prendre le clavier et, sur macOS, sans se montrer
 // (tests/discret.js) : la personne qui travaille sur ce Mac garde son écran et
 // le focus dans son application. Les événements envoyés par Playwright visent
 // une page précise et n'ont pas besoin du focus système.
-// ORBE_UI_FOCUS=1 ou ORBE_TEST_VISIBLE=1 rendent le comportement normal.
+// ORBX_UI_FOCUS=1 ou ORBX_TEST_VISIBLE=1 rendent le comportement normal.
 const { BaseWindow, app } = require('electron');
 
 require('../discret');
@@ -14,7 +14,7 @@ require('../discret');
 // Une fenêtre fermée ou une application qui s'arrête au milieu d'un groupe doit
 // pouvoir s'expliquer après coup : chaque demande est écrite sur la sortie
 // d'erreur, avec la pile d'appels de qui l'a faite (tests/ui/harness.js la garde).
-const dire = (texte) => { try { process.stderr.write(`[orbe-ui ${new Date().toISOString().slice(11, 23)}] ${texte}\n`); } catch {} };
+const dire = (texte) => { try { process.stderr.write(`[orbx-ui ${new Date().toISOString().slice(11, 23)}] ${texte}\n`); } catch {} };
 const pile = () => String(new Error().stack).split('\n').slice(3, 9).map((l) => l.trim()).join(' < ');
 for (const [objet, nom, methodes] of [[app, 'app', ['quit', 'exit']], [BaseWindow.prototype, 'fenêtre', ['close', 'destroy']]]) {
   for (const m of methodes) {

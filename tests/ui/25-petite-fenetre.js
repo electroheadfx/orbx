@@ -7,7 +7,7 @@ module.exports = {
   async test(ctx, t) {
     const { jusqua } = ctx;
     const petites = () => ctx.principal(({ req }) => req('little.js').LittleWindow.all.map((l) => ({ url: l.url, titre: l.title, menu: !!l.menu, barreDevant: l.win.contentView.children[l.win.contentView.children.length - 1] === l.ui })));
-    await ctx.principal(({ w, store, win }) => { w.data.spaces.push(store.makeSpace('Projets', '📁', '#0ea5e9')); win.OrbeWindow.pushAll(); });
+    await ctx.principal(({ w, store, win }) => { w.data.spaces.push(store.makeSpace('Projets', '📁', '#0ea5e9')); win.OrbxWindow.pushAll(); });
     await jusqua(() => ctx.shell.evaluate(() => document.querySelectorAll('#spaces [data-space]').length === 2), 'second Espace dans la barre');
     let barre = null;
 

@@ -1,6 +1,6 @@
 // Bibliothèque : sections, dernière section rouverte, archive (périodes,
 // filtres, croix, restauration dans l'Espace d'origine, vidage confirmé),
-// Espaces, Boosts, fichiers (menu « ··· », clic droit, glisser hors d'Orbe).
+// Espaces, Boosts, fichiers (menu « ··· », clic droit, glisser hors d'Orbx).
 // Les gestes du système (menu natif, corbeille, glisser réel, boîte de
 // dialogue) sont remplacés par des témoins dans le processus principal : la
 // souris et le clavier, eux, sont vrais.
@@ -240,7 +240,7 @@ module.exports = {
       assert.equal((await temoin()).menus[3], 'open(grisé),copy(grisé),reveal(grisé),hide,trash(grisé)');
     });
 
-    await t.verifier('glisser une ligne à la souris : le système reçoit le vrai fichier (glisser hors d’Orbe)', async () => {
+    await t.verifier('glisser une ligne à la souris : le système reçoit le vrai fichier (glisser hors d’Orbx)', async () => {
       const b = await ligne2('rapport.txt').locator('.name').boundingBox();
       const x = b.x + 30;
       const y = b.y + b.height / 2;

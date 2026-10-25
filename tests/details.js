@@ -1,7 +1,7 @@
 // Détails de la branche « médias et capture » : petite fenêtre (ouverture animée,
 // bandeau de première fois, profil retenu par site), image dans l'image par site…
 // Appelé par tests/selftest.js, ou seul :
-//   ORBE_SCENARIO=tests/details.js node scripts/dev.js --selftest
+//   ORBX_SCENARIO=tests/details.js node scripts/dev.js --selftest
 const outils = require('./outils');
 
 const { sleep } = outils;
@@ -54,7 +54,7 @@ module.exports = async function detailsTests(ctx) {
     little.hooks.profileOfSpace = (id) => (id === 'esp-travail' ? 'travail' : null);
     little.hooks.spaces = () => [{ id: 'esp-travail', name: 'Travail', icon: '💼' }];
     const sent = [];
-    little.hooks.openInOrbe = (url, spaceId) => sent.push([url, spaceId]);
+    little.hooks.openInOrbx = (url, spaceId) => sent.push([url, spaceId]);
     store.state.window.littleProfiles = {};
     const l3 = new LittleWindow('http://www.intranet.exemple.invalid/a');
     const first = l3.profileId;
@@ -64,7 +64,7 @@ module.exports = async function detailsTests(ctx) {
     const l5 = new LittleWindow('http://ailleurs.exemple.invalid/');
     check('profil retenu par site : envoyée dans un Espace d’un autre profil, la petite fenêtre suivante du même site s’ouvre avec ce profil', first === 'default' && sent.length === 1 && l4.profileId === 'travail' && l5.profileId === 'default' && store.state.window.littleProfiles['intranet.exemple.invalid'] === 'travail', JSON.stringify([first, l4.profileId, l5.profileId, store.state.window.littleProfiles]));
     little.hooks.profiles = () => ['default'];
-    check('profil retenu disparu, adresse d’Orbe ou sans site : profil de l’Espace affiché', little.rememberedProfile('http://intranet.exemple.invalid/') === null && little.rememberProfile('orbe://settings', 'travail') === false && little.rememberProfile('http://x.test/', { a: 1 }) === false && little.siteOf('file:///etc/hosts') === '');
+    check('profil retenu disparu, adresse d’Orbx ou sans site : profil de l’Espace affiché', little.rememberedProfile('http://intranet.exemple.invalid/') === null && little.rememberProfile('orbx://settings', 'travail') === false && little.rememberProfile('http://x.test/', { a: 1 }) === false && little.siteOf('file:///etc/hosts') === '');
     for (let i = 0; i < 230; i++) little.rememberProfile(`http://site${i}.test/`, 'default');
     check('profils retenus : 200 sites au plus, les plus anciens oubliés', Object.keys(store.state.window.littleProfiles).length === 200 && !('site0.test' in store.state.window.littleProfiles) && 'site229.test' in store.state.window.littleProfiles);
 
@@ -105,7 +105,7 @@ module.exports = async function detailsTests(ctx) {
     const box = () => menu().find((x) => x.label === t('ctx.pipAuto', { site: 'video.exemple.test' }));
     check('menu d’une vidéo : case « Automatique en quittant l’onglet, sur <site> », cochée par défaut', !!box() && box().type === 'checkbox' && box().checked === true);
     box().click();
-    check('case décochée : le site est retenu, la case le montre', s.pipOffSites.join() === 'video.exemple.test' && box().checked === false && win.OrbeWindow.pipOff(url) && !win.OrbeWindow.pipOff('https://autre.test/'));
+    check('case décochée : le site est retenu, la case le montre', s.pipOffSites.join() === 'video.exemple.test' && box().checked === false && win.OrbxWindow.pipOff(url) && !win.OrbxWindow.pipOff('https://autre.test/'));
     delete rt.pip;
     w.pip(rt, true);
     const refused = asked.length === 0 && !('pip' in rt);
@@ -119,7 +119,7 @@ module.exports = async function detailsTests(ctx) {
     s.autoPip = true;
     const prefs = require('../src/main/prefs');
     check('liste des sites : seuls des noms d’hôte, sans doublon, 200 au plus', prefs.SETTABLE.pipOffSites(['a.test', 'b.test']) && !prefs.SETTABLE.pipOffSites(['a.test', 'a.test']) && !prefs.SETTABLE.pipOffSites(['<script>']) && !prefs.SETTABLE.pipOffSites('a.test') && !prefs.SETTABLE.pipOffSites(Array.from({ length: 201 }, (_, i) => `s${i}.test`))
-      && win.OrbeWindow.togglePipSite('orbe://settings') === false && win.OrbeWindow.pipSite('file:///x') === '');
+      && win.OrbxWindow.togglePipSite('orbx://settings') === false && win.OrbxWindow.pipSite('file:///x') === '');
     rt.wc.getURL = getURL;
     rt.wc.executeJavaScript = run;
     rt.pip = false;
@@ -177,14 +177,14 @@ module.exports = async function detailsTests(ctx) {
     const sent = [];
     const realSend = w.ui.webContents.send.bind(w.ui.webContents);
     w.ui.webContents.send = (ch, p) => { if (ch === 'state') sent.push(p.downloadsStarted); return realSend(ch, p); };
-    win.OrbeWindow.pushAll();
+    win.OrbxWindow.pushAll();
     await until(() => sent.length > 0, 'état envoyé à la barre');
     const n0 = sent[sent.length - 1];
     sent.length = 0;
     win.noteDownload('start', { id: 'essai-1', state: 'progressing' }, null);
     win.noteDownload('progress', { id: 'essai-1', state: 'progressing' }, null);
     win.noteDownload('start', { id: 'essai-2', state: 'progressing' }, null);
-    win.OrbeWindow.pushAll();
+    win.OrbxWindow.pushAll();
     await until(() => sent.length > 0, 'état suivant envoyé');
     check('téléchargements commencés : comptés un par un (même sans page d’origine), et donnés à la barre latérale', typeof n0 === 'number' && sent[sent.length - 1] === n0 + 2, JSON.stringify(sent.slice(-3)));
     w.ui.webContents.send = realSend;
@@ -254,7 +254,7 @@ module.exports = async function detailsTests(ctx) {
     check('page sombre : la vue de l’onglet prend la couleur de fond de la page (redimensionner ne découvre plus de blanc)', rt().bg === '#121214');
     await until(() => rt().themeColor === '#1db954', 'couleur de thème reçue');
     w.layout();
-    win.OrbeWindow.pushAll();
+    win.OrbxWindow.pushAll();
     await until(() => ui('document.getElementById("toolbar").classList.contains("tinted")'), 'barre d’outils teintée');
     const look = () => ui('(() => { const b = document.getElementById("toolbar"); return { page: b.style.getPropertyValue("--page"), sombre: b.classList.contains("on-dark"), fond: getComputedStyle(b, "::before").backgroundColor }; })()');
     // (La teinte arrive en fondu : on lit la couleur une fois posée.)
@@ -264,14 +264,14 @@ module.exports = async function detailsTests(ctx) {
     check('barre d’outils : teintée par la couleur de thème de la page ; texte sombre sur couleur claire, clair sur couleur sombre', tinted.page === '#1db954' && tinted.fond === 'rgb(29, 185, 84)' && tinted.sombre === false && darkTint === true, JSON.stringify(tinted));
     w.navigate(base + '/claire', tab.id);
     await until(() => w.data.tabs[tab.id].title === 'Claire' && rt().bg === '#ffffff', 'page claire');
-    win.OrbeWindow.pushAll();
+    win.OrbxWindow.pushAll();
     await until(() => ui('!document.getElementById("toolbar").classList.contains("tinted")'), 'teinte retirée');
     check('page sans couleur de thème : la barre reprend ses couleurs, la vue redevient blanche', rt().themeColor === null && rt().bg === '#ffffff' && (await ui('document.getElementById("toolbar").style.getPropertyValue("--page")')) === '');
     check('couleur illisible donnée à la barre : ignorée', (await ui('(() => { fxToolbar("red;background:url(x)"); fxToolbar({}); return document.getElementById("toolbar").classList.contains("tinted"); })()')) === false);
     w.close(tab.id, { silent: true, ask: false });
     store.state.settings.showToolbar = toolbar0;
     w.layout();
-    win.OrbeWindow.pushAll();
+    win.OrbxWindow.pushAll();
     server.close();
     if (server.closeAllConnections) server.closeAllConnections();
   }

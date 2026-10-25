@@ -1,7 +1,7 @@
 // Reconnaissance des champs de connexion sur de vraies pages (demande Internet).
 // Aucun identifiant n'est saisi ni envoyé : chaque champ visible reçoit le
 // clavier, et on relève ce que le gestionnaire de mots de passe en a compris.
-//   ORBE_SCENARIO=tests/passwords-sites.js node scripts/dev.js --selftest
+//   ORBX_SCENARIO=tests/passwords-sites.js node scripts/dev.js --selftest
 const SITES = [
   ['https://github.com/login', { username: 1, password: 1 }],
   ['https://login.wordpress.org/', { username: 1, password: 1 }],
@@ -18,7 +18,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const soon = (p, fallback) => Promise.race([p.catch(() => fallback), sleep(5000).then(() => fallback)]);
 
 module.exports = async function sites({ first: w, win, passwords }) {
-  console.log('\nOrbe — champs de connexion sur des sites réels\n');
+  console.log('\nOrbx — champs de connexion sur des sites réels\n');
   const states = passwords.internals.states;
   let failed = 0;
   for (const [url, expected] of SITES) {

@@ -1,7 +1,7 @@
 // Test au clavier réel de la bascule ⌃Tab (prend le clavier une seconde).
 // Les touches sont envoyées au système, comme depuis un vrai clavier :
 //   swiftc -O tests/natif/ctrltab.swift -o /tmp/ctrltab
-//   CTRLTAB=/tmp/ctrltab ORBE_SCENARIO=tests/natif/bascule.js node scripts/dev.js --selftest
+//   CTRLTAB=/tmp/ctrltab ORBX_SCENARIO=tests/natif/bascule.js node scripts/dev.js --selftest
 const { execFileSync } = require('child_process');
 const { app } = require('electron');
 

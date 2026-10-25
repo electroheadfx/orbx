@@ -17,7 +17,7 @@ module.exports = {
     await t.verifier('aucun onglet : la barre ouverte propose de quoi démarrer (accueil, raccourcis, aide, réglages)', async () => {
       await ctx.nouvelOnglet();
       const titres = await ctx.suggestions();
-      assert.ok(titres.includes('Bienvenue dans Orbe') && titres.includes('Centre d’aide') && titres.some((x) => /^Réglages/.test(x)), titres.join(' | '));
+      assert.ok(titres.includes('Bienvenue dans Orbx') && titres.includes('Centre d’aide') && titres.some((x) => /^Réglages/.test(x)), titres.join(' | '));
       assert.equal(await ctx.selection(), -1);
     });
 
@@ -69,7 +69,7 @@ module.exports = {
       await modal.keyboard.press('Backspace');
       await jusqua(async () => (await portee()) === null, 'portée quittée');
       assert.equal(await modal.getAttribute('#cmd-input', 'placeholder'), 'Rechercher ou saisir une adresse…');
-      assert.ok((await ctx.suggestions()).includes('Bienvenue dans Orbe'));
+      assert.ok((await ctx.suggestions()).includes('Bienvenue dans Orbx'));
       await modal.keyboard.press('Escape');
       await fermee();
     });
@@ -267,10 +267,10 @@ module.exports = {
       }, 'barre de commande de la fenêtre neuve');
       assert.equal(await autre.evaluate(() => document.activeElement && document.activeElement.id), 'cmd-input');
       assert.equal(await autre.inputValue('#cmd-input'), '');
-      const etat = await ctx.principal(({ win }) => { const n = win.OrbeWindow.all[win.OrbeWindow.all.length - 1]; return { nb: win.OrbeWindow.all.length, mode: n.modalMode, actif: n.activeId }; });
+      const etat = await ctx.principal(({ win }) => { const n = win.OrbxWindow.all[win.OrbxWindow.all.length - 1]; return { nb: win.OrbxWindow.all.length, mode: n.modalMode, actif: n.activeId }; });
       assert.deepEqual(etat, { nb: 2, mode: 'command', actif: null });
-      await ctx.principal(({ win }) => { win.OrbeWindow.all[win.OrbeWindow.all.length - 1].win.close(); });
-      await jusqua(async () => (await ctx.principal(({ win }) => win.OrbeWindow.all.length)) === 1, 'fenêtre neuve refermée');
+      await ctx.principal(({ win }) => { win.OrbxWindow.all[win.OrbxWindow.all.length - 1].win.close(); });
+      await jusqua(async () => (await ctx.principal(({ win }) => win.OrbxWindow.all.length)) === 1, 'fenêtre neuve refermée');
     });
 
     await ctx.nouvelOnglet();

@@ -2,7 +2,7 @@
 // certificats, authentification HTTP, « quitter la page ? », fenêtres
 // surgissantes, téléchargements, pages plantées, appareils, liens externes.
 // Appelé par tests/selftest.js, ou seul :
-//   ORBE_SCENARIO=tests/essentiels.js node scripts/dev.js --selftest
+//   ORBX_SCENARIO=tests/essentiels.js node scripts/dev.js --selftest
 // Serveurs locaux HTTP et HTTPS (certificat auto-signé fabriqué par
 // tests/certificat.js, sans dépendance). Aucune boîte de dialogue du système,
 // aucune vraie caméra, aucune capture de l'écran de la machine : les réponses
@@ -40,7 +40,7 @@ function handler(state) {
     }
     if (p === '/embarque') return res.end(page('Embarque', `<img src="http://localhost:${state.port}/auth.png" width="10" height="10">`));
     if (p === '/sale') return res.end(page('Brouillon', '<textarea id="t"></textarea><script>window.addEventListener("beforeunload", (e) => { if (window.lent) { const t0 = Date.now(); while (Date.now() - t0 < window.lent); } if (window.sale) { e.preventDefault(); e.returnValue = "un texte que le navigateur ignore"; } });</script>'));
-    if (p === '/lien') return res.end(page('Lien externe', '<a id="m" href="mailto:test@orbe.invalid?subject=x" style="position:fixed;left:0;top:0;width:200px;height:60px;background:#def">écrire</a>'));
+    if (p === '/lien') return res.end(page('Lien externe', '<a id="m" href="mailto:test@orbx.invalid?subject=x" style="position:fixed;left:0;top:0;width:200px;height:60px;background:#def">écrire</a>'));
     if (p === '/vue.pdf') { res.setHeader('content-type', 'application/pdf'); return res.end(PDF); }
     if (p === '/doc.pdf') { res.setHeader('content-type', 'application/pdf'); res.setHeader('content-disposition', 'attachment; filename="document.pdf"'); return res.end(PDF); }
     if (p === '/installe.dmg') { res.setHeader('content-type', 'application/octet-stream'); res.setHeader('content-disposition', 'attachment; filename="Installe.dmg"'); return res.end('faux disque'); }
@@ -60,7 +60,7 @@ function handler(state) {
       res.setHeader('content-type', 'application/octet-stream');
       res.setHeader('content-disposition', 'attachment; filename="gros.bin"');
       res.setHeader('accept-ranges', 'bytes');
-      res.setHeader('etag', '"orbe-gros-1"');
+      res.setHeader('etag', '"orbx-gros-1"');
       res.setHeader('last-modified', MODIFIED);
       res.setHeader('content-length', String(BIG.length - start));
       if (range) res.setHeader('content-range', `bytes ${start}-${BIG.length - 1}/${BIG.length}`);
@@ -85,7 +85,7 @@ function handler(state) {
 }
 
 module.exports = async function essentielsTests(ctx) {
-  const { first: w, OrbeWindow, store, win, essentials } = ctx;
+  const { first: w, OrbxWindow, store, win, essentials } = ctx;
   const standalone = !ctx.check;
   let failed = 0;
   let total = 0;
@@ -94,7 +94,7 @@ module.exports = async function essentielsTests(ctx) {
     if (!ok) failed += 1;
     console.log(`${ok ? '  ✓' : '  ✗'} ${name}${ok || !detail ? '' : ' — ' + (typeof detail === 'string' ? detail : JSON.stringify(detail))}`);
   });
-  if (standalone) console.log('\nOrbe — navigation de tous les jours\n');
+  if (standalone) console.log('\nOrbx — navigation de tous les jours\n');
   const { sheets, permissions, displayMedia, capture, certs, auth, unload, popups, downloads } = essentials;
   const t = (k, v) => store.t(k, null, v);
   const ui = (js) => w.ui.webContents.executeJavaScript(js);
@@ -131,7 +131,7 @@ module.exports = async function essentielsTests(ctx) {
     return { tab, id: tab.id, get rt() { return rtOf(tab.id); }, wc: rtOf(tab.id).wc };
   };
   const js = (wc, code, gesture = false) => wc.executeJavaScript(code, gesture);
-  // Entrée de l'utilisateur dans la page. Orbe la voit par `before-mouse-event`
+  // Entrée de l'utilisateur dans la page. Orbx la voit par `before-mouse-event`
   // (c'est ce qu'il compte comme un geste). La page, elle, ne reçoit rien quand
   // elle est masquée (écran en veille, fenêtre recouverte, machine d'intégration :
   // Chromium écarte alors les entrées) ; son activation est donc donnée par
@@ -141,7 +141,7 @@ module.exports = async function essentielsTests(ctx) {
     await until(() => js(wc, 'document.readyState === "complete"'), 'page entièrement chargée');
     rt.gesture = 0;
     for (const type of ['mouseDown', 'mouseUp']) wc.sendInputEvent({ type, x: 230, y: 90, button: 'left', clickCount: 1 });
-    await until(() => rt.gesture > 0, 'entrée reçue par Orbe');
+    await until(() => rt.gesture > 0, 'entrée reçue par Orbx');
     await js(wc, '1', true);
   };
   // Clic sur un lien de la page (déclenché dans la page, avec geste, pour la même raison).
@@ -169,10 +169,10 @@ module.exports = async function essentielsTests(ctx) {
 
   // ---------------------------------------------------------------- Autorisations
   const cam = await open(A + '/camera', 'Page /camera');
-  check('une page web n’a aucun accès à l’interface d’Orbe', await js(cam.wc, 'typeof window.orbe') === 'undefined');
+  check('une page web n’a aucun accès à l’interface d’Orbx', await js(cam.wc, 'typeof window.orbx') === 'undefined');
   let pending = js(cam.wc, 'navigator.mediaDevices.getUserMedia({ video: true }).then((s) => { window.flux = s; return "flux:" + s.getTracks().map((x) => x.kind).join(); }, (e) => "err:" + e.name)', true);
   let sheet = await sheetOf(cam.wc, 'perm');
-  check('caméra : la question est une feuille d’Orbe posée sur l’onglet, qui ne nomme que la caméra',
+  check('caméra : la question est une feuille d’Orbx posée sur l’onglet, qui ne nomme que la caméra',
     sheet.payload.lines.length === 1 && sheet.payload.lines[0] === t('perm.camera') && sheet.payload.site === A && sheet.parent === w, sheet.payload);
   const shown = await inSheet(sheet, '({ title: document.getElementById("title").textContent, lines: [...document.querySelectorAll("#body p")].map((p) => p.textContent), buttons: [...document.querySelectorAll("#buttons button")].map((b) => b.id) })');
   check('la feuille affiche le site, ce qui est demandé, et « Refuser » / « Autoriser »', shown.title.includes('127.0.0.1') && shown.lines[0] === t('perm.camera') && shown.buttons.join() === 'deny,allow', shown);
@@ -207,13 +207,13 @@ module.exports = async function essentielsTests(ctx) {
   permissions.os.status = (kind) => (kind === 'camera' ? 'denied' : 'granted');
   pending = js(cam.wc, 'navigator.mediaDevices.getUserMedia({ video: true }).then((s) => "flux", (e) => "err:" + e.name)', true);
   sheet = await sheetOf(cam.wc, 'os');
-  check('site autorisé mais système qui refuse : la page n’a rien, et Orbe dit que c’est le système qui bloque la caméra',
+  check('site autorisé mais système qui refuse : la page n’a rien, et Orbx dit que c’est le système qui bloque la caméra',
     await pending === 'err:NotAllowedError' && sheet.payload.title.includes(t('os.name.camera')) && sheet.payload.settings === true && store.state.permissions[A].camera === true, sheet.payload);
   sheet.close('ok');
   permissions.os.status = (kind) => (asked.includes(kind) ? 'granted' : 'not-determined');
   permissions.os.ask = async (kind) => { asked.push(kind); return true; };
   pending = js(cam.wc, 'navigator.mediaDevices.getUserMedia({ video: true }).then((s) => "flux", (e) => "err:" + e.name)', true);
-  check('accord du système pas encore donné : Orbe le demande (askForMediaAccess), pour la caméra seulement', await pending === 'flux' && asked.join() === 'camera', asked);
+  check('accord du système pas encore donné : Orbx le demande (askForMediaAccess), pour la caméra seulement', await pending === 'flux' && asked.join() === 'camera', asked);
   permissions.os.status = saved.osStatus;
   permissions.os.ask = saved.osAsk;
 
@@ -244,7 +244,7 @@ module.exports = async function essentielsTests(ctx) {
     const popups = [];
     const evil = '<img src=x onerror="window.pirate=1"> Extension';
     const deps = { extActions: () => [{ id: 'ext-a', title: evil, badgeText: '3', enabled: true }, { id: 'ext-b', title: 'Coupée', enabled: false }], openExtPopup: (ow, id) => popups.push(id) };
-    check('le bouclier ouvre le centre de contrôle : une feuille d’Orbe sur l’onglet, pas un menu', win.hooks.action(w, 'siteControl') === true && sheets.top(ctl.wc).kind === 'control');
+    check('le bouclier ouvre le centre de contrôle : une feuille d’Orbx sur l’onglet, pas un menu', win.hooks.action(w, 'siteControl') === true && sheets.top(ctl.wc).kind === 'control');
     sheets.top(ctl.wc).close(null);
     let panel = essentials.siteControl(w, deps);
     await until(() => panel.payload.cookies === 1, 'cookies comptés');
@@ -331,7 +331,7 @@ module.exports = async function essentielsTests(ctx) {
 
     // Page interne, navigation privée.
     const inner = w.openInternal('shortcuts.html');
-    check('page interne d’Orbe : pas de centre de contrôle (le bouclier garde son menu)', essentials.siteControl(w) === null && win.hooks.action(w, 'siteControl') === false);
+    check('page interne d’Orbx : pas de centre de contrôle (le bouclier garde son menu)', essentials.siteControl(w) === null && win.hooks.action(w, 'siteControl') === false);
     if (inner && inner.id) w.close(inner.id, { silent: true, ask: false });
     w.activate(ctl.id);
 
@@ -438,7 +438,7 @@ module.exports = async function essentielsTests(ctx) {
   check('profil supprimé : ses autorisations aussi', permissions.get(other, 'https://profil.exemple', 'popups') === undefined && store.state.permissions[A].camera === true);
 
   // Navigation privée : les réponses restent en mémoire.
-  const iw = new OrbeWindow({ incognito: true });
+  const iw = new OrbxWindow({ incognito: true });
   const priv = await open(B + '/prive', 'Page /prive', iw);
   js(priv.wc, 'Notification.requestPermission(); 1', true).catch(() => {});
   sheet = await sheetOf(priv.wc, 'perm');
@@ -459,7 +459,7 @@ module.exports = async function essentielsTests(ctx) {
   const tiles = await until(async () => { const v = await inSheet(sheet, '[...document.querySelectorAll(".src")].map((b) => b.dataset.kind + ":" + b.querySelector(".name").textContent + ":" + b.querySelectorAll("b").length)'); return v.length === 2 && v; }, 'vignettes');
   check('sélecteur : les noms venus du système sont affichés comme du texte', tiles[0].startsWith('tab:' + t('share.thisTab')) && tiles[1] === 'screen:Écran <b>factice</b>:0', tiles);
   check('rien n’est partagé avant le choix', await inSheet(sheet, 'document.getElementById("share").disabled') === true && await js(share.wc, 'typeof window.flux') === 'undefined' && !capture.of(share.wc).length);
-  // Les captures d'Orbe lui-même (vignettes) comptent dans isBeingCaptured() ; écran
+  // Les captures d'Orbx lui-même (vignettes) comptent dans isBeingCaptured() ; écran
   // en veille, elles n'aboutissent jamais et la fin du partage n'est pas observable.
   const noisy = share.wc.isBeingCaptured();
   await inSheet(sheet, 'document.querySelector(".src[data-kind=tab]").click(); 1');
@@ -480,7 +480,7 @@ module.exports = async function essentielsTests(ctx) {
     check('« Cet onglet » : la page reçoit un flux vidéo', stream === 'flux:1', stream);
     await js(share.wc, 'window.flux.getTracks().forEach((x) => x.stop()); 1');
     if (noisy) {
-      outils.ignorer('partage de l’onglet arrêté par la page : le témoin s’éteint', 'une capture d’Orbe est restée en attente, écran en veille');
+      outils.ignorer('partage de l’onglet arrêté par la page : le témoin s’éteint', 'une capture d’Orbx est restée en attente, écran en veille');
       capture.clearAll(share.wc);
     } else {
       await until(() => !capture.of(share.wc).includes('screen'), 'fin du partage observée', 20000);
@@ -521,7 +521,7 @@ module.exports = async function essentielsTests(ctx) {
   let got2 = await outcome(js(legacy.wc, LEGACY(", chromeMediaSourceId: 'screen:0:0'"), true));
   check('ancienne capture d’écran sans geste de l’utilisateur : refusée, aucun flux, aucun sélecteur', got1 === 'err:NotAllowedError' && got2 === 'err:NotAllowedError' && !sheets.top(legacy.wc) && blocked() === 0 && !capture.of(legacy.wc).length, [got1, got2]);
   // Juste après un vrai clic, la demande ne se distingue plus d'un partage :
-  // Orbe constate que le sélecteur n'a pas été appelé et arrête la page aussitôt.
+  // Orbx constate que le sélecteur n'a pas été appelé et arrête la page aussitôt.
   await click(legacy.wc);
   got1 = await outcome(js(legacy.wc, LEGACY('')));
   await until(() => legacy.wc.isCrashed(), 'page arrêtée');
@@ -555,7 +555,7 @@ module.exports = async function essentielsTests(ctx) {
   sec.wc.loadURL(S + '/secret').catch(() => {});
   sheet = await sheetOf(sec.wc, 'cert');
   const host = new URL(S).host;
-  check('certificat refusé : avertissement d’Orbe par-dessus l’onglet, avec le nom du site et la cause',
+  check('certificat refusé : avertissement d’Orbx par-dessus l’onglet, avec le nom du site et la cause',
     sheet.payload.cover === true && sheet.payload.host === host && sheet.payload.reason === 'authority' && sheet.payload.error === 'net::ERR_CERT_AUTHORITY_INVALID' && sheet.payload.canProceed === true, sheet.payload);
   check('le certificat présenté est décrit : émetteur, validité, empreinte', sheet.payload.cert.issuer === pem.cn && sheet.payload.cert.subject === pem.cn && /^sha256\//.test(sheet.payload.cert.fingerprint) && sheet.payload.cert.validExpiry > Date.now() / 1000, sheet.payload.cert);
   check('la page du site n’a pas été chargée', !state.seen.some((x) => x.path === '/secret') && w.data.tabs[sec.id].url === S + '/secret');
@@ -639,7 +639,7 @@ module.exports = async function essentielsTests(ctx) {
   check('retirer l’exception : l’avertissement revient', !certs.hasException(sec.wc.session, S + '/'));
   sheet.close(null);
   iw.win.close();
-  await until(() => !OrbeWindow.all.includes(iw), 'fenêtre privée fermée');
+  await until(() => !OrbxWindow.all.includes(iw), 'fenêtre privée fermée');
 
   // ---------------------------------------------------------------- Authentification HTTP
   const au = await open(A + '/zero', 'Page /zero');
@@ -694,7 +694,7 @@ module.exports = async function essentielsTests(ctx) {
   const certs2 = [{ subjectName: 'Alice', issuerName: 'AC Test', fingerprint: 'a' }, { subjectName: 'Bob', issuerName: 'AC Test', fingerprint: 'b' }];
   app.emit('select-client-certificate', { preventDefault() { prevented = true; } }, emb.wc, 'https://client.exemple/', certs2, (c) => { chosen = c; });
   sheet = await sheetOf(emb.wc, 'choose');
-  check('certificat client : Electron n’envoie pas le premier d’office ; Orbe demande lequel', prevented && chosen === 'rien' && sheet.payload.items.map((x) => x.label).join() === 'Alice,Bob' && sheet.payload.host === 'client.exemple');
+  check('certificat client : Electron n’envoie pas le premier d’office ; Orbx demande lequel', prevented && chosen === 'rien' && sheet.payload.items.map((x) => x.label).join() === 'Alice,Bob' && sheet.payload.host === 'client.exemple');
   await inSheet(sheet, 'document.querySelector(".item[data-i=\\"1\\"]").click(); 1');
   await press(sheet, 'ok');
   await until(() => chosen !== 'rien', 'choix');
@@ -754,7 +754,7 @@ module.exports = async function essentielsTests(ctx) {
   check('archiver plusieurs onglets : une question par page qui s’y oppose, pas pour les autres', asks.length === 2 && !w.data.tabs[d2.id] && !w.data.tabs[d3.id] && !w.data.tabs[calm.id], asks.length);
 
   // Fermeture d'une fenêtre.
-  const w2 = new OrbeWindow();
+  const w2 = new OrbxWindow();
   const d4 = await open(A + '/sale', 'Brouillon', w2);
   const rt4 = d4.rt;
   let gone4 = 0;
@@ -771,15 +771,15 @@ module.exports = async function essentielsTests(ctx) {
   await until(() => asks.length === 1, 'question à la fermeture de la fenêtre');
   const asked4 = Date.now();
   await sleep(500);
-  // Si la page a disparu : quand (après la question), et ce qu'Orbe lui a fait (journal de la page).
-  const stayed = { fenetre: !w2.win.isDestroyed(), connue: OrbeWindow.all.includes(w2), page: !d4.wc.isDestroyed(), questions: asks.length, detruiteApres: gone4 ? gone4 - asked4 : null, attente: Date.now() - asked4, journal: rt4.trail, memeProcessus: sharing4 };
+  // Si la page a disparu : quand (après la question), et ce qu'Orbx lui a fait (journal de la page).
+  const stayed = { fenetre: !w2.win.isDestroyed(), connue: OrbxWindow.all.includes(w2), page: !d4.wc.isDestroyed(), questions: asks.length, detruiteApres: gone4 ? gone4 - asked4 : null, attente: Date.now() - asked4, journal: rt4.trail, memeProcessus: sharing4 };
   stayed.sale = stayed.page ? await js(d4.wc, 'window.sale').catch((e) => String(e)) : null;
   stayed.adresse = stayed.page ? d4.wc.getURL() : null;
   check('fermer la fenêtre puis « Rester » : la fenêtre et la page restent', stayed.fenetre && stayed.connue && stayed.page && stayed.sale === true, JSON.stringify(stayed));
   leave = true;
   unload.forget(d4.wc);
   w2.win.close();
-  await until(() => !OrbeWindow.all.includes(w2), 'fenêtre fermée');
+  await until(() => !OrbxWindow.all.includes(w2), 'fenêtre fermée');
   check('fermer la fenêtre puis « Quitter » : elle se ferme, l’onglet reste dans l’Espace (non archivé)', asks.length === 2 && !!store.state.tabs[d4.id] && store.state.archive.length === archived && d4.wc.isDestroyed(),
     JSON.stringify({ questions: asks.length, onglet: !!store.state.tabs[d4.id], archive: [archived, store.state.archive.length], pageDetruite: d4.wc.isDestroyed() }));
   leave = false;
@@ -787,7 +787,7 @@ module.exports = async function essentielsTests(ctx) {
   // « Rester » tient même quand la page tarde. Chromium donne une seconde à une page
   // consultée (beforeunload) pour répondre, puis de nouveau une seconde, après la
   // réponse de l'utilisateur, pour en accuser réception ; passé ce délai il la ferme
-  // d'office. Orbe l'en empêche (bouclier, src/main/unload.js).
+  // d'office. Orbx l'en empêche (bouclier, src/main/unload.js).
   const dirtyTab = async (owner = w) => {
     const d = await open(A + '/sale', 'Brouillon', owner);
     await click(d.wc);
@@ -801,12 +801,12 @@ module.exports = async function essentielsTests(ctx) {
     leave = true;
     if (d) unload.forget(d.wc);
     ow.win.close();
-    await until(() => !OrbeWindow.all.includes(ow), 'fenêtre fermée');
+    await until(() => !OrbxWindow.all.includes(ow), 'fenêtre fermée');
     leave = false;
   };
   // Page qui met une seconde et demie à répondre à beforeunload, puis s'y oppose.
   const slowTab = await dirtyTab();
-  const slowWin = new OrbeWindow();
+  const slowWin = new OrbxWindow();
   const slowIn = await dirtyTab(slowWin);
   const slowSleep = await dirtyTab();
   for (const d of [slowTab, slowIn, slowSleep]) await js(d.wc, 'window.lent = 1500; 1');
@@ -831,7 +831,7 @@ module.exports = async function essentielsTests(ctx) {
   check('fermer la fenêtre d’une page qui met plus d’une seconde à répondre : la question est posée quand même, « Rester » garde fenêtre et page',
     asks.length === 1 && Date.now() - t0 >= 1400 && !slowWin.win.isDestroyed() && await intact(slowIn), JSON.stringify({ questions: asks.length, ms: Date.now() - t0, page: !slowIn.wc.isDestroyed(), journal: slowIn.rt0.trail }));
   asks.length = 0;
-  OrbeWindow.sleepView(slowSleep.id);
+  OrbxWindow.sleepView(slowSleep.id);
   await until(() => slowSleep.rt0.objected || slowSleep.wc.isDestroyed(), 'réponse de la page lente (veille)');
   check('veille automatique d’une page lente à répondre : elle est consultée, s’y oppose et reste, sans question',
     asks.length === 0 && slowSleep.rt0.objected === true && !slowSleep.rt0.sleeping && win.live.get(slowSleep.id) === slowSleep.rt0 && await intact(slowSleep), JSON.stringify({ questions: asks.length, page: !slowSleep.wc.isDestroyed(), journal: slowSleep.rt0.trail }));
@@ -849,7 +849,7 @@ module.exports = async function essentielsTests(ctx) {
       process.kill(pid, 'SIGSTOP');
       setTimeout(() => { try { process.kill(pid, 'SIGCONT'); } catch {} }, ms);
     };
-    const fw = new OrbeWindow();
+    const fw = new OrbxWindow();
     const fz = await dirtyTab(fw);
     const before = store.state.archive.length;
     asks.length = 0;
@@ -888,14 +888,14 @@ module.exports = async function essentielsTests(ctx) {
   // réponse de la page vaut pour l'utilisateur. (Elle restait sans rien dire, puis était
   // fermée de force quatre secondes plus tard, sans question.)
   const both = await dirtyTab();
-  const bothWin = new OrbeWindow();
+  const bothWin = new OrbxWindow();
   const bothIn = await dirtyTab(bothWin);
   asks.length = 0;
   leave = false;
-  OrbeWindow.sleepView(both.id);
+  OrbxWindow.sleepView(both.id);
   w.close(both.id);
   bothWin.win.close();
-  OrbeWindow.sleepView(bothIn.id);
+  OrbxWindow.sleepView(bothIn.id);
   await until(() => asks.length === 2 || (both.wc.isDestroyed() && bothIn.wc.isDestroyed()), 'questions (veille et fermeture ensemble)', 6000).catch(() => {});
   const asked2 = asks.length;
   await sleep(4500);
@@ -967,7 +967,7 @@ module.exports = async function essentielsTests(ctx) {
   const ext = await open(A + '/lien', 'Lien externe');
   await clickLink(ext.wc, 'm');
   sheet = await sheetOf(ext.wc, 'external');
-  check('lien mailto: : Orbe demande avant d’ouvrir une autre application', sheet.payload.scheme === 'mailto' && sheet.payload.url.startsWith('mailto:test@orbe.invalid') && sheet.payload.site === A && launched.length === 0, sheet.payload);
+  check('lien mailto: : Orbx demande avant d’ouvrir une autre application', sheet.payload.scheme === 'mailto' && sheet.payload.url.startsWith('mailto:test@orbx.invalid') && sheet.payload.site === A && launched.length === 0, sheet.payload);
   await press(sheet, 'cancel');
   await sleep(300);
   check('annuler : rien n’est ouvert, la page reste affichée (pas de page d’erreur)', launched.length === 0 && w.data.tabs[ext.id].url === A + '/lien' && w.data.tabs[ext.id].title === 'Lien externe');
@@ -987,7 +987,7 @@ module.exports = async function essentielsTests(ctx) {
   await inSheet(sheet, 'document.getElementById("always").checked = true; 1');
   await press(sheet, 'ok');
   await until(() => launched.length === 1, 'application lancée');
-  check('« Ouvrir » avec « Toujours autoriser » : lien ouvert, retenu par site et par schéma', launched[0].startsWith('mailto:test@orbe.invalid') && store.state.permissions[A]['external:mailto'] === true);
+  check('« Ouvrir » avec « Toujours autoriser » : lien ouvert, retenu par site et par schéma', launched[0].startsWith('mailto:test@orbx.invalid') && store.state.permissions[A]['external:mailto'] === true);
   await clickLink(ext.wc, 'm');
   sheet = await sheetOf(ext.wc, 'external');
   check('ouvertures rapprochées : la question revient malgré l’autorisation', launched.length === 1);
@@ -1032,7 +1032,7 @@ module.exports = async function essentielsTests(ctx) {
 
   // ---------------------------------------------------------------- Téléchargements
   const dlDir = app.getPath('downloads');
-  const custom = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-dl-'));
+  const custom = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-dl-'));
   const dl = await open(A + '/fichiers', 'Page /fichiers');
   // Même le premier téléchargement automatique d'une page sans geste demande l'autorisation.
   {
@@ -1052,13 +1052,13 @@ module.exports = async function essentielsTests(ctx) {
     await sleep(300);
     check('le refus retenu vaut pour les suivants, sans nouvelle question', await noSheet(dl.wc) && count() === n0);
     downloads.saveFrom(dl.wc, A + '/note.txt');
-    await until(() => count() === n0 + 1, 'téléchargement demandé par Orbe');
+    await until(() => count() === n0 + 1, 'téléchargement demandé par Orbx');
     await click(dl.wc);
     dl.wc.downloadURL(A + '/note.txt');
     await until(() => count() === n0 + 2, 'téléchargement après un geste');
     dl.wc.downloadURL(A + '/note.txt');
     await sleep(300);
-    check('« Enregistrer l’image » (demandé par Orbe) et un téléchargement qui suit un geste passent toujours ; un geste n’en couvre qu’un', count() === n0 + 2);
+    check('« Enregistrer l’image » (demandé par Orbx) et un téléchargement qui suit un geste passent toujours ; un geste n’en couvre qu’un', count() === n0 + 2);
     // Site sans réponse retenue, page rechargée : la question revient, et « Autoriser » relance le fichier refusé.
     permissions.reset(ses, A, 'downloads');
     win.live.get(dl.id).gesture = 0;
@@ -1120,16 +1120,16 @@ module.exports = async function essentielsTests(ctx) {
   check('« Reprendre » demande la suite au serveur (Range) et le fichier est exact', fs.readFileSync(d.path).equals(BIG) && state.seen.some((x) => x.path === '/gros.bin' && /^bytes=[1-9]/.test(x.range)), { how, ranges: state.seen.map((x) => x.range) });
   fs.unlinkSync(d.path);
 
-  // Interrompu par la fermeture d'Orbe : l'enregistrement et le morceau reçu suffisent.
+  // Interrompu par la fermeture d'Orbx : l'enregistrement et le morceau reçu suffisent.
   const partial = path.join(dlDir, 'reprise.bin');
   fs.writeFileSync(partial, BIG.subarray(0, 100000));
   const old = { id: 'ancien-' + Date.now(), name: 'reprise.bin', path: partial, url: A + '/gros.bin', total: BIG.length, received: 100000, state: 'interrupted', at: Date.now(), profile: 'default', canResume: true,
-    resume: { urlChain: [A + '/gros.bin'], mimeType: 'application/octet-stream', eTag: '"orbe-gros-1"', lastModified: MODIFIED, startTime: Date.now() / 1000 } };
+    resume: { urlChain: [A + '/gros.bin'], mimeType: 'application/octet-stream', eTag: '"orbx-gros-1"', lastModified: MODIFIED, startTime: Date.now() / 1000 } };
   store.state.downloads.unshift(old);
   state.seen.length = 0;
   const way = await lib('dl:resume', old.id);
   await until(() => old.state === 'completed', 'reprise après redémarrage', 20000);
-  check('interrompu par la fermeture d’Orbe : repris depuis le morceau déjà reçu', way === 'continued' && fs.readFileSync(partial).equals(BIG) && state.seen.some((x) => x.range === 'bytes=100000-'), { way, ranges: state.seen.map((x) => x.range) });
+  check('interrompu par la fermeture d’Orbx : repris depuis le morceau déjà reçu', way === 'continued' && fs.readFileSync(partial).equals(BIG) && state.seen.some((x) => x.range === 'bytes=100000-'), { way, ranges: state.seen.map((x) => x.range) });
   fs.unlinkSync(partial);
   // Morceau disparu : nouveau départ.
   const lost = { ...old, id: 'perdu-' + Date.now(), state: 'interrupted', path: path.join(dlDir, 'perdu.bin'), name: 'perdu.bin' };
@@ -1269,7 +1269,7 @@ module.exports = async function essentielsTests(ctx) {
   Object.assign(downloads.env, saved.dl);
   try { fs.rmSync(custom, { recursive: true, force: true }); } catch {}
   w.layout();
-  OrbeWindow.pushAll();
+  OrbxWindow.pushAll();
   server.closeAllConnections();
   tls.closeAllConnections();
   server.close();

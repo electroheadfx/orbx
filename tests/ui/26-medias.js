@@ -170,9 +170,9 @@ module.exports = {
         await ctx.vitesseAnimations(0.2);
         try {
           // (La carte est née au clic ci-dessus : on en fait naître une autre pour voir l'entrée.)
-          await ctx.principal(({ w, win }, i) => { win.media.drop(w, i); win.OrbeWindow.pushAll(); }, p2);
+          await ctx.principal(({ w, win }, i) => { win.media.drop(w, i); win.OrbxWindow.pushAll(); }, p2);
           await jusqua(async () => (await carte(p2).count()) === 0, 'carte retirée');
-          await ctx.principal(({ w, win }, i) => { win.media.add(w, i); win.OrbeWindow.pushAll(); }, p2);
+          await ctx.principal(({ w, win }, i) => { win.media.add(w, i); win.OrbxWindow.pushAll(); }, p2);
           const a = await jusqua(() => carte(p2).evaluate((el) => { const an = el.getAnimations().find((x) => x.animationName === 'mp-in'); return an && an.playState === 'running' ? { props: [...new Set(an.effect.getKeyframes().flatMap((k) => Object.keys(k)))].filter((k) => !['offset', 'easing', 'composite', 'computedOffset'].includes(k)).sort(), duree: an.effect.getTiming().duration } : null; }), 'entrée de la carte');
           assert.deepEqual(a.props, ['opacity', 'transform']);
           assert.equal(a.duree, 360);

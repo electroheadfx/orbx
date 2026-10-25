@@ -3,14 +3,14 @@
 // fenêtre ou vers une autre fenêtre, dépôt dans un dossier fermé, nouvel Espace au bout
 // de la rangée, lueur de chargement.
 // Appelé par tests/selftest.js, ou seul :
-//   ORBE_SCENARIO=tests/finitions2.js node scripts/dev.js --selftest
+//   ORBX_SCENARIO=tests/finitions2.js node scripts/dev.js --selftest
 const outils = require('./outils');
 
 const { sleep } = outils;
 const until = (fn, label, timeout = 10000) => outils.until(fn, label, timeout);
 
 module.exports = async function finitions2Tests(ctx) {
-  const { first: w, store, win, OrbeWindow } = ctx;
+  const { first: w, store, win, OrbxWindow } = ctx;
   const starter = require('../src/main/starter');
   let failed = 0;
   const check = ctx.check || ((name, ok, detail = '') => { if (!ok) failed += 1; console.log(`${ok ? '  ✓' : '  ✗'} ${name}${ok || !detail ? '' : ' — ' + detail}`); });
@@ -47,8 +47,8 @@ module.exports = async function finitions2Tests(ctx) {
     check('premier lancement : un dossier « Premiers pas » est posé en tête des épinglés, ouvert, avec ses onglets',
       !!folder && space.pinned[0] === folder && folder.open === true && folder.name === T('starter.folder') && kids.length === starter.PAGES.length && kids.length >= 3
       && kids.every((tab, i) => tab && tab.url === starter.PAGES[i][1] && tab.homeUrl === tab.url && tab.title === T(starter.PAGES[i][0])));
-    check('« Premiers pas » : seules des pages d’Orbe (marquées internes) et des adresses https écrites dans le code ; aucune page n’est chargée d’avance',
-      kids.every((tab) => (tab.internal === true ? /^orbe:\/\/app\/[a-z]+\.html$/.test(tab.url) : /^https:\/\/github\.com\/amadoubaui\/orbe/.test(tab.url)) && !win.live.has(tab.id)));
+    check('« Premiers pas » : seules des pages d’Orbx (marquées internes) et des adresses https écrites dans le code ; aucune page n’est chargée d’avance',
+      kids.every((tab) => (tab.internal === true ? /^orbx:\/\/app\/[a-z]+\.html$/.test(tab.url) : /^https:\/\/github\.com\/electroheadfx\/orbx/.test(tab.url)) && !win.live.has(tab.id)));
     check('« Premiers pas » : posé une seule fois ; jamais dans une fenêtre privée', starter.seed(w, space) === null && store.state.window.starter === true && space.pinned.filter((n) => n.type === 'folder').length === 1
       && (() => { delete store.state.window.starter; const r = starter.seed({ incognito: true, shared: false, data: d, space, changed() {} }); return r === null && !store.state.window.starter; })());
     await until(() => ui(`[...document.querySelectorAll('#pinned .folder > .row .title')].some((el) => el.textContent === ${JSON.stringify(T('starter.folder'))})`), 'dossier dans la barre');
@@ -89,7 +89,7 @@ module.exports = async function finitions2Tests(ctx) {
       w.htmlFullscreen = true;
       key(); const video = key();
       w.htmlFullscreen = false;
-      check('page en plein écran (vidéo) : le moteur garde la main, Orbe ne s’en mêle pas', video === false && asked.length === 0);
+      check('page en plein écran (vidéo) : le moteur garde la main, Orbx ne s’en mêle pas', video === false && asked.length === 0);
       full = false; w.escAt = 0;
       key(); const plain = key();
       check('fenêtre ordinaire : Échap doublé ne fait rien de plus', plain === false && asked.length === 0);
@@ -147,16 +147,16 @@ module.exports = async function finitions2Tests(ctx) {
   // --- Onglet glissé hors de la fenêtre, ou vers une autre fenêtre (BL-95, BL-96) --------
   {
     const b = w.win.getBounds();
-    const count0 = OrbeWindow.all.length;
+    const count0 = OrbxWindow.all.length;
     w.activate(A);
-    check('lâché à l’intérieur de la fenêtre (glisser abandonné) : aucune fenêtre n’est créée', w.tearOff([B], { x: b.x + 50, y: b.y + 50 }) === null && OrbeWindow.all.length === count0);
-    check('identifiants inconnus, dossier, point illisible : refusés', w.tearOff(['nope'], { x: b.x - 500, y: b.y }) === null && w.tearOff([B], { x: NaN, y: 1 }) === null && w.handle('tearOff', 'x') === false && w.handle('tearOff', { ids: 'x' }) === false && OrbeWindow.all.length === count0);
+    check('lâché à l’intérieur de la fenêtre (glisser abandonné) : aucune fenêtre n’est créée', w.tearOff([B], { x: b.x + 50, y: b.y + 50 }) === null && OrbxWindow.all.length === count0);
+    check('identifiants inconnus, dossier, point illisible : refusés', w.tearOff(['nope'], { x: b.x - 500, y: b.y }) === null && w.tearOff([B], { x: NaN, y: 1 }) === null && w.handle('tearOff', 'x') === false && w.handle('tearOff', { ids: 'x' }) === false && OrbxWindow.all.length === count0);
     const cursor0 = win.hooks.cursor;
     const out = { x: b.x + b.width + 300, y: b.y + 200 };
     win.hooks.cursor = () => out;
     const made = w.handle('tearOff', { ids: [A], x: 5, y: 5 }); // le point envoyé par l'interface est ignoré
-    const w2 = OrbeWindow.all.find((x) => x !== w && x.activeId === A);
-    check('onglet lâché hors de la fenêtre : une nouvelle fenêtre ordinaire l’affiche, sur le même Espace', made === true && OrbeWindow.all.length === count0 + 1 && !!w2 && w2.shared && w2.spaceId === space.id && win.live.get(A).owner === w2);
+    const w2 = OrbxWindow.all.find((x) => x !== w && x.activeId === A);
+    check('onglet lâché hors de la fenêtre : une nouvelle fenêtre ordinaire l’affiche, sur le même Espace', made === true && OrbxWindow.all.length === count0 + 1 && !!w2 && w2.shared && w2.spaceId === space.id && win.live.get(A).owner === w2);
     check('… la fenêtre d’origine passe à l’onglet voisin (pas de page vide), l’onglet reste à sa place dans la liste', w.activeId === B && space.today.join() === [A, B, C, D].join(), String(w.activeId));
     if (w2) {
       const nb = w2.win.getBounds();
@@ -171,30 +171,30 @@ module.exports = async function finitions2Tests(ctx) {
       const corners = [[20, 20], [nb.width - 20, 20], [20, nb.height - 20], [nb.width - 20, nb.height - 20]].map(([dx, dy]) => ({ x: nb.x + dx, y: nb.y + dy }));
       const spot = corners.find((p) => !within(p, r));
       win.hooks.cursor = () => spot;
-      const n1 = OrbeWindow.all.length;
+      const n1 = OrbxWindow.all.length;
       if (!spot) ignorer('onglet lâché sur une autre fenêtre : elle l’affiche', 'les deux fenêtres se recouvrent sur cet écran');
       else {
         w.activate(C);
         const moved = w.handle('tearOff', { ids: [C] });
-        check('onglet lâché sur une autre fenêtre d’Orbe : elle l’affiche, sans créer de fenêtre ; la première passe au voisin', moved === true && OrbeWindow.all.length === n1 && w2.activeId === C && win.live.get(C).owner === w2 && w.activeId !== C && !!w.activeId, JSON.stringify([w2.activeId, w.activeId]));
+        check('onglet lâché sur une autre fenêtre d’Orbx : elle l’affiche, sans créer de fenêtre ; la première passe au voisin', moved === true && OrbxWindow.all.length === n1 && w2.activeId === C && win.live.get(C).owner === w2 && w.activeId !== C && !!w.activeId, JSON.stringify([w2.activeId, w.activeId]));
       }
       // Ligne lâchée sur la barre latérale de l'autre fenêtre (l'interface n'envoie que l'identifiant).
       w.activate(D);
       check('ligne d’une autre fenêtre lâchée sur la barre latérale : l’onglet s’affiche ici ; identifiant inconnu ou déjà d’ici : refusé',
         w2.handle('adoptTab', D) === true && w2.activeId === D && w.activeId !== D && w2.handle('adoptTab', 'nope') === false && w2.handle('adoptTab', { id: D }) === false);
       // Fenêtre privée : ses onglets ne sortent pas, et elle n'en adopte pas.
-      const iw = new OrbeWindow({ incognito: true });
+      const iw = new OrbxWindow({ incognito: true });
       const it = iw.createTab(dead('prive'));
       win.hooks.cursor = () => ({ x: -9000, y: -9000 });
-      const n2 = OrbeWindow.all.length;
-      check('fenêtre privée : un onglet glissé dehors n’ouvre rien ; elle n’adopte aucun onglet', iw.tearOff([it.id]) === null && iw.handle('adoptTab', D) === false && iw.adopt([D], w2) === null && OrbeWindow.all.length === n2 && w2.activeId === D);
+      const n2 = OrbxWindow.all.length;
+      check('fenêtre privée : un onglet glissé dehors n’ouvre rien ; elle n’adopte aucun onglet', iw.tearOff([it.id]) === null && iw.handle('adoptTab', D) === false && iw.adopt([D], w2) === null && OrbxWindow.all.length === n2 && w2.activeId === D);
       // (Une fenêtre fermée pendant que sa barre se charge laisse des messages en route dans le moteur.)
       await until(() => !iw.ui.webContents.isLoading() && !w2.ui.webContents.isLoading(), 'barres des fenêtres d’essai chargées');
       await sleep(300);
       iw.win.close();
       w.activate(A); // reprend l'onglet avant de fermer la seconde fenêtre
       w2.win.close();
-      await until(() => !OrbeWindow.all.includes(w2) && !OrbeWindow.all.includes(iw), 'fenêtres d’essai fermées');
+      await until(() => !OrbxWindow.all.includes(w2) && !OrbxWindow.all.includes(iw), 'fenêtres d’essai fermées');
     }
     win.hooks.cursor = cursor0;
     check('la position du pointeur vient du système', typeof win.hooks.cursor().x === 'number');
@@ -362,14 +362,14 @@ module.exports = async function finitions2Tests(ctx) {
     const fs = require('fs');
     const path = require('path');
     const os = require('os');
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-export-'));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-export-'));
     const file = path.join(dir, 'espace.html');
     const save0 = win.hooks.saveFile;
     let asked = null;
     win.hooks.saveFile = async (parent, options) => { asked = options; return file; };
     const evil = w.createTab('https://exemple.test/fin2-x?a="1"&b=<2>', { space, index: 0 });
     evil.title = '<script>alert(1)</script> & "co"';
-    const inner = w.createTab('orbe://app/shortcuts.html', { space, index: 0 });
+    const inner = w.createTab('orbx://app/shortcuts.html', { space, index: 0 });
     inner.internal = true;
     const pinnedTab = w.createTab('https://exemple.test/fin2-epingle', { space, index: 0 });
     pinnedTab.title = 'Épinglé';
@@ -386,11 +386,11 @@ module.exports = async function finitions2Tests(ctx) {
     const webCount = [...walkTabs(space)].filter((id) => /^https?:/i.test(d.tabs[id].homeUrl || d.tabs[id].url)).length;
     check('export : un fichier de signets au nom de l’Espace est proposé, avec ses dossiers et « Aujourd’hui »',
       !!asked && /Finitions 2\.html$/.test(asked.defaultPath) && html.startsWith('<!DOCTYPE NETSCAPE-Bookmark-file-1>') && html.includes('<H3>Finitions 2</H3>') && html.includes('<H3>Lot &amp; Cie</H3>') && html.includes(`<H3>${T('spaces.exportToday')}</H3>`) && html.includes('fin2-epingle">Épinglé</A>'));
-    check('export : titres et adresses échappés (aucune balise du site ne passe), pages d’Orbe écartées',
-      !html.includes('<script>') && html.includes('&lt;script&gt;alert(1)&lt;/script&gt; &amp; &quot;co&quot;') && html.includes('a=&quot;1&quot;&amp;b=&lt;2&gt;') && !html.includes('orbe://'));
+    check('export : titres et adresses échappés (aucune balise du site ne passe), pages d’Orbx écartées',
+      !html.includes('<script>') && html.includes('&lt;script&gt;alert(1)&lt;/script&gt; &amp; &quot;co&quot;') && html.includes('a=&quot;1&quot;&amp;b=&lt;2&gt;') && !html.includes('orbx://'));
     const parsed = require('../src/main/import-bookmarks').parse(html);
     const flat = JSON.stringify(parsed);
-    check('export : le fichier se relit par l’import de signets d’Orbe, toutes les adresses web y sont', flat.includes('fin2-epingle') && flat.includes('Lot & Cie') && (html.match(/<DT><A /g) || []).length === webCount
+    check('export : le fichier se relit par l’import de signets d’Orbx, toutes les adresses web y sont', flat.includes('fin2-epingle') && flat.includes('Lot & Cie') && (html.match(/<DT><A /g) || []).length === webCount
       && toasts.join() === T('spaces.exported', { n: webCount }), `${(html.match(/<DT><A /g) || []).length}/${webCount} ${toasts.join()}`);
     win.hooks.saveFile = async () => null;
     check('export annulé : rien n’est écrit ; chemin relatif refusé ; fenêtre privée : pas d’export', (await w.exportSpace()) === null
@@ -522,10 +522,10 @@ module.exports = async function finitions2Tests(ctx) {
       && veille.saving(undefined) === false && veille.saving({ level: 'bas', charging: false }) === false && veille.saving({ level: 0.1, charging: false }, false) === false);
     check('… le délai de veille passe à dix minutes (jamais plus long que le réglage ; « jamais » compris)',
       veille.idleFor(3, true) === 600000 && veille.idleFor(0, true) === 600000 && veille.idleFor(3, false) === 3 * 36e5 && veille.idleFor(0, false) === 0 && veille.SAVER_IDLE === 600000);
-    const reported = OrbeWindow.battery;
+    const reported = OrbxWindow.battery;
     if (reported) check('la barre latérale transmet le niveau de la batterie au démarrage (un nombre de 0 à 1, branché ou non)', Number.isFinite(reported.level) && reported.level >= 0 && reported.level <= 1 && typeof reported.charging === 'boolean', JSON.stringify(reported));
     else outils.ignorer('la barre latérale transmet le niveau de la batterie au démarrage', 'aucune batterie annoncée par le moteur sur cette machine');
-    const battery0 = OrbeWindow.battery;
+    const battery0 = OrbxWindow.battery;
     const saver0 = store.state.settings.batterySaver;
     const hours0 = store.state.settings.sleepAfterHours;
     store.state.settings.batterySaver = true;
@@ -536,9 +536,9 @@ module.exports = async function finitions2Tests(ctx) {
     const pick0 = veille.pick;
     const asked = [];
     veille.pick = (tabs, opts) => { asked.push(opts.idleMs); return []; };
-    OrbeWindow.battery = { level: 0.8, charging: false };
-    check('niveau refusé s’il n’est pas un nombre de 0 à 1 accompagné d’un booléen', w.handle('battery', { level: 2, charging: false }) === false && w.handle('battery', { level: 0.1 }) === false && w.handle('battery', '0.1') === false && w.handle('battery', { level: NaN, charging: false }) === false && OrbeWindow.battery.level === 0.8);
-    OrbeWindow.trimLive({ deep: true });
+    OrbxWindow.battery = { level: 0.8, charging: false };
+    check('niveau refusé s’il n’est pas un nombre de 0 à 1 accompagné d’un booléen', w.handle('battery', { level: 2, charging: false }) === false && w.handle('battery', { level: 0.1 }) === false && w.handle('battery', '0.1') === false && w.handle('battery', { level: NaN, charging: false }) === false && OrbxWindow.battery.level === 0.8);
+    OrbxWindow.trimLive({ deep: true });
     const normal = asked.pop();
     w.handle('battery', { level: 0.15, charging: false });
     const atDrop = asked.slice();
@@ -547,15 +547,15 @@ module.exports = async function finitions2Tests(ctx) {
       normal === 3 * 36e5 && toasts.join() === T('toast.batterySaver') && atDrop.join() === '600000', JSON.stringify([normal, toasts, atDrop]));
     asked.length = 0;
     store.state.settings.batterySaver = false;
-    OrbeWindow.trimLive({ deep: true });
+    OrbxWindow.trimLive({ deep: true });
     store.state.settings.batterySaver = true;
     w.handle('battery', { level: 0.14, charging: true });
-    OrbeWindow.trimLive({ deep: true });
+    OrbxWindow.trimLive({ deep: true });
     check('réglage coupé, ou machine rebranchée : le délai choisi revient', asked.join() === `${3 * 36e5},${3 * 36e5}`, asked.join());
     check('réglage « Économie de batterie » : actif par défaut', require('../src/main/store').DEFAULT_SETTINGS.batterySaver === true);
     veille.pick = pick0;
     w.toast = toast0;
-    OrbeWindow.battery = battery0;
+    OrbxWindow.battery = battery0;
     if (saver0 === undefined) delete store.state.settings.batterySaver; else store.state.settings.batterySaver = saver0;
     store.state.settings.sleepAfterHours = hours0;
   }
@@ -566,16 +566,16 @@ module.exports = async function finitions2Tests(ctx) {
     const entered = [];
     win.hooks.enterFullScreen = (bw) => { entered.push(bw); };
     const fake = (full) => ({ win: { isDestroyed: () => false, isFullScreen: () => full } });
-    const a1 = OrbeWindow.open({ blank: true }, fake(true));
-    const a2 = OrbeWindow.open({ blank: true }, fake(false));
-    const a3 = OrbeWindow.open({ blank: true }, null);
+    const a1 = OrbxWindow.open({ blank: true }, fake(true));
+    const a2 = OrbxWindow.open({ blank: true }, fake(false));
+    const a3 = OrbxWindow.open({ blank: true }, null);
     check('nouvelle fenêtre ouverte depuis une fenêtre en plein écran : elle passe en plein écran ; depuis une fenêtre ordinaire, ou sans fenêtre : non',
       entered.length === 1 && entered[0] === a1.win && a1.blank === true && !a2.win.isFullScreen() && !a3.win.isFullScreen());
     win.hooks.enterFullScreen = enter0;
     await until(() => [a1, a2, a3].every((x) => !x.ui.webContents.isLoading()), 'fenêtres d’essai chargées');
     await sleep(300);
     for (const x of [a1, a2, a3]) x.win.close();
-    await until(() => ![a1, a2, a3].some((x) => OrbeWindow.all.includes(x)), 'fenêtres d’essai fermées');
+    await until(() => ![a1, a2, a3].some((x) => OrbxWindow.all.includes(x)), 'fenêtres d’essai fermées');
     await until(() => ui('document.body.classList.contains("fullscreen") === S.fullScreen'), 'barre à jour');
     check('plein écran : la barre latérale le sait (plus de place réservée aux boutons de la fenêtre)',
       await ui(`(() => { const s0 = S; render({ ...s0, fullScreen: true }); const pad = getComputedStyle(document.getElementById('top')).paddingLeft; render(s0); return pad; })()`) === '0px');
@@ -604,8 +604,8 @@ module.exports = async function finitions2Tests(ctx) {
     const item = find(Menu.getApplicationMenu(), T('lib.media'));
     const before = w.activeId;
     item.click();
-    const opened = await until(() => { const tab = w.activeId && d.tabs[w.activeId]; return tab && tab.internal && tab.url === 'orbe://app/library.html#media' ? tab : null; }, 'section Médias ouverte');
-    check('barre de menus : « Médias » ouvre la Bibliothèque sur sa section Médias, dans un onglet d’Orbe', !!item && item.enabled !== false && !!opened && opened.internal === true);
+    const opened = await until(() => { const tab = w.activeId && d.tabs[w.activeId]; return tab && tab.internal && tab.url === 'orbx://app/library.html#media' ? tab : null; }, 'section Médias ouverte');
+    check('barre de menus : « Médias » ouvre la Bibliothèque sur sa section Médias, dans un onglet d’Orbx', !!item && item.enabled !== false && !!opened && opened.internal === true);
     const rt = await until(() => { const x = win.live.get(opened.id); return x && !x.wc.isLoading() ? x : null; }, 'page chargée');
     check('… la section Médias y est affichée', await until(() => rt.wc.executeJavaScript(`(() => { const on = document.querySelector('[data-tab].on'); return !!on && on.dataset.tab === 'media'; })()`).catch(() => false), 'onglet Médias sélectionné').then(() => true, () => false));
     w.close(opened.id, { silent: true, ask: false });
@@ -614,7 +614,7 @@ module.exports = async function finitions2Tests(ctx) {
 
   // --- Remise en état ---------------------------------------------------------------------
   w.switchSpace(space.id);
-  for (const id of Object.keys(d.tabs)) if (mine(d.tabs[id])) { OrbeWindow.destroyView(id); delete d.tabs[id]; }
+  for (const id of Object.keys(d.tabs)) if (mine(d.tabs[id])) { OrbxWindow.destroyView(id); delete d.tabs[id]; }
   space.today = []; space.pinned = []; space.splits = [];
   delete w.activeBySpace[space.id];
   d.spaces.splice(d.spaces.indexOf(space), 1);

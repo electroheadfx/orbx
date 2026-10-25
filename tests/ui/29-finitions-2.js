@@ -19,10 +19,10 @@ module.exports = {
     // Page B à l'écran et chargée : le bouton montre « Actualiser » (et non « Arrêter »).
     const pageBChargee = () => jusqua(async () => (await shell.locator('#reload-icon').getAttribute('href')) === '#i-reload'
       && (await ctx.principal(({ w }, u) => !!w.activeRt && !w.activeRt.loading && w.activeRt.wc.getURL() === u, ctx.url('/b'))), 'Page B chargée, bouton « Actualiser »');
-    const fenetres = () => ctx.principal(({ win }) => win.OrbeWindow.all.map((x) => ({ actif: x.activeId ? x.data.tabs[x.activeId].title : null, prive: x.incognito })));
+    const fenetres = () => ctx.principal(({ win }) => win.OrbxWindow.all.map((x) => ({ actif: x.activeId ? x.data.tabs[x.activeId].title : null, prive: x.incognito })));
 
     // --- Premiers pas -------------------------------------------------------------------
-    await t.verifier('premier lancement : le dossier « Premiers pas » est en tête des épinglés ; un clic sur « Raccourcis clavier essentiels » ouvre la page d’Orbe', async () => {
+    await t.verifier('premier lancement : le dossier « Premiers pas » est en tête des épinglés ; un clic sur « Raccourcis clavier essentiels » ouvre la page d’Orbx', async () => {
       const n = await ctx.principal(({ w, req }) => { const f = req('starter.js').seed(w); return f ? f.children.length : 0; });
       assert.ok(n >= 3, 'dossier posé');
       const dossier = shell.locator('#pinned .folder').first();
@@ -33,9 +33,9 @@ module.exports = {
       await ctx.clic(shell, ligne);
       const page = await ctx.attendrePage('shortcuts.html');
       await jusqua(async () => (await page.locator('h1').count()) > 0, 'page des raccourcis chargée');
-      assert.equal((await ctx.etat()).actifUrl, 'orbe://app/shortcuts.html');
+      assert.equal((await ctx.etat()).actifUrl, 'orbx://app/shortcuts.html');
       // Remise à plat pour la suite.
-      await ctx.principal(({ w, win }) => { const f = w.space.pinned.shift(); for (const c of f.children) { win.OrbeWindow.destroyView(c.id); delete w.data.tabs[c.id]; } delete w.activeBySpace[w.space.id]; w.layout(); w.changed(); });
+      await ctx.principal(({ w, win }) => { const f = w.space.pinned.shift(); for (const c of f.children) { win.OrbxWindow.destroyView(c.id); delete w.data.tabs[c.id]; } delete w.activeBySpace[w.space.id]; w.layout(); w.changed(); });
       await jusqua(async () => (await shell.locator('#pinned .folder').count()) === 0, 'dossier retiré');
     });
 
@@ -155,7 +155,7 @@ module.exports = {
       await ctx.clic(shell, ctx.ligne('Page B'));
       await jusqua(async () => (await fenetres())[0].actif === 'Page B', 'Page B dans la première fenêtre');
       const cdp = await autre.context().newCDPSession(autre);
-      const data = { items: [{ mimeType: 'application/x-orbe-item', data: idB }, { mimeType: 'text/plain', data: idB }], dragOperationsMask: 19 };
+      const data = { items: [{ mimeType: 'application/x-orbx-item', data: idB }, { mimeType: 'text/plain', data: idB }], dragOperationsMask: 19 };
       const box = await autre.locator('#today').boundingBox();
       const pt = { x: Math.round(box.x + box.width / 2), y: Math.round(box.y + 20) };
       for (const type of ['dragEnter', 'dragOver', 'drop']) await cdp.send('Input.dispatchDragEvent', { type, x: pt.x, y: pt.y, data });
@@ -165,7 +165,7 @@ module.exports = {
       assert.notEqual(f[0].actif, 'Page B');
       // Aucun onglet n'a été créé par ce dépôt (ce n'est pas une adresse).
       assert.equal((await ctx.titres()).filter((x) => x === 'Page B').length, 1);
-      await ctx.principal(({ win }) => { win.hooks.cursor = win.hooks.cursor0; const w2 = win.OrbeWindow.all[1]; win.OrbeWindow.all[0].activate(win.OrbeWindow.all[0].space.today[0]); w2.win.close(); });
+      await ctx.principal(({ win }) => { win.hooks.cursor = win.hooks.cursor0; const w2 = win.OrbxWindow.all[1]; win.OrbxWindow.all[0].activate(win.OrbxWindow.all[0].space.today[0]); w2.win.close(); });
       await jusqua(async () => (await fenetres()).length === 1, 'seconde fenêtre fermée');
     });
 
@@ -184,7 +184,7 @@ module.exports = {
         }, 100);
       });
       await new Promise((r) => serveur.listen(0, '127.0.0.1', r));
-      const dossier = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-ui-dl2-'));
+      const dossier = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-ui-dl2-'));
       try {
         await ctx.clic(shell, ctx.ligne('Page A'));
         await jusqua(async () => (await volets()).actif === 'Page A', 'Page A affichée');
@@ -215,7 +215,7 @@ module.exports = {
     });
 
     // --- Menus : pastille d'un favori, export d'un Espace, profil rappelé ---------------------
-    // (Un menu natif ne se pilote pas : il est relevé au moment où Orbe l'ouvre, après un vrai clic droit.)
+    // (Un menu natif ne se pilote pas : il est relevé au moment où Orbx l'ouvre, après un vrai clic droit.)
     await ctx.principal(({ w }) => { w.popup = (tpl) => { w.menuVu = tpl; }; });
     const menuContextuel = async (loc) => {
       await ctx.principal(({ w }) => { w.menuVu = null; });
@@ -247,7 +247,7 @@ module.exports = {
     });
 
     await t.verifier('clic droit sur l’en-tête de l’Espace → « Exporter l’Espace… » : un fichier de signets est écrit, avec les onglets', async () => {
-      const dossier = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-ui-export-'));
+      const dossier = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-ui-export-'));
       const fichier = path.join(dossier, 'espace.html');
       try {
         await ctx.principal(({ win }, f) => { win.hooks.saveFile0 = win.hooks.saveFile; win.hooks.saveFile = async () => f; }, fichier);
@@ -393,22 +393,22 @@ module.exports = {
         try {
           await ctx.menu('Cmd+N');
           await jusqua(async () => (await fenetres()).length === 2, 'seconde fenêtre');
-          const vu = await ctx.principal(({ win }) => ({ demandes: global.__plein, nouvelle: win.OrbeWindow.all[1].win.id }));
+          const vu = await ctx.principal(({ win }) => ({ demandes: global.__plein, nouvelle: win.OrbxWindow.all[1].win.id }));
           assert.deepEqual(vu.demandes, [vu.nouvelle]);
         } finally {
-          await ctx.principal(({ win }) => { win.hooks.enterFullScreen = win.hooks.enterFullScreen0; const w2 = win.OrbeWindow.all[1]; if (w2) w2.win.close(); });
+          await ctx.principal(({ win }) => { win.hooks.enterFullScreen = win.hooks.enterFullScreen0; const w2 = win.OrbxWindow.all[1]; if (w2) w2.win.close(); });
           await jusqua(async () => (await fenetres()).length === 1, 'seconde fenêtre fermée');
         }
       });
 
       await t.verifier('plein écran : un Échap ne fait rien, Échap doublé fait sortir la fenêtre du plein écran', async () => {
         // La touche est envoyée par Electron à la vue de la barre (les frappes du protocole DevTools
-        // ne passent pas par le filtre des raccourcis d'Orbe).
+        // ne passent pas par le filtre des raccourcis d'Orbx).
         const echap = () => ctx.principal(({ w }) => { for (const type of ['keyDown', 'keyUp']) w.ui.webContents.sendInputEvent({ type, keyCode: 'Escape' }); });
         await echap();
         await ctx.sleep(700);
         assert.equal(await plein(), true, 'un seul Échap : toujours en plein écran');
-        assert.ok(await ctx.principal(({ w }) => w.escAt > 0), 'la touche est arrivée jusqu’à Orbe');
+        assert.ok(await ctx.principal(({ w }) => w.escAt > 0), 'la touche est arrivée jusqu’à Orbx');
         await echap();
         await ctx.sleep(80);
         await echap();

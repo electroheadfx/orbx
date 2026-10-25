@@ -24,7 +24,7 @@ module.exports = {
       const ecarts = t0.slice(1).map((x, i) => x - t0[i]).sort((a, b) => a - b);
       return { misesEnPage: apres.LayoutCount - avant.LayoutCount, images: ecarts.length, mediane: Math.round(ecarts[Math.floor(ecarts.length / 2)] * 10) / 10, p95: Math.round(ecarts[Math.floor(ecarts.length * 0.95)] * 10) / 10 };
     };
-    const commencer = (n) => ctx.principal(({ win }, k) => { for (let i = 0; i < k; i++) win.noteDownload('start', { id: 'ui-' + Date.now() + '-' + i, state: 'progressing' }, null); win.OrbeWindow.pushAll(); }, n);
+    const commencer = (n) => ctx.principal(({ win }, k) => { for (let i = 0; i < k; i++) win.noteDownload('start', { id: 'ui-' + Date.now() + '-' + i, state: 'progressing' }, null); win.OrbxWindow.pushAll(); }, n);
 
     await t.verifier('premier affichage : le reflet a traversé la barre latérale une fois, et n’y est plus', async () => {
       if (reduit) return assert.equal(await shell.evaluate(() => document.documentElement.dataset.shimmer), undefined);

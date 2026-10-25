@@ -2,7 +2,7 @@
 // suppression d'un dossier ou d'un Espace qui archive, fenêtre vierge, « Gérer les
 // Espaces », articles du menu Édition, rendu de la barre sans retouche inutile.
 // Appelé par tests/selftest.js, ou seul :
-//   ORBE_SCENARIO=tests/finitions.js node scripts/dev.js --selftest
+//   ORBX_SCENARIO=tests/finitions.js node scripts/dev.js --selftest
 const electron = require('electron');
 
 const { clipboard, Menu, dialog, shell, app } = electron;
@@ -14,7 +14,7 @@ const { sleep } = outils;
 const until = (fn, label, timeout = 10000) => outils.until(fn, label, timeout);
 
 module.exports = async function finitionsTests(ctx) {
-  const { first: w, store, win, commands, OrbeWindow } = ctx;
+  const { first: w, store, win, commands, OrbxWindow } = ctx;
   const menu = ctx.menu || require('../src/main/menu');
   const platform = require('../src/main/platform');
   const shortcuts = ctx.shortcuts || require('../src/main/shortcuts');
@@ -212,11 +212,11 @@ module.exports = async function finitionsTests(ctx) {
   menu.refresh(true);
   await until(() => !!menuItem('file.newBlank'), 'menu reconstruit');
   check('Fichier → « Nouvelle fenêtre vierge », avec ⌃⌘N', menuItem('file.newBlank').accelerator === platform.accel('Ctrl+Cmd+N') && commands.byName.get('newBlank').global === true);
-  const n0 = OrbeWindow.all.length;
+  const n0 = OrbxWindow.all.length;
   const saved0 = JSON.stringify(store.state.window);
   menuItem('file.newBlank').click();
-  await until(() => OrbeWindow.all.length === n0 + 1, 'fenêtre vierge ouverte');
-  const bw = OrbeWindow.all.find((x) => x.blank);
+  await until(() => OrbxWindow.all.length === n0 + 1, 'fenêtre vierge ouverte');
+  const bw = OrbxWindow.all.find((x) => x.blank);
   check('fenêtre vierge : hors des Espaces — un seul Espace à elle, aucun onglet, données à part', !!bw && bw.data !== store.state && bw.data.spaces.length === 1 && bw.space.name === T('blank.title') && !Object.keys(bw.data.tabs).length && !bw.incognito && !bw.shared);
   check('fenêtre vierge : même session que les fenêtres ordinaires (cookies, historique), contrairement à la navigation privée', bw.session === w.session);
   await until(() => bw.modalMode === 'command', 'barre de commande de la fenêtre vierge');
@@ -226,7 +226,7 @@ module.exports = async function finitionsTests(ctx) {
   bw.changed();
   await until(() => bw.ui.webContents.executeJavaScript('typeof S === "object" && !!S && S.blank === true && S.today.length === 1 && S.spaces.length === 1'), 'barre de la fenêtre vierge');
   check('ses onglets n’entrent dans aucun Espace enregistré', !store.state.tabs[bt.id] && !store.state.spaces.some((s) => s.today.includes(bt.id)));
-  check('elle ne devient jamais la fenêtre dont l’état est mémorisé, ni la fenêtre principale', !bw.persistent && w.persistent && (bw.remember(), JSON.stringify(store.state.window) === saved0) && OrbeWindow.all.find((x) => x.shared) === w);
+  check('elle ne devient jamais la fenêtre dont l’état est mémorisé, ni la fenêtre principale', !bw.persistent && w.persistent && (bw.remember(), JSON.stringify(store.state.window) === saved0) && OrbxWindow.all.find((x) => x.shared) === w);
   const spaces0 = store.state.spaces.length;
   bw.newSpace();
   bw.newProfile();
@@ -246,7 +246,7 @@ module.exports = async function finitionsTests(ctx) {
   if (rouvert) bw.close(rouvert.id);
   store.state.archive = store.state.archive.filter((x) => !x.url.startsWith('https://exemple.test/fin-'));
   bw.win.close();
-  await until(() => OrbeWindow.all.length === n0, 'fenêtre vierge refermée');
+  await until(() => OrbxWindow.all.length === n0, 'fenêtre vierge refermée');
   check('raccourcis : « Nouvelle fenêtre vierge » se règle dans le groupe Fichier', (shortcuts.list().find((g) => g.title === T('menu.file')) || { items: [] }).items.some((x) => x.name === 'newBlank'));
 
   // --- Gérer les Espaces -----------------------------------------------------------------
@@ -386,7 +386,7 @@ module.exports = async function finitionsTests(ctx) {
   w.replay('redo');
   check('⇧⌘Z le retransforme en dossier', !d.spaces.includes(born) && space.pinned.some((x) => x.type === 'folder' && x.name === 'Voyage'));
   check('dernier Espace : pas de transformation en dossier', (() => { const bw2 = { ...w }; void bw2; return d.spaces.length > 1 || pick(w.spaceMenuTemplate(), 'spaces.toFolder').enabled === false; })());
-  for (const id of [K, L, M, extra.id]) if (d.tabs[id]) { w.leaveSplit(id); OrbeWindow.destroyView(id); OrbeWindow.forget(id, d); const loc = w.locate(id); if (loc) loc.arr.splice(loc.index, 1); delete d.tabs[id]; }
+  for (const id of [K, L, M, extra.id]) if (d.tabs[id]) { w.leaveSplit(id); OrbxWindow.destroyView(id); OrbxWindow.forget(id, d); const loc = w.locate(id); if (loc) loc.arr.splice(loc.index, 1); delete d.tabs[id]; }
   space.pinned = [];
   w.undoStack.length = 0;
   w.redoStack.length = 0;
@@ -411,16 +411,16 @@ module.exports = async function finitionsTests(ctx) {
   check('glisser un lien : sa page s’ouvre (la première adresse de la liste)', opened[1] === 'https://exemple.org/page');
   await dropOn([['text/plain', 'javascript:alert(1)']]);
   await dropOn([['text/plain', 'file:///etc/hosts']]);
-  await dropOn([['application/x-orbe-item', 'x'], ['text/plain', 'https://exemple.org/autre']]);
+  await dropOn([['application/x-orbx-item', 'x'], ['text/plain', 'https://exemple.org/autre']]);
   await sleep(200);
   check('… jamais une adresse javascript: ou file:, ni une ligne venue d’une autre fenêtre', opened.length === 2, opened.join(' | '));
   w.newTab = newTab0;
 
   // --- Deux fenêtres, mêmes Espaces : les mêmes onglets --------------------------------------------------
-  const before2 = OrbeWindow.all.length;
+  const before2 = OrbxWindow.all.length;
   commands.run(w, 'newWindow');
-  await until(() => OrbeWindow.all.length === before2 + 1, 'seconde fenêtre');
-  const w2 = OrbeWindow.all.find((x) => x !== w && x.shared);
+  await until(() => OrbxWindow.all.length === before2 + 1, 'seconde fenêtre');
+  const w2 = OrbxWindow.all.find((x) => x !== w && x.shared);
   w2.hideModal();
   w2.switchSpace(space.id);
   const [X1, X2] = make('XY');
@@ -433,8 +433,8 @@ module.exports = async function finitionsTests(ctx) {
   await until(() => ui(`document.querySelector('#today [data-id="${X1}"] .title')?.textContent === 'Renommé ailleurs'`), 'renommage vu dans la première fenêtre');
   check('… et un changement fait dans la seconde revient dans la première', true);
   w2.win.close();
-  await until(() => OrbeWindow.all.length === before2, 'seconde fenêtre refermée');
-  for (const id of [X1, X2]) { const loc = w.locate(id); if (loc) loc.arr.splice(loc.index, 1); OrbeWindow.destroyView(id); delete d.tabs[id]; }
+  await until(() => OrbxWindow.all.length === before2, 'seconde fenêtre refermée');
+  for (const id of [X1, X2]) { const loc = w.locate(id); if (loc) loc.arr.splice(loc.index, 1); OrbxWindow.destroyView(id); delete d.tabs[id]; }
   w.undoStack.length = 0;
   w.win.focus();
 
@@ -484,7 +484,7 @@ module.exports = async function finitionsTests(ctx) {
   w.activate(head);
   check('… un clic la rouvre avec ses deux volets', w.visibleIds().length === 2);
   w.separateAll(head);
-  for (const id of [S1, S2, S3, S4]) { const loc = w.locate(id); if (loc) loc.arr.splice(loc.index, 1); OrbeWindow.destroyView(id); OrbeWindow.forget(id, d); delete d.tabs[id]; }
+  for (const id of [S1, S2, S3, S4]) { const loc = w.locate(id); if (loc) loc.arr.splice(loc.index, 1); OrbxWindow.destroyView(id); OrbxWindow.forget(id, d); delete d.tabs[id]; }
   w.undoStack.length = 0;
 
   // --- Plein écran (⌃⌘F), archivage d'office expliqué une fois ---------------------------------------------
@@ -541,7 +541,7 @@ module.exports = async function finitionsTests(ctx) {
   check('favori jamais affiché : sa page n’est pas chargée d’avance (ni vue, ni processus) ; elle l’est au clic', !win.live.has(FV) && await ui(`!document.querySelector('#fav [data-id="${FV}"]').classList.contains('live')`)
     && (w.activate(FV), win.live.has(FV)));
   w.toggleFavorite(FV);
-  for (const sp of [space, away]) for (const id of [...sp.today]) { OrbeWindow.destroyView(id); OrbeWindow.forget(id, d); delete d.tabs[id]; }
+  for (const sp of [space, away]) for (const id of [...sp.today]) { OrbxWindow.destroyView(id); OrbxWindow.forget(id, d); delete d.tabs[id]; }
   space.today = [];
   d.spaces.splice(d.spaces.indexOf(away), 1);
   delete w.activeBySpace[away.id];
@@ -553,7 +553,7 @@ module.exports = async function finitionsTests(ctx) {
   const keepalive = require('../src/main/keepalive');
   check('sites qui restent vivants : messageries, courrier, agendas, musique — sur le nom d’hôte et le début du chemin',
     ['https://mail.google.com/mail/u/0/', 'https://app.slack.com/client/T1/C1', 'https://open.spotify.com/', 'https://web.whatsapp.com/', 'https://www.notion.so/page', 'https://calendar.google.com/calendar/u/0/r', 'https://docs.google.com/document/d/1', 'https://x.com/home'].every(keepalive.matches)
-    && !['https://exemple.org/?u=mail.google.com/mail', 'https://mail.google.com.exemple.org/mail', 'https://docs.google.com/forms/x', 'https://app.slack.com/', 'orbe://mail.google.com/mail', 'file:///mail.google.com/mail', 'pas une adresse', '', null].some(keepalive.matches));
+    && !['https://exemple.org/?u=mail.google.com/mail', 'https://mail.google.com.exemple.org/mail', 'https://docs.google.com/forms/x', 'https://app.slack.com/', 'orbx://mail.google.com/mail', 'file:///mail.google.com/mail', 'pas une adresse', '', null].some(keepalive.matches));
   const veille = require('../src/main/veille');
   const old = Date.now() - 10 * 36e5;
   const picked = veille.pick([
@@ -623,7 +623,7 @@ module.exports = async function finitionsTests(ctx) {
   await until(async () => /<b>|font-weight/.test(await js('document.getElementById("riche").innerHTML')), 'gras posé');
   const riche = await js('document.getElementById("riche").innerHTML');
   check('Format → Police : gras, italique et souligné s’appliquent à la sélection de la zone de texte enrichi', /<b>/.test(riche) && /<i>/.test(riche) && /<u>/.test(riche), riche);
-  // La page qui gère elle-même ⌘B garde la main : la touche lui arrive, Orbe ne la prend pas.
+  // La page qui gère elle-même ⌘B garde la main : la touche lui arrive, Orbx ne la prend pas.
   await js('window.vuB = 0; document.addEventListener("keydown", (e) => { if ((e.metaKey || e.ctrlKey) && e.key === "b") { e.preventDefault(); window.vuB += 1; } }); document.getElementById("riche").innerHTML = "simple"; getSelection().selectAllChildren(document.getElementById("riche"));');
   const mod = platform.isMac ? 'meta' : 'control';
   pwc.sendInputEvent({ type: 'keyDown', keyCode: 'b', modifiers: [mod] });
@@ -633,7 +633,7 @@ module.exports = async function finitionsTests(ctx) {
   if (!vuB && (await outils.milieu(w)).verrouille) outils.ignorer('⌘B dans une page qui le gère elle-même', 'session verrouillée : la page ne reçoit pas les touches');
   else {
     await sleep(150);
-    check('⌘B dans une page qui le gère elle-même : la touche lui arrive et sa décision tient (aucune mise en gras par Orbe)', vuB && (await js('document.getElementById("riche").innerHTML')) === 'simple');
+    check('⌘B dans une page qui le gère elle-même : la touche lui arrive et sa décision tient (aucune mise en gras par Orbx)', vuB && (await js('document.getElementById("riche").innerHTML')) === 'simple');
   }
   // Rechercher et remplacer (⌥⌘F) : dans un champ de saisie, jamais dans le texte fixe de la page.
   await js('document.getElementById("zone").value = "chat et chat, puis Chat"; document.getElementById("riche").textContent = "un chat riche"; document.getElementById("bas").textContent = "un chat en bas"; document.activeElement.blur(); getSelection().removeAllRanges();');
@@ -705,7 +705,7 @@ module.exports = async function finitionsTests(ctx) {
   BaseWindow.prototype.minimize = function minimize() { reduced.push(this.id); };
   const n = commands.minimizeAll();
   BaseWindow.prototype.minimize = minimize0;
-  check('« Tout placer dans le Dock » réduit chaque fenêtre visible d’Orbe', n === reduced.length && reduced.includes(w.win.id) && n === BaseWindow.getAllWindows().filter((x) => x.isVisible() && !x.isMinimized()).length);
+  check('« Tout placer dans le Dock » réduit chaque fenêtre visible d’Orbx', n === reduced.length && reduced.includes(w.win.id) && n === BaseWindow.getAllWindows().filter((x) => x.isVisible() && !x.isMinimized()).length);
   // Enregistrer une trace : premier appel, elle commence ; second, elle est rangée dans Téléchargements.
   const start0 = contentTracing.startRecording;
   const stop0 = contentTracing.stopRecording;
@@ -724,7 +724,7 @@ module.exports = async function finitionsTests(ctx) {
   // La question d'abord : elle dit ce que la trace contient. Refusée, rien ne s'enregistre.
   await commands.run(w, 'recordTrace');
   check('« Enregistrer une trace… » : la question est posée d’abord, elle dit que la trace contient adresses et titres de toutes les fenêtres ; refusée, rien ne commence',
-    questions.length === 1 && questions[0].message === T('trace.confirm') && questions[0].detail === T('trace.detail') && /toutes les fenêtres|every Orbe window/.test(questions[0].detail) && /adresses|addresses/.test(questions[0].detail) && questions[0].cancelId === 1 && questions[0].defaultId === 1 && commands.tracing() === false && trace.length === 0 && toasts.length === 0, JSON.stringify(questions));
+    questions.length === 1 && questions[0].message === T('trace.confirm') && questions[0].detail === T('trace.detail') && /toutes les fenêtres|every Orbx window/.test(questions[0].detail) && /adresses|addresses/.test(questions[0].detail) && questions[0].cancelId === 1 && questions[0].defaultId === 1 && commands.tracing() === false && trace.length === 0 && toasts.length === 0, JSON.stringify(questions));
   traceAnswer = 0;
   await commands.run(w, 'recordTrace');
   menu.refresh(true);
@@ -738,7 +738,7 @@ module.exports = async function finitionsTests(ctx) {
   await w.ui.webContents.executeJavaScript('document.getElementById("trace-note").click()');
   await until(() => commands.tracing() === false && trace.length === 3, 'trace arrêtée par le témoin');
   check('… un clic sur le témoin l’arrête : la trace est écrite dans Téléchargements et montrée dans le dossier',
-    trace[1][0] === 'stop' && trace[1][1].startsWith(app.getPath('downloads')) && /orbe-trace-[\dT-]+\.json$/.test(trace[1][1]) && trace[2][1] === trace[1][1] && toasts[1] === T('toast.traceSaved'), JSON.stringify(trace.slice(1)));
+    trace[1][0] === 'stop' && trace[1][1].startsWith(app.getPath('downloads')) && /orbx-trace-[\dT-]+\.json$/.test(trace[1][1]) && trace[2][1] === trace[1][1] && toasts[1] === T('toast.traceSaved'), JSON.stringify(trace.slice(1)));
   await until(async () => !(await noteShown()), 'témoin retiré');
   // Arrêt seul au bout du délai (deux minutes ; raccourci pour l'essai).
   const limit0 = traceLib.LIMIT.ms;
@@ -752,7 +752,7 @@ module.exports = async function finitionsTests(ctx) {
   // Navigation privée : une fenêtre qui s'ouvre arrête et jette la trace ; ouverte, elle l'interdit.
   trace.length = 0; toasts.length = 0; questions.length = 0;
   await commands.run(w, 'recordTrace');
-  const nPriv = OrbeWindow.all.length;
+  const nPriv = OrbxWindow.all.length;
   const privWin = commands.hooks.newWindow({ incognito: true });
   await until(() => commands.tracing() === false && trace.length === 2, 'trace jetée');
   check('une fenêtre de navigation privée s’ouvre pendant la trace : elle est arrêtée et jetée (rien dans Téléchargements, rien de montré)',
@@ -761,7 +761,7 @@ module.exports = async function finitionsTests(ctx) {
   const refusedTrace = await commands.run(w, 'recordTrace');
   check('fenêtre de navigation privée ouverte : aucune trace, sans même poser la question', refusedTrace === false && commands.tracing() === false && trace.length === 0 && questions.length === 0 && toasts[0] === T('trace.private'), JSON.stringify([refusedTrace, toasts]));
   privWin.win.close();
-  await until(() => OrbeWindow.all.length === nPriv, 'fenêtre privée refermée');
+  await until(() => OrbxWindow.all.length === nPriv, 'fenêtre privée refermée');
   dialog.showMessageBox = box0;
   contentTracing.startRecording = start0;
   contentTracing.stopRecording = stop0;
@@ -834,12 +834,12 @@ module.exports = async function finitionsTests(ctx) {
   w.changed();
   await until(() => ui(`document.querySelector('#fav [data-id="${pin.id}"] .count').hidden`), 'pastille retirée');
   d.tabs[pin.id].title = '(7) Boîte';
-  OrbeWindow.destroyView(pin.id);
+  OrbxWindow.destroyView(pin.id);
   w.changed();
   await until(() => ui(`!document.querySelector('#fav [data-id="${pin.id}"]').classList.contains('live')`), 'favori endormi');
   check('… plafonnée à « 99+ », retirée quand le titre n’en annonce plus, et absente d’un favori dont la page n’est pas chargée', await ui(`document.querySelector('#fav [data-id="${pin.id}"] .count').hidden`));
   w.toggleFavorite(pin.id);
-  { const loc = w.locate(pin.id); if (loc) loc.arr.splice(loc.index, 1); OrbeWindow.destroyView(pin.id); OrbeWindow.forget(pin.id, d); delete d.tabs[pin.id]; }
+  { const loc = w.locate(pin.id); if (loc) loc.arr.splice(loc.index, 1); OrbxWindow.destroyView(pin.id); OrbxWindow.forget(pin.id, d); delete d.tabs[pin.id]; }
   w.undoStack.length = 0;
   w.redoStack.length = 0;
   store.state.archive = store.state.archive.filter((x) => !x.url.startsWith(origin));
@@ -862,11 +862,11 @@ module.exports = async function finitionsTests(ctx) {
   // --- Remise en état ------------------------------------------------------------------------
   w.toast = toast0;
   for (const sp of [space]) {
-    for (const id of [...sp.today]) { OrbeWindow.destroyView(id); delete d.tabs[id]; }
+    for (const id of [...sp.today]) { OrbxWindow.destroyView(id); delete d.tabs[id]; }
     sp.today = []; sp.pinned = []; sp.splits = [];
     delete w.activeBySpace[sp.id];
   }
-  for (const id of Object.keys(d.tabs)) if (mine(d.tabs[id]) || /exemple\.test\/fin-/.test(d.tabs[id].url)) { OrbeWindow.destroyView(id); delete d.tabs[id]; }
+  for (const id of Object.keys(d.tabs)) if (mine(d.tabs[id]) || /exemple\.test\/fin-/.test(d.tabs[id].url)) { OrbxWindow.destroyView(id); delete d.tabs[id]; }
   d.spaces.splice(d.spaces.indexOf(space), 1);
   store.state.archive = store.state.archive.filter((x) => !mine(x) && !/exemple\.test\/fin-/.test(x.url));
   check('remise en état : l’archive retrouve sa taille', store.state.archive.length === archive0, `${store.state.archive.length} / ${archive0}`);

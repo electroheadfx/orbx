@@ -1,7 +1,7 @@
 // Navigation de tous les jours, à la souris et au clavier réels : avertissement
 // de certificat, identifiants HTTP, fenêtre surgissante bloquée, demande
 // d'autorisation, partage d'écran, « quitter la page ? », téléchargements.
-// Les feuilles d'onglet (orbe://app/sheet.html) sont pilotées comme le ferait
+// Les feuilles d'onglet (orbx://app/sheet.html) sont pilotées comme le ferait
 // quelqu'un : on lit ce qu'elles affichent, on clique leurs boutons.
 const assert = require('node:assert/strict');
 const http = require('http');
@@ -67,7 +67,7 @@ module.exports = {
     const { clair, chiffre, vus, pem } = await servir();
     const A = `http://127.0.0.1:${clair.address().port}`;
     const S = `https://127.0.0.1:${chiffre.address().port}`;
-    const dossier = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-ui-dl-'));
+    const dossier = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-ui-dl-'));
 
     // Rien du système n'est sollicité : ni boîte de dialogue, ni réglages, ni
     // capture de l'écran de la machine, ni vrai dossier Téléchargements.
@@ -109,7 +109,7 @@ module.exports = {
     const touche = (f, nom) => f.keyboard.press(nom).catch(() => {});
 
     // ------------------------------------------------------------- Certificat
-    await t.verifier('certificat refusé : page d’avertissement d’Orbe, « Revenir en lieu sûr » par défaut', async () => {
+    await t.verifier('certificat refusé : page d’avertissement d’Orbx, « Revenir en lieu sûr » par défaut', async () => {
       await allerA(A + '/depart');
       await pageDe(A + '/depart');
       await naviguer(S + '/prive');
@@ -301,7 +301,7 @@ module.exports = {
     });
 
     // ------------------------------------------------------------- Partage d'écran
-    await t.verifier('partage d’écran : sélecteur d’Orbe, rien n’est partagé avant « Partager »', async () => {
+    await t.verifier('partage d’écran : sélecteur d’Orbx, rien n’est partagé avant « Partager »', async () => {
       const page = await pageDe(A + '/demandes');
       await page.click('#partage');
       const f = await feuille('picker');

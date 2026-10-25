@@ -1,7 +1,7 @@
 // Service worker de l'extension d'essai : exécute les appels que le test lui
 // dicte et consigne les événements reçus.
 
-// Relevé fait avant toute autre chose : la couche d'Orbe doit déjà être là.
+// Relevé fait avant toute autre chose : la couche d'Orbx doit déjà être là.
 const early = {
   permissions: typeof chrome.permissions,
   onRemoved: typeof (chrome.permissions && chrome.permissions.onRemoved && chrome.permissions.onRemoved.addListener),

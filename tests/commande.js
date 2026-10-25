@@ -1,7 +1,7 @@
 // Barre de commande : actions, portées (actions seules, recherche dans un site),
 // suppression d'une suggestion, dédoublonnage, clic qui traverse le fond.
 // Appelé par tests/selftest.js, ou seul :
-//   ORBE_SCENARIO=tests/commande.js node scripts/dev.js --selftest
+//   ORBX_SCENARIO=tests/commande.js node scripts/dev.js --selftest
 // Les messages passent par `handle`, la porte qu'emprunte la vue de la barre,
 // pour vérifier aussi le contrôle des arguments.
 const http = require('http');
@@ -12,7 +12,7 @@ const { sleep, until, profilPret } = require('./outils');
 
 module.exports = async function commandeTests(ctx) {
   const { first: w, store, win, commands } = ctx;
-  const { OrbeWindow } = win;
+  const { OrbxWindow } = win;
   let failed = 0;
   const check = ctx.check || ((name, ok, detail = '') => { if (!ok) failed += 1; console.log(`${ok ? '  ✓' : '  ✗'} ${name}${ok || !detail ? '' : ' — ' + detail}`); });
   const ui = (js) => w.ui.webContents.executeJavaScript(js);
@@ -122,7 +122,7 @@ module.exports = async function commandeTests(ctx) {
   w.newTab = (url) => { opened.push(url); return null; };
   for (const name of ['helpCenter', 'reportIssue', 'whatsNew']) w.run(name);
   w.newTab = newTab0;
-  check('Centre d’aide, Signaler un problème, Nouveautés : pages du dépôt d’Orbe', opened.join() === [commands.REPO_URL + '#readme', commands.REPO_URL + '/issues/new', commands.REPO_URL + '/releases'].join(), opened.join());
+  check('Centre d’aide, Signaler un problème, Nouveautés : pages du dépôt d’Orbx', opened.join() === [commands.REPO_URL + '#readme', commands.REPO_URL + '/issues/new', commands.REPO_URL + '/releases'].join(), opened.join());
 
   // --- Espaces, dossiers, déplacements ---------------------------------------------
   const focus = find('voyages', 'focusSpace');
@@ -183,7 +183,7 @@ module.exports = async function commandeTests(ctx) {
     const ses = w.session;
     const extHost = require('../src/main/ext-host');
     const ext = await ses.extensions.loadExtension(path.join(__dirname, 'ext-fixture-sans'));
-    await until(() => extHost.actionsFor(w).some((x) => x.id === ext.id), 'bouton de l’extension connu d’Orbe');
+    await until(() => extHost.actionsFor(w).some((x) => x.id === ext.id), 'bouton de l’extension connu d’Orbx');
     const item = find('marquer la page', 'extensionAction');
     const calls = [];
     const open0 = extHost.openPopup;
@@ -218,7 +218,7 @@ module.exports = async function commandeTests(ctx) {
   check('recherche dans un site : une seule ligne, l’adresse de recherche du site',
     inSite.length === 1 && inSite[0].kind === 'search' && inSite[0].url === 'https://www.youtube.com/results?search_query=chats%20%26%20chiens' && inSite[0].subtitle === T('cmd.searchSite', { site: 'YouTube' }));
   check('site inconnu ou requête vide : aucune ligne', (await w.handle('suggest', { q: 'x', scope: { site: 'inconnu' } })).length === 0 && (await w.handle('suggest', { q: '  ', scope: { site: 'github' } })).length === 0);
-  check('adresses propres à la langue (Wikipédia)', palette.siteUrl(palette.siteFor('wiki'), 'orbe') === 'https://fr.wikipedia.org/w/index.php?search=orbe');
+  check('adresses propres à la langue (Wikipédia)', palette.siteUrl(palette.siteFor('wiki'), 'orbx') === 'https://fr.wikipedia.org/w/index.php?search=orbx');
   check('chaque site a une adresse https avec la requête, et des clés sans doublon',
     palette.SITES.every((s) => /^https:\/\/[^%]+%s/.test(s.url) && s.keys.length) && new Set(palette.SITES.flatMap((s) => s.keys)).size === palette.SITES.flatMap((s) => s.keys).length);
 
@@ -227,9 +227,9 @@ module.exports = async function commandeTests(ctx) {
   const visit = (url, title, last = 0) => { h[url] = { url, title, visits: 2, last: Date.now() - last }; };
   visit('https://pagaie.exemple.fr/', 'Pagaie en mer');
   visit('https://pagaie.exemple.fr/sorties', 'Pagaie : sorties', 1000);
-  visit('https://github.com/orbe/depot/pull/1', 'Fusion pagaie · orbe/depot', 2000);
-  visit('https://github.com/orbe/depot/pull/1/files', 'Fusion pagaie · orbe/depot', 3000);
-  visit('https://github.com/orbe/depot/pull/1/commits', 'Fusion pagaie · orbe/depot', 4000);
+  visit('https://github.com/orbx/depot/pull/1', 'Fusion pagaie · orbx/depot', 2000);
+  visit('https://github.com/orbx/depot/pull/1/files', 'Fusion pagaie · orbx/depot', 3000);
+  visit('https://github.com/orbx/depot/pull/1/commits', 'Fusion pagaie · orbx/depot', 4000);
   visit('https://www.figma.com/file/abc?node-id=1', 'Maquette pagaie', 5000);
   visit('https://www.figma.com/file/abc?node-id=2', 'Maquette pagaie', 6000);
   visit('https://blog.exemple.org/pagaie-1', 'Carnet pagaie', 7000);
@@ -243,7 +243,7 @@ module.exports = async function commandeTests(ctx) {
   const count = (re) => got.filter((i) => re.test(i.url)).length;
   check('historique : une seule ligne par titre pour GitHub et Figma, les autres sites gardent leurs doublons',
     count(/github\.com/) === 1 && count(/figma\.com/) === 1 && count(/blog\.exemple\.org/) === 2, titles(got).join(' | '));
-  check('la ligne gardée est la mieux classée (la plus récente)', got.find((i) => /github/.test(i.url)).url === 'https://github.com/orbe/depot/pull/1');
+  check('la ligne gardée est la mieux classée (la plus récente)', got.find((i) => /github/.test(i.url)).url === 'https://github.com/orbx/depot/pull/1');
   check('les suggestions de l’historique et de l’archive peuvent être oubliées, pas les autres',
     got.every((i) => i.deletable === true) && w.suggestLocal('pagaie').filter((i) => i.kind !== 'history').every((i) => !i.deletable));
 
@@ -307,9 +307,9 @@ module.exports = async function commandeTests(ctx) {
   check('clic sur le fond, au-dessus de la page ou point mal formé : la barre se ferme, rien d’autre', w.modalMode === null && w.activeId === page.id);
 
   // --- Fenêtre neuve : la barre s'ouvre seule ; barre vide sans onglet : de quoi démarrer ---
-  const before = OrbeWindow.all.length;
+  const before = OrbxWindow.all.length;
   const w2 = commands.run(w, 'newWindow');
-  check('⌘N : la fenêtre neuve, sans onglet, s’ouvre sur la barre de commande', OrbeWindow.all.length === before + 1 && !!w2 && w2 !== w && w2.modalMode === 'command' && w2.commandMode === 'new');
+  check('⌘N : la fenêtre neuve, sans onglet, s’ouvre sur la barre de commande', OrbxWindow.all.length === before + 1 && !!w2 && w2 !== w && w2.modalMode === 'command' && w2.commandMode === 'new');
   check('barre vide : les onglets récents, tant qu’il y en a', w2.suggestLocal('').length > 0 && w2.suggestLocal('').every((i) => i.kind === 'tab'));
   w2.win.close();
   // Fenêtre de navigation privée : aucun onglet nulle part.
@@ -318,7 +318,7 @@ module.exports = async function commandeTests(ctx) {
   check('fenêtre sans aucun onglet : la barre s’ouvre, et propose de quoi démarrer (aide, raccourcis, réglages)',
     w3.modalMode === 'command' && lone.length >= 4 && lone.every((i) => i.kind === 'command') && ['welcome', 'shortcuts', 'helpCenter', 'settings'].every((n) => lone.some((i) => i.command === n)), titles(lone).join(' | '));
   w3.win.close();
-  await until(() => OrbeWindow.all.length === before, 'fenêtres d’essai refermées');
+  await until(() => OrbxWindow.all.length === before, 'fenêtres d’essai refermées');
 
   // --- Note à côté de la page ------------------------------------------------------------
   w.activate(page.id);
@@ -333,7 +333,7 @@ module.exports = async function commandeTests(ctx) {
   // --- Remise en état ---------------------------------------------------------------------
   w.hideModal();
   for (const sp of [space, other]) {
-    for (const id of [...sp.today]) { win.OrbeWindow.destroyView(id); delete d.tabs[id]; }
+    for (const id of [...sp.today]) { win.OrbxWindow.destroyView(id); delete d.tabs[id]; }
     sp.today = [];
     sp.pinned = [];
     sp.splits = [];

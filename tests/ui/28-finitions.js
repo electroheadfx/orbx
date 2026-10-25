@@ -251,12 +251,12 @@ module.exports = {
       assert.equal(await coque.locator('#spaces .sp').count(), 0, 'aucune pastille d’Espace');
       assert.equal(await coque.locator('#sidebar .row.tab').count(), 0, 'aucun onglet des Espaces');
       const r = await ctx.principal(({ win, store }) => {
-        const b = win.OrbeWindow.all.find((x) => x.blank);
-        return { a: !!b, donnees: b.data !== store.state, commande: b.modalMode, persistante: b.persistent, session: b.session === win.OrbeWindow.all.find((x) => x.shared).session };
+        const b = win.OrbxWindow.all.find((x) => x.blank);
+        return { a: !!b, donnees: b.data !== store.state, commande: b.modalMode, persistante: b.persistent, session: b.session === win.OrbxWindow.all.find((x) => x.shared).session };
       });
       assert.deepEqual(r, { a: true, donnees: true, commande: 'command', persistante: false, session: true });
-      await ctx.principal(({ win }) => win.OrbeWindow.all.find((x) => x.blank).win.close());
-      await jusqua(() => ctx.principal(({ win }) => !win.OrbeWindow.all.some((x) => x.blank)), 'fenêtre vierge refermée');
+      await ctx.principal(({ win }) => win.OrbxWindow.all.find((x) => x.blank).win.close());
+      await jusqua(() => ctx.principal(({ win }) => !win.OrbxWindow.all.some((x) => x.blank)), 'fenêtre vierge refermée');
     });
   },
 };

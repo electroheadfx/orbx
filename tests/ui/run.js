@@ -1,9 +1,9 @@
-// Tests d'interface d'Orbe : Playwright pilote le vrai navigateur avec de
+// Tests d'interface d'Orbx : Playwright pilote le vrai navigateur avec de
 // vraies entrées (clics, frappes, glisser-déposer) et lit le résultat dans la
 // barre latérale.
 //   node scripts/test-ui.js            tous les groupes
 //   node scripts/test-ui.js glisser    seulement les groupes dont le nom contient « glisser »
-//   ORBE_UI_CPU=4 node scripts/test-ui.js   coque quatre fois plus lente (machine chargée simulée)
+//   ORBX_UI_CPU=4 node scripts/test-ui.js   coque quatre fois plus lente (machine chargée simulée)
 //
 // Chaque groupe (fichier NN-nom.js) démarre un navigateur neuf sur un profil
 // temporaire. Une vérification précédée de « BOGUE: » décrit un défaut connu de
@@ -12,13 +12,13 @@ const fs = require('fs');
 const path = require('path');
 const { lancer, delai } = require('./harness');
 
-const FOCUS = process.env.ORBE_UI_FOCUS === '1';
+const FOCUS = process.env.ORBX_UI_FOCUS === '1';
 const total = { ok: 0, ko: 0, bogues: 0, corriges: 0, ignores: 0 };
 const echecs = [];
 const bogues = [];
 
-// ORBE_UI_DETAIL=1 : message d'erreur entier (différences comprises).
-const court = (err) => (process.env.ORBE_UI_DETAIL ? String((err && err.message) || err) : String((err && err.message) || err).split('\n')[0].slice(0, 300));
+// ORBX_UI_DETAIL=1 : message d'erreur entier (différences comprises).
+const court = (err) => (process.env.ORBX_UI_DETAIL ? String((err && err.message) || err) : String((err && err.message) || err).split('\n')[0].slice(0, 300));
 
 // Vérification en échec : ce que montrait la barre latérale à cet instant
 // (lignes, sélection, glisser en cours) et une capture de la coque.
@@ -93,9 +93,9 @@ function rapport(groupe, ctx) {
       return t[mode](nom, fn);
     },
     // Vérifications qui lisent le focus natif : la fenêtre doit être au premier
-    // plan, ce qui prend le clavier. Uniquement avec ORBE_UI_FOCUS=1.
+    // plan, ce qui prend le clavier. Uniquement avec ORBX_UI_FOCUS=1.
     avecFocus(mode, nom, fn) {
-      if (!FOCUS) return t.ignorer(nom, 'ORBE_UI_FOCUS=1 requis : lit le focus clavier natif');
+      if (!FOCUS) return t.ignorer(nom, 'ORBX_UI_FOCUS=1 requis : lit le focus clavier natif');
       return t[mode](nom, fn);
     },
   };
@@ -108,8 +108,8 @@ async function main() {
     .filter((f) => /^\d\d-.*\.js$/.test(f))
     .filter((f) => !filtres.length || filtres.some((x) => f.includes(x)))
     .sort();
-  console.log('\nOrbe — tests d’interface (Playwright, vraies entrées souris et clavier)');
-  if (!FOCUS) console.log('Fenêtre de test ouverte sans prendre le clavier (ORBE_UI_FOCUS=1 pour les vérifications de focus).');
+  console.log('\nOrbx — tests d’interface (Playwright, vraies entrées souris et clavier)');
+  if (!FOCUS) console.log('Fenêtre de test ouverte sans prendre le clavier (ORBX_UI_FOCUS=1 pour les vérifications de focus).');
 
   for (const f of fichiers) {
     const groupe = require(path.join(__dirname, f));

@@ -2,7 +2,7 @@
 // nouvel Espace au bout de la rangée (geste délibéré, annulable), aperçu d'un dossier au
 // survol, bulle et rebond du glisser vers une vue scindée, écran de création d'un Espace.
 // Appelé par tests/selftest.js, ou seul :
-//   ORBE_SCENARIO=tests/derniers.js node scripts/dev.js --selftest
+//   ORBX_SCENARIO=tests/derniers.js node scripts/dev.js --selftest
 const http = require('http');
 const outils = require('./outils');
 
@@ -11,7 +11,7 @@ const until = (fn, label, timeout = 10000) => outils.until(fn, label, timeout);
 const PAGER_HOLD = 90 + 450; // PAGER.idle + PAGER.createHold (src/renderer/shell.js)
 
 module.exports = async function derniersTests(ctx) {
-  const { first: w, store, win, OrbeWindow, shortcuts } = ctx;
+  const { first: w, store, win, OrbxWindow, shortcuts } = ctx;
   let failed = 0;
   const check = ctx.check || ((name, ok, detail = '') => { if (!ok) failed += 1; console.log(`${ok ? '  ✓' : '  ✗'} ${name}${ok || !detail ? '' : ' — ' + detail}`); });
   const ui = (js) => w.ui.webContents.executeJavaScript(js);
@@ -51,7 +51,7 @@ module.exports = async function derniersTests(ctx) {
     const b = w.createTab(base + '/lente', { space, index: 1 });
     w.activate(a.id);
     await until(() => { const rt = win.live.get(a.id); return rt && !rt.wc.isLoading() && rt.wc.getURL() === base + '/a'; }, 'page A chargée');
-    OrbeWindow.destroyView(b.id); // endormi : la ligne reste, la page n'existe plus
+    OrbxWindow.destroyView(b.id); // endormi : la ligne reste, la page n'existe plus
     w.activate(b.id); // réveil : le chargement commence
     const rt = await until(() => win.live.get(b.id), 'onglet réveillé');
     await until(() => rt.wc.isLoading(), 'chargement commencé');
@@ -221,7 +221,7 @@ module.exports = async function derniersTests(ctx) {
     await ui('folderPeek.close(true)');
     w.activate(space.today[0]);
     space.pinned = space.pinned.filter((n) => n !== dossier && n !== videF);
-    for (const tab of [t1, t2, t3]) { OrbeWindow.destroyView(tab.id); delete d.tabs[tab.id]; }
+    for (const tab of [t1, t2, t3]) { OrbxWindow.destroyView(tab.id); delete d.tabs[tab.id]; }
     w.changed();
   }
 
@@ -282,7 +282,7 @@ module.exports = async function derniersTests(ctx) {
     check('glisser abandonné au-dessus de la page : la zone part aussitôt', !w.dropView.getVisible());
     w.run('separateAll');
     w.activate(A);
-    for (const tab of [x1, x2]) { OrbeWindow.destroyView(tab.id); space.today.splice(space.today.indexOf(tab.id), 1); delete d.tabs[tab.id]; }
+    for (const tab of [x1, x2]) { OrbxWindow.destroyView(tab.id); space.today.splice(space.today.indexOf(tab.id), 1); delete d.tabs[tab.id]; }
     space.splits = [];
     w.layout();
     w.changed();
@@ -290,7 +290,7 @@ module.exports = async function derniersTests(ctx) {
 
   // --- Remise en état ---------------------------------------------------------------------
   w.switchSpace(space.id);
-  for (const id of Object.keys(d.tabs)) if (mine(d.tabs[id])) { OrbeWindow.destroyView(id); delete d.tabs[id]; }
+  for (const id of Object.keys(d.tabs)) if (mine(d.tabs[id])) { OrbxWindow.destroyView(id); delete d.tabs[id]; }
   space.today = []; space.pinned = []; space.splits = [];
   delete w.activeBySpace[space.id];
   d.spaces.splice(d.spaces.indexOf(space), 1);

@@ -12,7 +12,7 @@ module.exports = {
       const ses = req('sessions.js').mainSession();
       const ext = await ses.extensions.loadExtension(dir);
       req('ext-host.js').sync();
-      win.OrbeWindow.pushAll();
+      win.OrbxWindow.pushAll();
       return ext.id;
     }, path.join(ctx.root, 'tests', 'ext-fixture'));
     const pageExt = (fichier) => ctx.pages().find((p) => p.url().startsWith(`chrome-extension://${id}/${fichier}`));
@@ -54,7 +54,7 @@ module.exports = {
       await jusqua(() => popup.evaluate(() => !!document.getElementById('out')), 'contenu de la fenêtre');
       assert.equal(await popup.evaluate(() => typeof chrome.tabs.query), 'function');
       const actif = await popup.evaluate(() => chrome.tabs.query({ active: true, currentWindow: true }).then((x) => x.map((y) => y.url)));
-      assert.deepEqual(actif, [ctx.url('/a')], 'la fenêtre voit l’onglet actif d’Orbe');
+      assert.deepEqual(actif, [ctx.url('/a')], 'la fenêtre voit l’onglet actif d’Orbx');
     });
 
     await t.verifier('le panneau latéral s’ouvre à droite et la page lui laisse la place', async () => {
@@ -63,7 +63,7 @@ module.exports = {
       await popup.evaluate(() => chrome.windows.getCurrent().then((w) => chrome.sidePanel.open({ windowId: w.id })));
       await jusqua(() => pageExt('panel.html'), 'page du panneau', 8000);
       const apres = await jusqua(async () => { const l = (await ctx.etat()).vuePage.width; return l < avant - 200 ? l : null; }, 'page rétrécie');
-      const cadre = await jusqua(() => ctx.pages().find((p) => p.url().includes('orbe://app/panel.html')), 'cadre du panneau');
+      const cadre = await jusqua(() => ctx.pages().find((p) => p.url().includes('orbx://app/panel.html')), 'cadre du panneau');
       await jusqua(() => cadre.evaluate(() => !document.getElementById('panel').hidden), 'cadre affiché');
       assert.equal(await sousLePointeur(cadre, '#close'), true, 'le bouton de fermeture est atteignable');
       ctx.largeurAvecPanneau = apres;
@@ -71,7 +71,7 @@ module.exports = {
     });
 
     await t.verifier('un clic sur × ferme le panneau, la page reprend sa largeur', async () => {
-      const cadre = ctx.pages().find((p) => p.url().includes('orbe://app/panel.html'));
+      const cadre = ctx.pages().find((p) => p.url().includes('orbx://app/panel.html'));
       const b = await cadre.evaluate(() => { const r = document.getElementById('close').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
       await cadre.mouse.click(b.x, b.y);
       await jusqua(async () => (await ctx.etat()).vuePage.width === ctx.largeurSansPanneau, 'largeur rétablie');

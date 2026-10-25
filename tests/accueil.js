@@ -1,6 +1,6 @@
 // Accueil du premier lancement (welcome.html) : cinq étapes, chacune facultative.
 // Appelé par tests/selftest.js, ou seul :
-//   ORBE_SCENARIO=tests/accueil.js node scripts/dev.js --selftest
+//   ORBX_SCENARIO=tests/accueil.js node scripts/dev.js --selftest
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -15,7 +15,7 @@ module.exports = async function accueilTests(ctx) {
   const br = require('../src/main/import-browsers');
   const platform = require('../src/main/platform');
   const real = { ...br.conf };
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-accueil-'));
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-accueil-'));
   fx.profils(home, { platform: 'darwin' });
   br.configure({ home, platform: 'darwin', sqlite: '' });
   // Le navigateur par défaut du système n'est jamais changé par un essai.
@@ -35,14 +35,14 @@ module.exports = async function accueilTests(ctx) {
   const hello = JSON.parse(await js(`JSON.stringify({ step: document.querySelector('.step.on').dataset.step, h1: document.querySelector('.step.on h1').textContent, next: document.getElementById('next').textContent,
     skip: document.getElementById('skip').textContent, back: document.getElementById('back').hidden, shown: [...document.querySelectorAll('.step')].filter((s) => s.getClientRects().length).length })`));
   check('accueil : une étape à la fois, « Commencer », « Passer l’accueil », cinq points',
-    hello.step === 'hello' && hello.h1 === 'Bienvenue dans Orbe' && hello.next === 'Commencer' && hello.skip === 'Passer l’accueil' && hello.back && hello.shown === 1, JSON.stringify(hello));
+    hello.step === 'hello' && hello.h1 === 'Bienvenue dans Orbx' && hello.next === 'Commencer' && hello.skip === 'Passer l’accueil' && hello.back && hello.shown === 1, JSON.stringify(hello));
 
   // Langue : choisie dès la première étape, appliquée tout de suite à toute l'interface.
   await click('#langs [data-lang="en"]');
-  await until(async () => (await js('document.querySelector(".step.on h1").textContent')) === 'Welcome to Orbe', 'accueil en anglais');
+  await until(async () => (await js('document.querySelector(".step.on h1").textContent')) === 'Welcome to Orbx', 'accueil en anglais');
   const en = { next: await js('document.getElementById("next").textContent'), lang: store.state.settings.lang, pressed: await js('document.querySelector("#langs [aria-pressed=true]").dataset.lang') };
   await click('#langs [data-lang="fr"]');
-  await until(async () => (await js('document.querySelector(".step.on h1").textContent')) === 'Bienvenue dans Orbe', 'accueil en français');
+  await until(async () => (await js('document.querySelector(".step.on h1").textContent')) === 'Bienvenue dans Orbx', 'accueil en français');
   check('première étape : la langue se choisit (français, anglais) et s’applique aussitôt', en.next === 'Get started' && en.lang === 'en' && en.pressed === 'en' && store.state.settings.lang === 'fr', JSON.stringify(en));
 
   await click('#next');
@@ -83,11 +83,10 @@ module.exports = async function accueilTests(ctx) {
   await click('#next');
   await click('#next');
   await until(async () => (await step()) === 'ready', 'dernière étape');
-  const ready = JSON.parse(await js(`JSON.stringify({ title: document.querySelector('.support b').textContent, body: document.querySelector('.support .sub').textContent, btn: document.querySelector('.support [data-cmd=support]').textContent,
+  const ready = JSON.parse(await js(`JSON.stringify({ title: document.querySelector('.step[data-step=ready] h1').textContent, soutien: document.querySelector('.support') !== null,
     tips: [...document.querySelectorAll('.tips .line')].map((l) => l.textContent.trim()).length, next: document.getElementById('next').textContent, skip: document.getElementById('skip').hidden })`));
-  check('dernière étape : premiers gestes avec leurs raccourcis, et le mot de soutien tel qu’il est écrit',
-    ready.title === store.t('support.title') && ready.body === store.t('support.body') && ready.btn === 'Soutenir le projet' && ready.tips === 6 && ready.next === 'Commencer à naviguer' && ready.skip, JSON.stringify(ready));
-  check('le lien de soutien est celui du projet', /^https:\/\/buymeacoffee\.com\/amadouba$/.test(require('fs').readFileSync(require('path').join(__dirname, '..', 'src', 'main', 'commands.js'), 'utf8').match(/SUPPORT_URL = '([^']+)'/)[1]));
+  check('dernière étape : premiers gestes avec leurs raccourcis, sans carte de soutien',
+    ready.title === store.t('welcome.readyTitle') && ready.soutien === false && ready.tips === 6 && ready.next === 'Commencer à naviguer' && ready.skip, JSON.stringify(ready));
   await click('#next');
   await until(() => !w.data.tabs[tab.id], 'accueil refermé');
   check('« Commencer à naviguer » referme l’accueil, qui ne reviendra pas', store.state.window.welcomed === true && !w.data.tabs[tab.id]);
@@ -96,12 +95,12 @@ module.exports = async function accueilTests(ctx) {
   const again = w.openInternal('welcome.html');
   await until(() => win.live.get(again.id) && win.live.get(again.id).wc.executeJavaScript('typeof show === "function" && !!document.getElementById("skip")'), 'accueil rouvert depuis l’aide');
   await win.live.get(again.id).wc.executeJavaScript('document.getElementById("skip").click()');
-  // « Passer » ne ferme pas : il mène à la dernière étape, celle du mot de soutien.
+  // « Passer » ne ferme pas : il mène à la dernière étape, celle des premiers gestes.
   const awc = win.live.get(again.id).wc;
   await until(() => awc.executeJavaScript('document.querySelector(".step.on").dataset.step === "ready"'), 'dernière étape après « Passer »');
-  const skipped = JSON.parse(await awc.executeJavaScript(`JSON.stringify({ soutien: document.querySelector('.support').getClientRects().length > 0, bouton: document.querySelector('.support [data-cmd="support"]').textContent, passer: document.getElementById('skip').hidden, suite: document.getElementById('next').textContent })`));
-  check('« Passer l’accueil » mène à la dernière étape : le mot de soutien est affiché, puis « Commencer à naviguer »',
-    !!w.data.tabs[again.id] && skipped.soutien && skipped.bouton === 'Soutenir le projet' && skipped.passer === true && skipped.suite === 'Commencer à naviguer', JSON.stringify(skipped));
+  const skipped = JSON.parse(await awc.executeJavaScript(`JSON.stringify({ soutien: document.querySelector('.support') !== null, passer: document.getElementById('skip').hidden, suite: document.getElementById('next').textContent })`));
+  check('« Passer l’accueil » mène à la dernière étape, sans carte de soutien, puis « Commencer à naviguer »',
+    !!w.data.tabs[again.id] && skipped.soutien === false && skipped.passer === true && skipped.suite === 'Commencer à naviguer', JSON.stringify(skipped));
   await awc.executeJavaScript('document.getElementById("next").click()');
   await until(() => !w.data.tabs[again.id], 'accueil refermé');
   check('après « Passer », « Commencer à naviguer » referme l’accueil', !w.data.tabs[again.id]);

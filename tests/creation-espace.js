@@ -3,14 +3,14 @@
 // couleur et profil, ⌘Z. Le geste au bout de la rangée est vérifié dans finitions2.js
 // et derniers.js.
 // Appelé par tests/selftest.js, ou seul :
-//   ORBE_SCENARIO=tests/creation-espace.js node scripts/dev.js --selftest
+//   ORBX_SCENARIO=tests/creation-espace.js node scripts/dev.js --selftest
 const outils = require('./outils');
 
 const { sleep } = outils;
 const until = (fn, label, timeout = 10000) => outils.until(fn, label, timeout);
 
 module.exports = async function creationEspaceTests(ctx) {
-  const { first: w, store, OrbeWindow } = ctx;
+  const { first: w, store, OrbxWindow } = ctx;
   const { Menu } = require('electron');
   let failed = 0;
   const check = ctx.check || ((name, ok, detail = '') => { if (!ok) failed += 1; console.log(`${ok ? '  ✓' : '  ✗'} ${name}${ok || !detail ? '' : ' — ' + detail}`); });
@@ -31,7 +31,7 @@ module.exports = async function creationEspaceTests(ctx) {
   // --- Validation ------------------------------------------------------------------------
   {
     const P = [{ id: 'default', name: 'Défaut' }, { id: 'p2', name: 'Travail' }];
-    const ok = (a) => OrbeWindow.checkSpace({ name: 'A', icon: '🚀', profileId: 'default', ...a }, P);
+    const ok = (a) => OrbxWindow.checkSpace({ name: 'A', icon: '🚀', profileId: 'default', ...a }, P);
     const good = ok({ name: '  Mes   projets \n', color: '#10B981', profileId: 'p2' });
     check('création d’un Espace : nom nettoyé, icône, couleur et profil acceptés', !!good && good.name === 'Mes projets' && good.icon === '🚀' && good.color === '#10b981' && good.profileId === 'p2', JSON.stringify(good));
     check('… nom vide accepté (nom par défaut), nom de plus de 80 caractères ou d’un autre type refusé',
@@ -40,7 +40,7 @@ module.exports = async function creationEspaceTests(ctx) {
     check('… couleur : #rrggbb seulement ; thème prêt : un identifiant connu',
       ['red', '#12', '#12345g', 'url(x)', 3].every((color) => ok({ color }) === null) && ok({ preset: 'lagon' }).preset === 'lagon' && ok({ preset: 'inconnu' }) === null && ok({ preset: 4 }) === null);
     check('… profil : il doit exister ; « new » demande un profil neuf', ok({ profileId: 'absent' }) === null && ok({ profileId: undefined }) === null && ok({ profileId: 'new' }).newProfile === true);
-    check('… une demande qui n’est pas un objet est refusée', [null, 'x', 4, undefined].every((a) => OrbeWindow.checkSpace(a, P) === null));
+    check('… une demande qui n’est pas un objet est refusée', [null, 'x', 4, undefined].every((a) => OrbxWindow.checkSpace(a, P) === null));
     check('sans panneau ouvert, « spaceCreate » ne crée rien', w.handle('spaceCreate', { name: 'Pirate', icon: '🚀', profileId: 'default' }) === false && d.spaces.length === n0);
   }
 

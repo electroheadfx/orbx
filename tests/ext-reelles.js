@@ -2,10 +2,10 @@
 // Chrome Web Store dans un profil jetable, pages réelles, puis relevé de ce qui
 // fonctionne — styles calculés, contenu des fenêtres surgissantes, erreurs des
 // service workers.
-//   node scripts/test-ext.js reelles      (ou : ORBE_SCENARIO=tests/ext-reelles.js node scripts/dev.js --selftest)
-//   ORBE_EXT_KEEP=1 avec ORBE_USER_DATA=<dossier> : second passage sur le même profil, sans réinstaller
-//   ORBE_EXT=darkreader,wappalyzer,ublock,peeper,gofullpage,claude   pour n'en essayer que certaines
-//   ORBE_SHOTS=<dossier>   pour garder des captures des fenêtres et panneaux
+//   node scripts/test-ext.js reelles      (ou : ORBX_SCENARIO=tests/ext-reelles.js node scripts/dev.js --selftest)
+//   ORBX_EXT_KEEP=1 avec ORBX_USER_DATA=<dossier> : second passage sur le même profil, sans réinstaller
+//   ORBX_EXT=darkreader,wappalyzer,ublock,peeper,gofullpage,claude   pour n'en essayer que certaines
+//   ORBX_SHOTS=<dossier>   pour garder des captures des fenêtres et panneaux
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const IDS = {
@@ -29,7 +29,7 @@ async function until(fn, timeout = 15000) {
 }
 
 module.exports = async function realExtensions({ first: w, win, extensions, extApi, extHost }) {
-  const wanted = (process.env.ORBE_EXT || 'darkreader,wappalyzer,ublock,peeper,gofullpage,claude').split(',').map((s) => s.trim()).filter(Boolean);
+  const wanted = (process.env.ORBX_EXT || 'darkreader,wappalyzer,ublock,peeper,gofullpage,claude').split(',').map((s) => s.trim()).filter(Boolean);
   const ses = w.session;
   let failed = 0;
   const check = (name, ok, detail = '') => {
@@ -66,10 +66,10 @@ module.exports = async function realExtensions({ first: w, win, extensions, extA
 
   // Sans cela, Electron affiche une boîte d'erreur bloquante et l'essai ne se termine jamais.
   process.on('uncaughtException', (err) => { failed += 1; console.error('  ✗ exception dans le processus principal\n', err); });
-  console.log('\nOrbe — vraies extensions\n');
+  console.log('\nOrbx — vraies extensions\n');
   for (const key of wanted) {
     const id = IDS[key] || key;
-    if (process.env.ORBE_EXT_KEEP && extensions.get(id)) { console.log(`  · ${extensions.get(id).name} déjà installée`); continue; }
+    if (process.env.ORBX_EXT_KEEP && extensions.get(id)) { console.log(`  · ${extensions.get(id).name} déjà installée`); continue; }
     try {
       const r = await extensions.install(id);
       console.log(`  · ${r.name} ${r.version} installée (signature du Store : ${r.verified.store})`);
@@ -108,7 +108,7 @@ module.exports = async function realExtensions({ first: w, win, extensions, extA
       check('elle affiche ses réglages (écran « Loading » terminé)', typeof text === 'string' && /Brightness/.test(text) && /loader--complete/.test(loader), `${pop.getContentSize().join('×')} · écran d’attente : ${loader} · ${text}`);
       check('aucune erreur dans sa console', pop.errors.length === 0, pop.errors.slice(0, 4).join(' | '));
       console.log('      structure : ' + await js(pop.webContents, '[...document.querySelectorAll("button, [role=button], .toggle, .site-toggle, input")].slice(0, 40).map((e) => e.tagName.toLowerCase() + "." + String(e.className).split(" ").join(".") + (e.innerText ? ":" + e.innerText.trim().slice(0, 18).replace(/\\s+/g, " ") : "")).join(" | ")'));
-      if (process.env.ORBE_SHOTS) require('fs').writeFileSync(require('path').join(process.env.ORBE_SHOTS, 'ext-darkreader-popup.png'), (await pop.webContents.capturePage()).toPNG());
+      if (process.env.ORBX_SHOTS) require('fs').writeFileSync(require('path').join(process.env.ORBX_SHOTS, 'ext-darkreader-popup.png'), (await pop.webContents.capturePage()).toPNG());
 
       // Réglage : luminosité +, lue ensuite dans le stockage de l'extension.
       const stored = () => js(pop.webContents, 'Promise.all([chrome.storage.local.get(null), chrome.storage.sync.get(null)]).then(([l, s]) => JSON.stringify({ local: l, sync: s }).slice(0, 900))');
@@ -131,8 +131,8 @@ module.exports = async function realExtensions({ first: w, win, extensions, extA
       // Luminosité : trois crans vers le haut, relus dans le stockage puis sur la page.
       const brightness = () => js(pop.webContents, 'chrome.storage.sync.get(null).then((s) => (s.theme ? s.theme.brightness : "défaut"))');
       const b0 = await brightness();
-      // Second passage sur le même profil (ORBE_EXT_KEEP) : le réglage a survécu au redémarrage.
-      if (process.env.ORBE_EXT_KEEP) check('réglage conservé après redémarrage', Number(b0) > 100, { luminosite: b0 });
+      // Second passage sur le même profil (ORBX_EXT_KEEP) : le réglage a survécu au redémarrage.
+      if (process.env.ORBX_EXT_KEEP) check('réglage conservé après redémarrage', Number(b0) > 100, { luminosite: b0 });
       await js(pop.webContents, '(() => { const up = [...document.querySelectorAll(".updown__button")][1]; for (let i = 0; i < 3; i++) up.click(); })()');
       // Dark Reader regroupe ses écritures : le réglage arrive dans le stockage après un délai.
       await until(async () => { const b = await brightness(); return b !== b0 && Number(b) > 100; }, 20000);
@@ -153,7 +153,7 @@ module.exports = async function realExtensions({ first: w, win, extensions, extA
     // À l'installation, l'extension ouvre sa page d'accueil (tabs.create) : on
     // l'attend, pour qu'elle ne prenne pas la place de l'onglet étudié.
     const welcome = await until(() => extHost.tabs().some((t) => /wappalyzer\.com/.test(t.url)), 20000);
-    check('sa page d’accueil s’ouvre dans un onglet d’Orbe (tabs.create)', !!welcome || !!process.env.ORBE_EXT_KEEP);
+    check('sa page d’accueil s’ouvre dans un onglet d’Orbx (tabs.create)', !!welcome || !!process.env.ORBX_EXT_KEEP);
     const rt = await open('https://wordpress.org/', 6000);
     w.activate(rt.id);
     await sleep(500);
@@ -168,7 +168,7 @@ module.exports = async function realExtensions({ first: w, win, extensions, extA
       console.log('      onglet actif vu par la fenêtre surgissante : ' + JSON.stringify(seen) + ' · onglets : ' + JSON.stringify(extHost.tabs().map((t) => (t.active ? '*' : '') + t.url)));
       check('elle liste des technologies pour l’onglet actif', Array.isArray(techs) && techs.some((x) => /^WordPress/.test(x)) && Array.isArray(seen) && seen[0] === rt.wc.getURL(), `${pop.getContentSize().join('×')} · ${JSON.stringify(techs)} · ${text}`);
       check('aucune erreur dans sa console', pop.errors.length === 0, pop.errors.slice(0, 4).join(' | '));
-      if (process.env.ORBE_SHOTS) require('fs').writeFileSync(require('path').join(process.env.ORBE_SHOTS, 'ext-wappalyzer-popup.png'), (await pop.webContents.capturePage()).toPNG());
+      if (process.env.ORBX_SHOTS) require('fs').writeFileSync(require('path').join(process.env.ORBX_SHOTS, 'ext-wappalyzer-popup.png'), (await pop.webContents.capturePage()).toPNG());
       extHost.closePopup(w);
     }
     const info = extHost.actionsFor(w).find((x) => x.id === id);
@@ -216,7 +216,7 @@ module.exports = async function realExtensions({ first: w, win, extensions, extA
     await until(async () => { const t = await inspectorText(); return typeof t === 'string' && /Typography/.test(t) && !/Let's get started/.test(t); }, 15000);
     const seen = await inspectorText();
     check('l’inspecteur s’ouvre dans la page et décrit ses styles (polices, couleurs, feuilles de style)', typeof seen === 'string' && /WordPress/.test(seen) && /Typography/.test(seen) && /Style Rules/.test(seen) && !/Let's get started/.test(seen), seen);
-    if (process.env.ORBE_SHOTS) await rt.wc.capturePage().then((img) => require('fs').writeFileSync(require('path').join(process.env.ORBE_SHOTS, 'ext-peeper-page.png'), img.toPNG()), () => {});
+    if (process.env.ORBX_SHOTS) await rt.wc.capturePage().then((img) => require('fs').writeFileSync(require('path').join(process.env.ORBX_SHOTS, 'ext-peeper-page.png'), img.toPNG()), () => {});
 
     // Panneau latéral. Dans l'inspecteur, « Open Side Bar » est réservé aux
     // comptes payants (« Premium Sidebar view ») : on envoie donc au service
@@ -232,7 +232,7 @@ module.exports = async function realExtensions({ first: w, win, extensions, extA
     check('sidePanel.open ouvre son panneau à droite des pages, qui rétrécissent', !!p && p.url === `chrome-extension://${id}/sidepanel.html` && w.contentRect().width === full.width - extHost.panel.widthIn(w) - 8, p && { url: p.url, pages: `${full.width} → ${w.contentRect().width}`, panneau: p.view.getBounds() });
     if (p) {
       const errors = [];
-      // Mesure d'audience bloquée par Orbe : sans conséquence.
+      // Mesure d'audience bloquée par Orbx : sans conséquence.
       p.wc.on('console-message', (e) => { if ((e.level === 'error' || e.level === 3) && !/Analytics error|Failed to fetch/.test(e.message)) errors.push(e.message); });
       await until(async () => /Overview/.test(String(await js(p.wc, 'document.body.innerText'))), 15000);
       await sleep(2500);
@@ -248,7 +248,7 @@ module.exports = async function realExtensions({ first: w, win, extensions, extA
       check('il répond aux clics : l’onglet « Colors » liste des couleurs', !!colors && Array.isArray(colors.couleurs) && colors.couleurs.length > 2, colors);
       console.log('      (compte gratuit : le panneau décrit sa propre page ; la vue latérale de la page inspectée est réservée aux comptes payants)');
       check('aucune erreur dans la console du panneau', errors.length === 0, errors.slice(0, 4).join(' | '));
-      if (process.env.ORBE_SHOTS) await p.wc.capturePage().then((img) => require('fs').writeFileSync(require('path').join(process.env.ORBE_SHOTS, 'ext-peeper-panneau.png'), img.toPNG()), () => {});
+      if (process.env.ORBX_SHOTS) await p.wc.capturePage().then((img) => require('fs').writeFileSync(require('path').join(process.env.ORBX_SHOTS, 'ext-peeper-panneau.png'), img.toPNG()), () => {});
       extHost.panel.userClose(w);
       await sleep(1500);
       check('fermer le panneau rend la place aux pages', !extHost.panel.shownIn(w) && w.contentRect().width === full.width, { pages: w.contentRect().width });
@@ -266,7 +266,7 @@ module.exports = async function realExtensions({ first: w, win, extensions, extA
     const canCapture = await rt.wc.capturePage().then((img) => !img.isEmpty(), () => false);
     if (!canCapture) console.log('  – capture non vérifiée : l’écran est éteint ou verrouillé, Chromium ne peut rien capturer');
     else {
-      // Premier clic : l'extension compte sur « activeTab » ; Orbe demande l'accord
+      // Premier clic : l'extension compte sur « activeTab » ; Orbx demande l'accord
       // (accepté ici), recharge l'extension, puis ouvre sa fenêtre.
       check('premier clic : accès à l’onglet demandé puis accordé (activeTab)', extHost.openPopup(w, id, { x: 260, y: 60 }, { keepOpen: true }) === true && !!(await until(() => extHost.access.widened(id) && extHost.popups.size === 1, 20000)));
       const pop = [...extHost.popups.values()][0];
@@ -320,7 +320,7 @@ module.exports = async function realExtensions({ first: w, win, extensions, extA
       if (/Se connecter|Sign in|Log in/i.test(String(text))) console.log('      → s’arrête ici : l’extension demande une connexion à un compte Claude payant');
       const native = await js(p.wc, 'new Promise((r) => { try { const port = chrome.runtime.connectNative("com.anthropic.claude_browser_extension"); port.onDisconnect.addListener(() => r(chrome.runtime.lastError ? chrome.runtime.lastError.message : "déconnecté")); setTimeout(() => r("resté ouvert"), 3000); } catch (e) { r("exception : " + e.message); } })');
       console.log('      messagerie native (pont vers Claude Code ou l’application) : ' + native);
-      if (process.env.ORBE_SHOTS) await p.wc.capturePage().then((img) => require('fs').writeFileSync(require('path').join(process.env.ORBE_SHOTS, 'ext-claude-panneau.png'), img.toPNG()), () => {});
+      if (process.env.ORBX_SHOTS) await p.wc.capturePage().then((img) => require('fs').writeFileSync(require('path').join(process.env.ORBX_SHOTS, 'ext-claude-panneau.png'), img.toPNG()), () => {});
       w.activate(Object.keys(w.data.tabs).find((k) => k !== rt.id && win.live.get(k)) || rt.id);
       await sleep(600);
       check('le panneau ne suit pas sur un autre onglet', !extHost.panel.shownIn(w) || extHost.panel.shownIn(w) !== p, extHost.panel.shownIn(w) && extHost.panel.shownIn(w).url);

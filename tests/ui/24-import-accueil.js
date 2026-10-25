@@ -14,8 +14,8 @@ module.exports = {
   nom: 'Import, accueil, mises à jour',
   async test(ctx, t) {
     const { shell, jusqua } = ctx;
-    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-ui-nav-'));
-    const dl = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-ui-maj-'));
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-ui-nav-'));
+    const dl = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-ui-maj-'));
     fx.profils(home, { platform: 'darwin' });
     await ctx.principal(({ req }, h) => {
       req('import-browsers.js').configure({ home: h, platform: 'darwin', sqlite: '' });
@@ -33,7 +33,7 @@ module.exports = {
       if (req.url.startsWith('/releases/download/v9.1.0/')) return res.end(zip);
       res.setHeader('content-type', 'application/json');
       return res.end(JSON.stringify({
-        tag_name: 'v9.1.0', name: 'Orbe 9.1', body: 'Import depuis Chrome, Firefox et Safari\n<b>pas du HTML</b>', draft: false, prerelease: false, published_at: '2026-10-08T09:00:00Z',
+        tag_name: 'v9.1.0', name: 'Orbx 9.1', body: 'Import depuis Chrome, Firefox et Safari\n<b>pas du HTML</b>', draft: false, prerelease: false, published_at: '2026-10-08T09:00:00Z',
         assets: serveur.archive ? [{ name: serveur.archive, size: zip.length, digest: 'sha256:' + crypto.createHash('sha256').update(zip).digest('hex'), browser_download_url: 'https://pirate.example/ignoree.zip' }] : [],
       }));
     });
@@ -43,7 +43,7 @@ module.exports = {
       global.__maj = { ouverts: [], montres: [] };
       u.configure({ test: true, endpoint: a.url, version: '0.12.0', downloadsDir: () => a.dl, reveal: (f) => global.__maj.montres.push(f), open: (x) => global.__maj.ouverts.push(x) });
       return u.assetName('9.1.0');
-    }, { url: `http://127.0.0.1:${serveur.address().port}/repos/amadoubaui/orbe/releases/latest`, dl });
+    }, { url: `http://127.0.0.1:${serveur.address().port}/repos/electroheadfx/orbx/releases/latest`, dl });
 
     await ctx.ouvrir('/a', 'Page A');
     let r = null;
@@ -119,17 +119,17 @@ module.exports = {
       await jusqua(async () => (await volet()) === 'advanced', 'volet Avancé').catch(async () => { r = await ctx.attendrePage('settings.html'); });
       r = await ctx.attendrePage('settings.html');
       await jusqua(async () => (await volet()) === 'advanced' && (await r.locator('#update-new').isVisible()), 'carte de la nouvelle version');
-      assert.equal(await r.textContent('#update-version'), 'Orbe 0.12.0');
-      assert.equal(await r.textContent('#update-state'), 'Orbe 9.1.0 est disponible');
+      assert.equal(await r.textContent('#update-version'), 'Orbx 0.12.0');
+      assert.equal(await r.textContent('#update-state'), 'Orbx 9.1.0 est disponible');
       assert.match(await r.textContent('#update-notes'), /Import depuis Chrome, Firefox et Safari\n<b>pas du HTML<\/b>/);
       assert.equal(await r.locator('#update-notes b').count(), 0);
-      assert.equal(demandes[0].agent, 'Orbe');
+      assert.equal(demandes[0].agent, 'Orbx');
       assert.equal(demandes[0].cookie, '');
     });
 
-    await t.verifier('barre latérale : note « Orbe 9.1.0 est disponible », sur une ligne au-dessus des Espaces ; × l’écarte', async () => {
+    await t.verifier('barre latérale : note « Orbx 9.1.0 est disponible », sur une ligne au-dessus des Espaces ; × l’écarte', async () => {
       await jusqua(() => shell.locator('#update-note').isVisible(), 'note affichée');
-      assert.equal(await shell.textContent('#update-open'), 'Orbe 9.1.0 est disponible');
+      assert.equal(await shell.textContent('#update-open'), 'Orbx 9.1.0 est disponible');
       const b = await shell.locator('#update-note').boundingBox();
       const bas = await shell.locator('#bottom').boundingBox();
       assert.ok(b.y + b.height <= bas.y + 1 && b.height < 40, 'la note tient au-dessus des Espaces, sur une ligne : ' + JSON.stringify(b));
@@ -153,10 +153,10 @@ module.exports = {
       assert.equal(await ctx.principal(({ store }) => store.state.updates.dismissed), '9.1.0');
     });
 
-    await t.verifier('« Page de téléchargement » et « Télécharger » : page de la version dans le dépôt d’Orbe ; archive vérifiée, montrée, jamais ouverte', async () => {
+    await t.verifier('« Page de téléchargement » et « Télécharger » : page de la version dans le dépôt d’Orbx ; archive vérifiée, montrée, jamais ouverte', async () => {
       await r.click('#update-page');
       await jusqua(async () => (await ctx.principal(() => global.__maj.ouverts.length)) === 1, 'page demandée');
-      assert.equal(await ctx.principal(() => global.__maj.ouverts[0]), 'https://github.com/amadoubaui/orbe/releases/tag/v9.1.0');
+      assert.equal(await ctx.principal(() => global.__maj.ouverts[0]), 'https://github.com/electroheadfx/orbx/releases/tag/v9.1.0');
       if (!serveur.archive) return;
       await r.click('#update-download');
       await jusqua(async () => (await r.locator('#update-reveal').isVisible()), 'archive téléchargée');
@@ -185,7 +185,7 @@ module.exports = {
       a = await ctx.attendrePage('welcome.html');
       await jusqua(async () => (await a.locator('#dots i').count()) === 5, 'accueil chargé');
       assert.equal(await etape(), 'hello');
-      assert.equal(await a.textContent('.step.on h1'), 'Bienvenue dans Orbe');
+      assert.equal(await a.textContent('.step.on h1'), 'Bienvenue dans Orbx');
       assert.equal(await a.locator('.step:visible').count(), 1);
       assert.equal((await a.textContent('#next')).trim(), 'Commencer');
       assert.ok(await a.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 1), 'la première étape tient dans la fenêtre');
@@ -200,7 +200,7 @@ module.exports = {
       await brave.locator('.imp-apply').click();
       await jusqua(async () => (await ctx.etat()).espaces.some((s) => s.nom === 'Brave'), 'Espace « Brave »');
       // L'accueil reste à l'écran : l'import ne change pas d'Espace sous les yeux de qui le suit.
-      assert.equal(await ctx.principal(({ w }) => (w.data.tabs[w.activeId] || {}).url), 'orbe://app/welcome.html');
+      assert.equal(await ctx.principal(({ w }) => (w.data.tabs[w.activeId] || {}).url), 'orbx://app/welcome.html');
       assert.equal(await brave.locator('.imp-undo').isVisible(), true);
       await brave.locator('.imp-undo').click();
       await jusqua(async () => !(await ctx.etat()).espaces.some((s) => s.nom === 'Brave'), 'import annulé');

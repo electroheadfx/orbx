@@ -4,7 +4,7 @@
 // décodage d'images, adresses affichées à l'étroit, copie en Markdown.
 // Chaque vérification échoue sur le code d'avant le correctif.
 // Appelé par tests/selftest.js, ou seul :
-//   ORBE_SCENARIO=tests/securite.js node scripts/dev.js --selftest
+//   ORBX_SCENARIO=tests/securite.js node scripts/dev.js --selftest
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -15,7 +15,7 @@ const { clipboard, dialog, nativeImage } = require('electron');
 const { until } = require('./outils');
 
 module.exports = async function securiteTests(ctx) {
-  const { first: w, store, win, OrbeWindow } = ctx;
+  const { first: w, store, win, OrbxWindow } = ctx;
   let failed = 0;
   const check = ctx.check || ((name, ok, detail = '') => { if (!ok) failed += 1; console.log(`${ok ? '  ✓' : '  ✗'} ${name}${ok || !detail ? '' : ' — ' + detail}`); });
   const downloads = require('../src/main/downloads');
@@ -40,7 +40,7 @@ module.exports = async function securiteTests(ctx) {
   const port = server.address().port;
   const base = `http://127.0.0.1:${port}`;
   const host = `127.0.0.1:${port}`;
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-securite-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-securite-'));
   // Chaque partie est indépendante : une erreur dans l'une compte comme un échec et laisse passer les suivantes.
   let part = 0;
   const section = async (fn) => {
@@ -134,7 +134,7 @@ module.exports = async function securiteTests(ctx) {
     const sender = w.ui.webContents;
     const dragged = library.drag(sender, 'sec-2');
     await until(() => asked.length === 3, 'question posée au glisser');
-    check('fichier sans marque : le glisser hors d’Orbe est refusé, la question est posée', dragged === false && drags.length === 0);
+    check('fichier sans marque : le glisser hors d’Orbx est refusé, la question est posée', dragged === false && drags.length === 0);
     const rows = await library.action('lib:get', {}, null);
     check('fichier sans marque : la Bibliothèque le dit (ligne signalée, icône du système non demandée)', rows.downloads.find((r) => r.id === 'sec-2').marked === false && !library.internals.icons.has(pdf));
     agree = true;
@@ -210,8 +210,8 @@ module.exports = async function securiteTests(ctx) {
 
   // === 3. Sauvegardes : droits, « supprimé veut dire supprimé », restauration prudente ============
   await section(async () => {
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-sauvegardes-sec-'));
-    const file = path.join(tmp, 'orbe.json');
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-sauvegardes-sec-'));
+    const file = path.join(tmp, 'orbx.json');
     const file0 = store.file;
     const flush0 = store.flush;
     const history0 = store.state.history;
@@ -310,10 +310,10 @@ module.exports = async function securiteTests(ctx) {
     fs.writeFileSync(file, JSON.stringify({ spaces: [{ id: 'now' }], marque: 'maintenant' }));
     const name = path.basename(b1);
     const r1 = await backups.restore(name);
-    check('« Restaurer une sauvegarde » : la question dit ce qui revient, ce qui ne revient pas, et ce qu’Orbe garde comme sauvegardes',
+    check('« Restaurer une sauvegarde » : la question dit ce qui revient, ce qui ne revient pas, et ce qu’Orbx garde comme sauvegardes',
       asked.length === 1 && asked[0].detail.includes(T('backup.detailPerms')) && asked[0].detail.includes(T('backup.detailBoosts', { n: 1 })) && asked[0].detail.includes(T('backup.detailJs'))
       && asked[0].detail.includes(T('backup.detailRetention', { today: backups.TODAY_MAX, days: backups.DAYS_MAX })), asked[0] && asked[0].detail);
-    check('restauration pendant un téléchargement, « Annuler » à la question de l’arrêt : rien n’est touché, Orbe ne quitte pas',
+    check('restauration pendant un téléchargement, « Annuler » à la question de l’arrêt : rien n’est touché, Orbx ne quitte pas',
       r1 === false && quits === 0 && backups.restoring() === false && read(file).marque === 'maintenant');
     quitOk = true;
     const r2 = await backups.restore(name);
@@ -354,11 +354,11 @@ module.exports = async function securiteTests(ctx) {
     check('aiguillage : la règle vaut pour son site et ses sous-domaines (et, si elle le dit, pour un début de chemin ou un port)', yes.every((u) => prefs.routeFor(u) !== null), JSON.stringify(yes.filter((u) => prefs.routeFor(u) === null)));
     check('aiguillage : une adresse qui contient seulement le texte de la règle (paramètre, chemin, sous-domaine piégé, identifiant) n’est pas aiguillée', no.every((u) => prefs.routeFor(u) === null), JSON.stringify(no.filter((u) => prefs.routeFor(u) !== null)));
     check('lien cliqué dans une page (onglet épinglé, ⇧clic) : « https://evil.tld/?github.com » s’ouvre en aperçu, pas dans l’Espace de la règle',
-      w.peekTarget('https://evil.tld/?github.com') === 'peek' && w.peekTarget('https://github.com/orbe') === 'route');
-    const s = { routes: [{ match: 'https://WWW.Figma.com/', to: sp }, { match: 'github.com/Orbe/', to: sp }, { match: 'figma', to: sp }, { match: '/chemin', to: sp }, { match: 'a b', to: sp }, null, { match: 4 }] };
+      w.peekTarget('https://evil.tld/?github.com') === 'peek' && w.peekTarget('https://github.com/orbx') === 'route');
+    const s = { routes: [{ match: 'https://WWW.Figma.com/', to: sp }, { match: 'github.com/Orbx/', to: sp }, { match: 'figma', to: sp }, { match: '/chemin', to: sp }, { match: 'a b', to: sp }, null, { match: 4 }] };
     const changed = prefs.migrateRoutes(s);
     check('règles d’avant : adresse entière, « www. » et majuscules ramenés à la forme normale ; une règle qui ne nomme pas un site reste dans la liste, sans rien aiguiller',
-      changed === true && s.routes.map((r) => r.match).join('|') === 'figma.com|github.com/orbe|figma|/chemin|a b' && prefs.routeRule('/chemin') === null && prefs.routeRule('a b') === null && prefs.routeFor('https://x.tld/chemin', s.routes) === null && prefs.routeFor('https://www.figma.com/file/1', s.routes) === sp);
+      changed === true && s.routes.map((r) => r.match).join('|') === 'figma.com|github.com/orbx|figma|/chemin|a b' && prefs.routeRule('/chemin') === null && prefs.routeRule('a b') === null && prefs.routeFor('https://x.tld/chemin', s.routes) === null && prefs.routeFor('https://www.figma.com/file/1', s.routes) === sp);
     check('réglages : une nouvelle règle doit nommer un site (forme normale) ; un mot avec espace, un chemin seul ou une adresse avec identifiant sont refusés',
       prefs.routes([{ match: 'figma.com', to: sp }]) === true && prefs.routes([{ match: '/b', to: sp }]) === false && prefs.routes([{ match: 'Figma.com', to: sp }]) === false && prefs.routes([{ match: 'a@b.fr', to: sp }]) === false
       && prefs.routeText('https://www.Figma.com/File/?x#y') === 'figma.com/file' && prefs.routeText('*.exemple.fr') === 'exemple.fr' && prefs.routeText('?github.com') === '');
@@ -367,7 +367,7 @@ module.exports = async function securiteTests(ctx) {
   // === 5. Boost modifié depuis la Bibliothèque : jamais appliqué en navigation privée ==============
   await section(async () => {
     boosts.set(host, { css: 'body { outline: 3px solid rgb(255, 0, 0) !important; }' });
-    const iw = new OrbeWindow({ incognito: true });
+    const iw = new OrbxWindow({ incognito: true });
     const tab = iw.createTab(base + '/prive');
     iw.activate(tab.id);
     const wc = () => win.live.get(tab.id).wc;
@@ -469,7 +469,7 @@ module.exports = async function securiteTests(ctx) {
     boosts.remove('zap.exemple.fr');
 
     // === 11. Boost importé : relecture avant la première activation =================================
-    const res = boosts.importData({ orbeBoosts: 1, boosts: [{ host: 'importe.exemple.fr', css: '@import "https://pisteur.example/a.css"; body { background: url(https://pisteur.example/p.png) }', js: 'alert(1)', zaps: ['.pub'] }, { host: 'sage.exemple.fr', css: 'p { color: red }' }] });
+    const res = boosts.importData({ orbxBoosts: 1, boosts: [{ host: 'importe.exemple.fr', css: '@import "https://pisteur.example/a.css"; body { background: url(https://pisteur.example/p.png) }', js: 'alert(1)', zaps: ['.pub'] }, { host: 'sage.exemple.fr', css: 'p { color: red }' }] });
     const imp = () => boosts.get('importe.exemple.fr');
     boosts.set('importe.exemple.fr', { enabled: true, jsOn: true });
     check('Boost importé : « à relire » ; un message qui demande de l’activer (ou d’armer son script) ne l’active pas', res.added.length === 2 && imp().review === true && imp().enabled === false && imp().jsOn === false && boosts.cssFor('importe.exemple.fr') === '');
@@ -504,9 +504,9 @@ module.exports = async function securiteTests(ctx) {
 
   // === 13. Adresse affichée à l'étroit : la fin du nom d'hôte reste visible ====================
   await section(async () => {
-    const long = 'compte.banque.fr.' + 'connexion-securisee.'.repeat(6) + 'orbe.example';
+    const long = 'compte.banque.fr.' + 'connexion-securisee.'.repeat(6) + 'orbx.example';
     const seen = await ui(`(() => {
-      const parts = [['a.b.exemple.co.uk', 'exemple.co.uk'], ['exemple.fr', 'exemple.fr'], ['x.github.io', 'x.github.io'], ['127.0.0.1', '127.0.0.1'], ['localhost', 'localhost'], ['${long}', 'orbe.example']].map(([h, want]) => siteParts(h).domain === want);
+      const parts = [['a.b.exemple.co.uk', 'exemple.co.uk'], ['exemple.fr', 'exemple.fr'], ['x.github.io', 'x.github.io'], ['127.0.0.1', '127.0.0.1'], ['localhost', 'localhost'], ['${long}', 'orbx.example']].map(([h, want]) => siteParts(h).domain === want);
       const el = document.createElement('span');
       const texts = ['https://user:pw@sous.exemple.fr:8443/chemin?x=1#y', 'sous.exemple.fr/chemin', 'Titre sans adresse', ''];
       const same = texts.map((t) => addressInto(el, t).textContent === t);
@@ -527,7 +527,7 @@ module.exports = async function securiteTests(ctx) {
     check('adresse étroite : le domaine enregistré est reconnu (suffixes à deux étages, adresses de la machine)', seen.parts.every(Boolean), JSON.stringify(seen.parts));
     check('adresse étroite : le texte affiché reste l’adresse entière, découpée en « avant le domaine », « domaine », « reste »', seen.same.every(Boolean) && seen.split.join('|') === 'https://user:pw@sous.|exemple.fr:8443|/chemin?x=1#y', JSON.stringify([seen.same, seen.split]));
     check('volet étroit, nom d’hôte trop long : il est coupé par la GAUCHE — le domaine enregistré, mis en avant, reste entièrement visible',
-      seen.domaine === 'orbe.example' && seen.coupe === true && seen.dedans === true && seen.debutCache === true && seen.gras === true, JSON.stringify(seen));
+      seen.domaine === 'orbx.example' && seen.coupe === true && seen.dedans === true && seen.debutCache === true && seen.gras === true, JSON.stringify(seen));
     const peek = await ui(`(() => { const css = [...document.styleSheets].some((s) => { try { return [...s.cssRules].some((r) => r.selectorText === '.addr .addr-host' && r.style.direction === 'rtl'); } catch { return false; } }); return css; })()`);
     check('la même règle sert partout où une adresse est montrée à l’étroit (feuille de style commune)', peek === true);
   });

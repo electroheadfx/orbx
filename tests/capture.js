@@ -1,4 +1,4 @@
-// Captures d'écran des tests, pour relecture visuelle (ORBE_SHOTS=<dossier>).
+// Captures d'écran des tests, pour relecture visuelle (ORBX_SHOTS=<dossier>).
 // macOS : `screencapture` photographie la vraie fenêtre.
 // Ailleurs : la fenêtre est recomposée à partir de ses vues (coque, pages,
 // vues flottantes), chacune capturée par Chromium ; s'y ajoute, sous Windows,
@@ -65,7 +65,7 @@ async function shoot(win, dir, name, background) {
   const file = path.join(dir, name + '.png');
   // Essais discrets (tests/discret.js) : la fenêtre est transparente à l'écran,
   // on la recompose à partir de ses vues.
-  if (process.platform === 'darwin' && process.env.ORBE_DISCRET !== '1') {
+  if (process.platform === 'darwin' && process.env.ORBX_DISCRET !== '1') {
     const id = win.getMediaSourceId().split(':')[1];
     try { execFileSync('screencapture', ['-x', '-o', '-l', id, file]); } catch {}
     return;

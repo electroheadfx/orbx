@@ -85,8 +85,8 @@ module.exports = {
       await k.press('Enter');
       assert.equal((await blocs()).pop().t, 'p');
       await ctx.clic(page, '#tools button[data-do=h3]');
-      await k.type('Voir orbe');
-      assert.deepEqual((await blocs()).pop(), { t: 'h3', runs: [{ s: 'Voir orbe' }] });
+      await k.type('Voir orbx');
+      assert.deepEqual((await blocs()).pop(), { t: 'h3', runs: [{ s: 'Voir orbx' }] });
       await k.press('Shift+Alt+ArrowLeft');
       await k.press(`${mod}+k`);
       assert.equal(await page.locator('#link').isVisible(), true);
@@ -96,7 +96,7 @@ module.exports = {
       await k.press(`${mod}+k`);
       await k.type(ctx.url('/a'));
       await k.press('Enter');
-      assert.deepEqual((await blocs()).pop(), { t: 'h3', runs: [{ s: 'Voir ' }, { s: 'orbe', a: ctx.url('/a') }] });
+      assert.deepEqual((await blocs()).pop(), { t: 'h3', runs: [{ s: 'Voir ' }, { s: 'orbx', a: ctx.url('/a') }] });
       assert.equal(await page.evaluate(() => document.activeElement.id), 'editor');
     });
 

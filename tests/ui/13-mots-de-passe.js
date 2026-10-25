@@ -1,5 +1,5 @@
 // Mots de passe, à la souris et au clavier réels : proposition d'enregistrer
-// après une connexion, puis remplissage par le sélecteur d'Orbe.
+// après une connexion, puis remplissage par le sélecteur d'Orbx.
 const assert = require('node:assert/strict');
 
 module.exports = {
@@ -17,7 +17,7 @@ module.exports = {
     await ctx.ouvrir('/connexion', 'Connexion');
     const page = () => ctx.onglet('/connexion');
 
-    await t.verifier('après une connexion saisie au clavier, Orbe propose d’enregistrer le mot de passe', async () => {
+    await t.verifier('après une connexion saisie au clavier, Orbx propose d’enregistrer le mot de passe', async () => {
       await page().click('#u');
       await page().keyboard.type('amadou');
       await page().click('#p');
@@ -35,7 +35,7 @@ module.exports = {
       const fs = require('fs');
       const path = require('path');
       await jusqua(() => fs.existsSync(path.join(ctx.userData, 'passwords.json')), 'coffre écrit', 8000);
-      for (const f of ['passwords.json', 'orbe.json']) {
+      for (const f of ['passwords.json', 'orbx.json']) {
         const file = path.join(ctx.userData, f);
         if (fs.existsSync(file)) assert.ok(!fs.readFileSync(file, 'utf8').includes('Secret-123'), f + ' contient le mot de passe en clair');
       }

@@ -2,7 +2,7 @@
 // garantissent, vérifié par des faits (processus, écouteurs, requêtes), jamais
 // par des durées, qui varient avec la charge de la machine.
 // Appelé par tests/selftest.js, ou seul :
-//   ORBE_SCENARIO=tests/performances.js node scripts/dev.js --selftest
+//   ORBX_SCENARIO=tests/performances.js node scripts/dev.js --selftest
 const { app, webContents } = require('electron');
 const fs = require('fs');
 const os = require('os');
@@ -21,7 +21,7 @@ async function until(fn, label, timeout = 8000) {
 }
 
 module.exports = async function performancesTests(ctx) {
-  const { first: w, OrbeWindow, store, win } = ctx;
+  const { first: w, OrbxWindow, store, win } = ctx;
   let failed = 0;
   const check = ctx.check || ((name, ok, detail = '') => { if (!ok) failed += 1; console.log(`${ok ? '  ✓' : '  ✗'} ${name}${ok || !detail ? '' : ' — ' + detail}`); });
   const sessions = require('../src/main/sessions');
@@ -35,7 +35,7 @@ module.exports = async function performancesTests(ctx) {
 
   // --- Page de la coque : ses scripts sont demandés ensemble (DEM-13) -----------------
   {
-    const r = await ui(`(() => { const s = [...document.scripts].filter((x) => x.src); return { n: s.length, differes: s.filter((x) => x.defer).length, ordre: s.map((x) => x.src.split('/').pop()).join(' '), prets: typeof t === 'function' && !!window.OrbeTheme && !!window.renderPlayers && !!window.fxStart && typeof send === 'function' && !!window.libPeek && !!window.folderPeek }; })()`);
+    const r = await ui(`(() => { const s = [...document.scripts].filter((x) => x.src); return { n: s.length, differes: s.filter((x) => x.defer).length, ordre: s.map((x) => x.src.split('/').pop()).join(' '), prets: typeof t === 'function' && !!window.OrbxTheme && !!window.renderPlayers && !!window.fxStart && typeof send === 'function' && !!window.libPeek && !!window.folderPeek }; })()`);
     check('coque : tous ses scripts sont différés (demandés ensemble, exécutés dans l’ordre de la page), et tous ont tourné',
       r.n >= 7 && r.differes === r.n && r.ordre.startsWith('common.js ') && r.ordre.indexOf('shell.js') < r.ordre.indexOf('libpeek.js') && r.prets, JSON.stringify(r));
   }
@@ -63,13 +63,13 @@ module.exports = async function performancesTests(ctx) {
     check('réserve de vues : demandée après le premier rendu de la barre latérale, une seule fois ; sans image présentée, après un délai borné', n === 1 && early === -1 && late >= 300 && late < 3000, `${n} ${early} ${late}`);
   }
   check('la vue modale naît de la coque : même processus de rendu, adresse à son nom',
-    pidOf(w.modal) === shellPid && w.modal.webContents.getURL() === 'orbe://app/overlay.html#modal', `${pidOf(w.modal)} / ${shellPid} ${w.modal.webContents.getURL()}`);
+    pidOf(w.modal) === shellPid && w.modal.webContents.getURL() === 'orbx://app/overlay.html#modal', `${pidOf(w.modal)} / ${shellPid} ${w.modal.webContents.getURL()}`);
   const prefs = w.modal.webContents.getLastWebPreferences();
   check('elle garde le bac à sable, l’isolation du contexte et le pont de l’interface',
     prefs.sandbox === true && prefs.contextIsolation === true && prefs.nodeIntegration === false && prefs.nodeIntegrationInSubFrames === false
     && prefs.nodeIntegrationInWorker === false && prefs.webviewTag === false && prefs.webSecurity === true && prefs.allowRunningInsecureContent === false
     && Object.keys(win.UI_PREFS).every((k) => k === 'preload' || prefs[k] === win.UI_PREFS[k]) && win.trusted.has(w.modal.webContents)
-    && await w.modal.webContents.executeJavaScript('typeof window.orbe === "object" && typeof window.orbe.send === "function" && typeof require === "undefined"'), JSON.stringify(prefs));
+    && await w.modal.webContents.executeJavaScript('typeof window.orbx === "object" && typeof window.orbx.send === "function" && typeof require === "undefined"'), JSON.stringify(prefs));
   w.toast('Essai');
   await until(() => w.toastView && w.win.contentView.children.includes(w.toastView), 'notification affichée');
   const hadTab = !!w.activeId;
@@ -91,7 +91,7 @@ module.exports = async function performancesTests(ctx) {
     await until(() => w.floatView || w.spares.some((s) => s.ready && s.page === 'shell.html#flottant'), 'barre flottante préparée');
     w.setPeek(true);
     await until(() => w.floatView && w.floatView.webContents.executeJavaScript('typeof S === "object" && S !== null && document.documentElement.classList.contains("floating")', true), 'barre flottante affichée');
-    check('barre latérale masquée : la barre flottante naît elle aussi de la coque', pidOf(w.floatView) === shellPid && w.floatView.webContents.getURL() === 'orbe://app/shell.html#flottant', `${pidOf(w.floatView)} / ${shellPid}`);
+    check('barre latérale masquée : la barre flottante naît elle aussi de la coque', pidOf(w.floatView) === shellPid && w.floatView.webContents.getURL() === 'orbx://app/shell.html#flottant', `${pidOf(w.floatView)} / ${shellPid}`);
     w.setPeek(false);
     if (wasVisible) w.toggleSidebar(true);
     await sleep(300);
@@ -111,22 +111,22 @@ module.exports = async function performancesTests(ctx) {
 
   // La coque n'ouvre rien d'elle-même, et une vue d'appoint ne va nulle part ailleurs.
   const strays = () => webContents.getAllWebContents().filter((wc) => /settings\.html|shell\.html$|exemple\.invalid|about:blank/.test(wc.getURL()) && wc !== w.ui.webContents).length
-    + Math.max(0, webContents.getAllWebContents().filter((wc) => wc.getURL().endsWith('#modal')).length - OrbeWindow.all.length);
+    + Math.max(0, webContents.getAllWebContents().filter((wc) => wc.getURL().endsWith('#modal')).length - OrbxWindow.all.length);
   const before = strays();
-  const opened = await ui('[window.open("orbe://app/overlay.html#modal"), window.open("orbe://app/settings.html"), window.open("https://exemple.invalid/"), window.open("about:blank")].map(String).join()');
+  const opened = await ui('[window.open("orbx://app/overlay.html#modal"), window.open("orbx://app/settings.html"), window.open("https://exemple.invalid/"), window.open("about:blank")].map(String).join()');
   await sleep(150);
   check('la coque ne peut ouvrir aucune fenêtre de son propre chef', opened === 'null,null,null,null' && strays() === before, `${opened} ${strays()}/${before}`);
   const spare = w.spares.find((s) => s.ready);
   const spareUrl = spare.view.webContents.getURL();
-  await spare.view.webContents.executeJavaScript('location.href = "https://exemple.invalid/"; window.open("orbe://app/shell.html"); 1', true).catch(() => {});
-  await w.modal.webContents.executeJavaScript('location.href = "orbe://app/settings.html"; 1', true).catch(() => {});
+  await spare.view.webContents.executeJavaScript('location.href = "https://exemple.invalid/"; window.open("orbx://app/shell.html"); 1', true).catch(() => {});
+  await w.modal.webContents.executeJavaScript('location.href = "orbx://app/settings.html"; 1', true).catch(() => {});
   await sleep(200);
   check('une vue d’appoint ne peut ni changer de page ni ouvrir de fenêtre',
-    spare.view.webContents.getURL() === spareUrl && w.modal.webContents.getURL() === 'orbe://app/overlay.html#modal' && strays() === before);
+    spare.view.webContents.getURL() === spareUrl && w.modal.webContents.getURL() === 'orbx://app/overlay.html#modal' && strays() === before);
 
   // Barre de commande demandée avant la fin du chargement de sa vue : le message attend.
   {
-    const w2 = new OrbeWindow();
+    const w2 = new OrbxWindow();
     w2.openCommand(); // la coque de cette fenêtre n'a pas encore chargé : la vue naît à part
     const own = w2.modal;
     await until(() => own.webContents.executeJavaScript('!document.getElementById("command").hidden'), 'barre de commande affichée dès le chargement');
@@ -139,7 +139,7 @@ module.exports = async function performancesTests(ctx) {
     w2.toast('Avant');
     await until(() => w2.toastView, 'notification de la seconde fenêtre');
     const lost = pidOf(w2.ui);
-    w2.wanted.push({ page: 'overlay.html#reserve', url: 'orbe://app/overlay.html#perime' }); // demande restée en plan
+    w2.wanted.push({ page: 'overlay.html#reserve', url: 'orbx://app/overlay.html#perime' }); // demande restée en plan
     const born = w2.toastView;
     const bornWc = born.webContents;
     w2.ui.webContents.forcefullyCrashRenderer();
@@ -150,23 +150,23 @@ module.exports = async function performancesTests(ctx) {
     check('processus de la coque perdu : la coque se recharge, ses vues d’appoint renaissent avec elle',
       bornWc.isDestroyed() && !w2.wanted.some((x) => x.url.endsWith('#perime')) && pidOf(w2.toastView) === pidOf(w2.ui) && await w2.ui.webContents.executeJavaScript('S.space.id', true) === w2.spaceId);
     w2.win.close();
-    await until(() => !OrbeWindow.all.includes(w2), 'seconde fenêtre fermée');
+    await until(() => !OrbxWindow.all.includes(w2), 'seconde fenêtre fermée');
   }
 
   // --- Fichiers de l'interface servis depuis la mémoire ----------------------------
   const stats = { ...sessions.uiStats };
-  const codes = await ui(`Promise.all(['overlay.html', 'absent.html', '%2e%2e/main/main.js', '..%2fpreload/ui.js'].map((p) => fetch('orbe://app/' + p).then((r) => r.status + ':' + (r.headers.get('content-type') || '').split(';')[0], () => 'refus'))).then((a) => a.join(' '))`);
+  const codes = await ui(`Promise.all(['overlay.html', 'absent.html', '%2e%2e/main/main.js', '..%2fpreload/ui.js'].map((p) => fetch('orbx://app/' + p).then((r) => r.status + ':' + (r.headers.get('content-type') || '').split(';')[0], () => 'refus'))).then((a) => a.join(' '))`);
   check('fichiers de l’interface : servis depuis la mémoire, rien hors du dossier de l’interface',
     codes.startsWith('200:text/html ') && !/200.*200/.test(codes) && sessions.uiStats.hits > stats.hits && sessions.uiStats.reads === stats.reads, `${codes} ${JSON.stringify(sessions.uiStats)}`);
 
   // --- Extensions : rien dans les pages web tant qu'aucune n'est chargée -------------
   {
     const ses = w.session;
-    const ids = () => ses.getPreloadScripts().map((s) => s.id).filter((id) => id.startsWith('orbe-ext')).sort().join();
+    const ids = () => ses.getPreloadScripts().map((s) => s.id).filter((id) => id.startsWith('orbx-ext')).sort().join();
     const none = !ses.extensions.getAllExtensions().length;
     if (none) check('sans extension : le script des extensions n’est enregistré sur aucune page web', ids() === '', ids());
     const ext = await ses.extensions.loadExtension(path.join(__dirname, 'ext-fixture-sans'));
-    check('dès qu’une extension est chargée, son script de complément est en place (pages et service workers)', ids() === 'orbe-ext-frame,orbe-ext-worker', ids());
+    check('dès qu’une extension est chargée, son script de complément est en place (pages et service workers)', ids() === 'orbx-ext-frame,orbx-ext-worker', ids());
     if (none) ses.extensions.removeExtension(ext.id);
   }
 
@@ -246,9 +246,9 @@ module.exports = async function performancesTests(ctx) {
     typedWc.sendInputEvent({ type: 'char', keyCode: 'a' });
     typedWc.sendInputEvent({ type: 'keyUp', keyCode: 'a' });
     await until(() => win.live.get(tabs[1].id).typed, 'frappe vue dans la page');
-    check('aucune mise en veille par ancienneté à l’activation d’un onglet (seulement au passage de fond)', OrbeWindow.trimLive().length === 0 && tabs.every((x) => win.live.has(x.id)));
+    check('aucune mise en veille par ancienneté à l’activation d’un onglet (seulement au passage de fond)', OrbxWindow.trimLive().length === 0 && tabs.every((x) => win.live.has(x.id)));
     await until(() => tabs.every((x) => !win.live.get(x.id).loading), 'onglets d’essai au repos');
-    const slept = OrbeWindow.trimLive({ deep: true });
+    const slept = OrbxWindow.trimLive({ deep: true });
     await until(() => !win.live.has(tabs[0].id) && !win.live.has(tabs[2].id), 'onglets anciens endormis').catch(() => {});
     check('passage de fond : les onglets non vus depuis 3 h s’endorment ; celui où l’on a écrit reste',
       slept.filter((p) => p.why === 'idle').map((p) => p.id).sort().join() === [tabs[0].id, tabs[2].id].sort().join() && !win.live.has(tabs[0].id) && !win.live.has(tabs[2].id) && win.live.has(tabs[1].id) && !!w.data.tabs[tabs[0].id],
@@ -271,28 +271,28 @@ module.exports = async function performancesTests(ctx) {
       const [longue, autre, volet] = await fresh(['Longue', 'Autre', 'Volet']);
       w.activate(longue.id);
       age(longue); // affichée depuis quatre heures, sans y revenir
-      OrbeWindow.trimLive({ deep: true });
+      OrbxWindow.trimLive({ deep: true });
       const stamped = Date.now() - win.live.get(longue.id).lastUsed < 5000;
       age(longue);
       w.activate(autre.id); // on la quitte à l'instant
       for (const x of [autre]) age(x);
-      OrbeWindow.trimLive({ deep: true });
+      OrbxWindow.trimLive({ deep: true });
       await settle();
       check('un onglet resté longtemps à l’écran ne s’endort pas dès qu’on le quitte : le délai court depuis qu’il est caché',
         stamped && win.live.has(longue.id) && Date.now() - win.live.get(longue.id).lastUsed < 5000);
       w.splitWith(autre.id, volet.id);
       await until(() => w.visibleIds().includes(volet.id) && w.visibleIds().includes(autre.id), 'vue scindée');
       age(volet); age(autre);
-      OrbeWindow.trimLive({ deep: true });
+      OrbxWindow.trimLive({ deep: true });
       w.leaveSplit(volet.id);
       w.activate(longue.id);
       win.live.get(longue.id).typed = false;
-      OrbeWindow.trimLive({ deep: true });
+      OrbxWindow.trimLive({ deep: true });
       await settle();
       check('le volet d’une vue scindée compte comme affiché : il ne s’endort pas en la quittant', win.live.has(volet.id) && win.live.has(autre.id));
       win.live.get(volet.id).lastUsed = old;
       win.live.get(volet.id).typed = false;
-      OrbeWindow.trimLive({ deep: true });
+      OrbxWindow.trimLive({ deep: true });
       await until(() => !win.live.has(volet.id), 'volet endormi une fois le délai passé').catch(() => {});
       check('… et s’endort bien une fois le délai écoulé depuis qu’il est caché', !win.live.has(volet.id));
 
@@ -312,7 +312,7 @@ module.exports = async function performancesTests(ctx) {
       await until(() => acted.every((x) => win.live.get(x.id).typed), 'gestes vus', 4000).catch(() => {});
       const missed = acted.filter((x) => !win.live.get(x.id).typed).map((x) => w.data.tabs[x.id].title).join();
       for (const x of [...acted, lu]) age(x);
-      OrbeWindow.trimLive({ deep: true });
+      OrbxWindow.trimLive({ deep: true });
       await until(() => !win.live.has(lu.id), 'onglet seulement lu endormi').catch(() => {});
       check('coller, AltGr, Suppr, Entrée, clic : l’onglet où l’on a agi ne s’endort pas de lui-même ; lire (molette, touche Maj seule) ne compte pas',
         !missed && acted.every((x) => win.live.has(x.id)) && !win.live.has(lu.id), missed || acted.filter((x) => !win.live.has(x.id)).length + ' endormis');
@@ -328,23 +328,23 @@ module.exports = async function performancesTests(ctx) {
       await until(() => win.live.get(tient.id).typed, 'geste dans la page qui tient');
       const asked = unload.state.asked;
       Object.assign(win.live.get(tient.id), { typed: false, lastUsed: old }); // comme si le geste nous avait échappé
-      OrbeWindow.trimLive({ deep: true });
+      OrbxWindow.trimLive({ deep: true });
       await until(() => win.live.get(tient.id) && win.live.get(tient.id).objected, 'refus de la page', 5000).catch(() => {});
       const rtT = win.live.get(tient.id);
       check('la page refuse la veille (beforeunload) : elle reste vivante, aucune question n’est posée, et elle n’est plus proposée',
-        !!rtT && rtT.objected === true && !twc.isDestroyed() && unload.state.asked === asked && OrbeWindow.trimLive({ deep: true }).every((p) => p.id !== tient.id));
+        !!rtT && rtT.objected === true && !twc.isDestroyed() && unload.state.asked === asked && OrbxWindow.trimLive({ deep: true }).every((p) => p.id !== tient.id));
 
       // 3. Image dans l'image, téléchargement en cours.
       const [pip, dl] = await fresh(['Incrustée', 'Télécharge']);
       win.live.get(pip.id).pip = true;
       win.noteDownload('start', { id: 'essai-dl', state: 'progressing' }, win.live.get(dl.id).wc);
       age(pip); age(dl);
-      OrbeWindow.trimLive({ deep: true });
+      OrbxWindow.trimLive({ deep: true });
       await settle();
       const keptBoth = win.live.has(pip.id) && win.live.has(dl.id);
       win.live.get(pip.id).pip = false;
       win.noteDownload('done', { id: 'essai-dl', state: 'completed' }, win.live.get(dl.id).wc);
-      OrbeWindow.trimLive({ deep: true });
+      OrbxWindow.trimLive({ deep: true });
       await until(() => !win.live.has(pip.id) && !win.live.has(dl.id), 'onglets libérés endormis').catch(() => {});
       check('image dans l’image ou téléchargement en cours : l’onglet reste ; ensuite il peut s’endormir', keptBoth && !win.live.has(pip.id) && !win.live.has(dl.id));
 
@@ -379,19 +379,19 @@ module.exports = async function performancesTests(ctx) {
     const asleep = w.createTab('https://reveil.exemple.invalid/page');
     asleep.title = 'Réveil';
     const plain = w.createTab('http://clair.exemple.invalid/');
-    OrbeWindow.pushAll();
+    OrbxWindow.pushAll();
     check('survol d’un onglet en veille : pré-connexion à son site, une seule fois, sans charger la page',
       w.prewake(asleep.id) === true && w.prewake(asleep.id) === false && calls.join() === 'https://reveil.exemple.invalid' && !win.live.has(asleep.id) && !store.state.history['https://reveil.exemple.invalid/page']);
     check('pas de pré-connexion pour un onglet vivant, une adresse en clair ou un identifiant inconnu',
       w.prewake(tabs[1].id) === false && w.prewake(plain.id) === false && w.prewake('inconnu') === false && w.prewake({}) === false && calls.length === 1);
-    const priv = new OrbeWindow({ incognito: true });
+    const priv = new OrbxWindow({ incognito: true });
     const privTab = priv.createTab('https://prive.exemple.invalid/');
     check('jamais de pré-connexion en navigation privée', priv.prewake(privTab.id) === false && calls.length === 1);
     priv.win.close();
     // La barre latérale signale le survol après 150 ms.
     const other = w.createTab('https://survol.exemple.invalid/');
     other.title = 'Survol';
-    OrbeWindow.pushAll();
+    OrbxWindow.pushAll();
     await until(() => ui(`!!document.querySelector('#today .row.tab[data-id="${other.id}"]')`), 'ligne de l’onglet en veille');
     await ui(`document.querySelector('#today .row.tab[data-id="${other.id}"]').dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))`);
     await until(() => calls.includes('https://survol.exemple.invalid'), 'pré-connexion au survol');
@@ -407,7 +407,7 @@ module.exports = async function performancesTests(ctx) {
         keepalive.user('https://git.exemple.fr/outil/1', mine) && keepalive.user('https://www.messagerie.test/x?y', mine) && keepalive.user('http://localhost:3000/', mine)
         && !keepalive.user('https://git.exemple.fr/autre', mine) && !keepalive.user('https://pirate.invalid/?u=https://messagerie.test/', mine) && !keepalive.user('https://messagerie.test.pirate.invalid/', mine)
         && !keepalive.user('http://localhost:4000/', mine) && !keepalive.user('file:///messagerie.test/', mine) && !keepalive.user('', mine) && !keepalive.user('https://messagerie.test/', {}));
-      check('un seul mécanisme : la liste d’Orbe et celle de l’utilisateur passent par la même question, posée une fois par la veille',
+      check('un seul mécanisme : la liste d’Orbx et celle de l’utilisateur passent par la même question, posée une fois par la veille',
         keepalive.matches('https://mail.google.com/mail/u/0/', {}) && keepalive.matches('https://git.exemple.fr/outil/1', mine) && !keepalive.matches('https://git.exemple.fr/outil/1', {}) && !keepalive.matches('https://exemple.org/', mine)
         && typeof veille.spared === 'undefined' && (fs.readFileSync(path.join(__dirname, '..', 'src', 'main', 'window.js'), 'utf8').match(/keepalive\.matches\(/g) || []).length === 1);
       const prefs = require('../src/main/prefs');
@@ -427,14 +427,14 @@ module.exports = async function performancesTests(ctx) {
       const vieux = Date.now() - 4 * 36e5;
       win.live.get(garde.id).lastUsed = vieux;
       win.live.get(libre.id).lastUsed = vieux;
-      const pris = OrbeWindow.trimLive({ deep: true }).map((p) => p.id);
+      const pris = OrbxWindow.trimLive({ deep: true }).map((p) => p.id);
       await until(() => !win.live.has(libre.id), 'site hors liste endormi').catch(() => {});
       check('veille automatique : le site de la liste « restent éveillés » ne s’endort pas, l’autre site oui',
         pris.includes(libre.id) && !pris.includes(garde.id) && win.live.has(garde.id) && !win.live.has(libre.id), JSON.stringify(pris));
       check('… et le dernier passage dit ce qu’il a relevé', !!win.lastSweep() && win.lastSweep().at > 0 && win.lastSweep().totalMb > 0);
       s.neverSleep = [];
       win.live.get(garde.id).lastUsed = vieux;
-      OrbeWindow.trimLive({ deep: true });
+      OrbxWindow.trimLive({ deep: true });
       await until(() => !win.live.has(garde.id), 'site retiré de la liste endormi').catch(() => {});
       check('… retiré de la liste, il s’endort au passage suivant', !win.live.has(garde.id));
       // Barre latérale : la ligne d'un onglet en veille n'a plus la classe « live » (titre plus pâle).
@@ -506,12 +506,12 @@ module.exports = async function performancesTests(ctx) {
       const data = tasks.list();
       const row = data.rows.find((r) => r.pid === pidCible);
       const kinds = new Set(data.rows.map((r) => r.kind));
-      check('gestionnaire de tâches : chaque processus dit ce qu’il porte (Orbe, interface, graphique, onglets avec leur titre), sa mémoire et son processeur',
+      check('gestionnaire de tâches : chaque processus dit ce qu’il porte (Orbx, interface, graphique, onglets avec leur titre), sa mémoire et son processeur',
         kinds.has('app') && kinds.has('ui') && kinds.has('gpu') && kinds.has('tab') && !!row && row.kind === 'tab' && row.titles.join().includes('Piège') && row.mb > 0 && row.canEnd === true
         && data.total >= row.mb && data.rows.every((r) => Number.isInteger(r.pid) && typeof r.cpu === 'number') && data.rows.filter((r) => r.canEnd).every((r) => r.kind === 'tab'), JSON.stringify([...kinds]));
       const uiPid = w.ui.webContents.getOSProcessId();
       const gpu = data.rows.find((r) => r.kind === 'gpu');
-      check('« Arrêter » ne vaut que pour le processus d’un onglet : jamais Orbe, son interface, le processus graphique, ni un numéro quelconque',
+      check('« Arrêter » ne vaut que pour le processus d’un onglet : jamais Orbx, son interface, le processus graphique, ni un numéro quelconque',
         tasks.end(process.pid) === 0 && tasks.end(uiPid) === 0 && tasks.end(gpu.pid) === 0 && tasks.end(-1) === 0 && tasks.end(NaN) === 0 && tasks.end('1') === 0
         && !w.ui.webContents.isCrashed() && !win.live.get(cible.id).wc.isCrashed());
       commands.run(w, 'taskManager');
@@ -541,8 +541,8 @@ module.exports = async function performancesTests(ctx) {
   // --- Historique : lu au premier accès, pas avant la fenêtre -------------------------
   {
     const Store = store.constructor;
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-historique-'));
-    fs.writeFileSync(path.join(dir, 'orbe.json'), JSON.stringify({ tabs: {} }));
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-historique-'));
+    fs.writeFileSync(path.join(dir, 'orbx.json'), JSON.stringify({ tabs: {} }));
     fs.writeFileSync(path.join(dir, 'history.json'), JSON.stringify({ 'https://ancien.exemple.fr/': { url: 'https://ancien.exemple.fr/', visits: 4, last: 1, title: 'Ancien' } }));
     const st = new Store();
     st.load(dir);
@@ -553,7 +553,7 @@ module.exports = async function performancesTests(ctx) {
     check('historique : le fichier n’est lu qu’au premier accès, et rien ne se perd à l’écriture suivante',
       pending && st.historyPending === false && disk['https://ancien.exemple.fr/'].visits === 4 && disk['https://neuf.exemple.fr/'].visits === 1, JSON.stringify(Object.keys(disk)));
     const empty = new Store();
-    const dir2 = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-historique-'));
+    const dir2 = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-historique-'));
     empty.load(dir2);
     check('profil neuf : pas d’historique, premier lancement reconnu sans le lire', empty.hadHistory === false && empty.historyPending === true && Object.keys(empty.state.history).length === 0);
   }

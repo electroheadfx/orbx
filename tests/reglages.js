@@ -1,6 +1,6 @@
 // Réglages à volets, raccourcis modifiables et import de signets.
 // Appelé par tests/selftest.js, ou seul :
-//   ORBE_SCENARIO=tests/reglages.js node scripts/dev.js --selftest
+//   ORBX_SCENARIO=tests/reglages.js node scripts/dev.js --selftest
 // Chaque réglage passe par « settings:set », la porte de la fenêtre des
 // réglages, pour vérifier aussi le refus des valeurs invalides.
 const http = require('http');
@@ -24,7 +24,7 @@ function serve() {
 }
 
 module.exports = async function reglagesTests(ctx) {
-  const { first: w, OrbeWindow, store, win, little, commands, menu, openSettings, openUrl, panes, prefs, shortcuts, globalAction } = ctx;
+  const { first: w, OrbxWindow, store, win, little, commands, menu, openSettings, openUrl, panes, prefs, shortcuts, globalAction } = ctx;
   let failed = 0;
   const check = ctx.check || ((name, ok, detail = '') => { if (!ok) failed += 1; console.log(`${ok ? '  ✓' : '  ✗'} ${name}${ok || !detail ? '' : ' — ' + detail}`); });
   const ui = (js) => w.ui.webContents.executeJavaScript(js);
@@ -36,7 +36,7 @@ module.exports = async function reglagesTests(ctx) {
   const boosts = require('../src/main/boosts');
   const bm = require('../src/main/import-bookmarks');
   const more = require('../src/main/ext-more');
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-reglages-'));
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-reglages-'));
 
   await until(() => ui('typeof S === "object" && S !== null'), 'coque chargée');
   const server = await serve();
@@ -203,7 +203,7 @@ module.exports = async function reglagesTests(ctx) {
   await set({ warnOnQuit: true });
   panes.beforeQuit({ preventDefault: () => { prevented += 1; } });
   await sleep(50);
-  check('quitter : confirmation demandée seulement si le réglage est actif, et un refus garde Orbe ouvert', quiet && asked === 1 && prevented === 1 && !panes.quit.confirmed && OrbeWindow.all.length > 0);
+  check('quitter : confirmation demandée seulement si le réglage est actif, et un refus garde Orbx ouvert', quiet && asked === 1 && prevented === 1 && !panes.quit.confirmed && OrbxWindow.all.length > 0);
   await set({ warnOnQuit: false });
   panes.quit.ask = ask;
 
@@ -293,7 +293,7 @@ module.exports = async function reglagesTests(ctx) {
   await set({ cookieBanners: false });
   await until(async () => (await css(banner)) === 'block', 'bandeau rétabli');
   check('bandeaux de cookies : masqués quand le réglage est actif, rétablis sinon', shown === 'block');
-  const themeVar = 'getComputedStyle(document.documentElement).getPropertyValue("--orbe-theme-color").trim()';
+  const themeVar = 'getComputedStyle(document.documentElement).getPropertyValue("--orbx-theme-color").trim()';
   const noTheme = await css(themeVar);
   await set({ themeData: true });
   await until(async () => (await css(themeVar)).toLowerCase() === s2.color.toLowerCase(), 'couleur du thème');
@@ -375,7 +375,7 @@ module.exports = async function reglagesTests(ctx) {
   const bad = ['', 'T', 'Shift+T', main + '+', main + '+' + main + '+T', 'Hyper+T', main + '+TT', main + '+' + 'A'.repeat(60), main + '++', platform.isMac ? 'Alt+T' : 'Cmd+T', 42, null];
   const reserved = [platform.isMac ? 'Cmd+Q' : 'Alt+F4', platform.accel('Cmd+C'), platform.accel('Cmd+1'), platform.accel('Ctrl+3'), 'Ctrl+Tab'];
   check('accélérateurs mal formés ou sans touche de modification : refusés', bad.every((a) => !!shortcuts.check(a).error), bad.filter((a) => !shortcuts.check(a).error).join(' | '));
-  check('combinaisons réservées au système ou à Orbe : refusées', reserved.every((a) => shortcuts.check(a).error === 'reserved'), reserved.map((a) => a + ':' + shortcuts.check(a).error).join(' '));
+  check('combinaisons réservées au système ou à Orbx : refusées', reserved.every((a) => shortcuts.check(a).error === 'reserved'), reserved.map((a) => a + ':' + shortcuts.check(a).error).join(' '));
   check('formes acceptées, rendues sous forme canonique',
     shortcuts.check('shift+' + main.toLowerCase() + '+k').accel === (platform.isMac ? 'Shift+Cmd+K' : 'Ctrl+Shift+K') && shortcuts.check('F5').accel === 'F5' && shortcuts.check('Ctrl+Alt+Left').accel === 'Ctrl+Alt+Left');
 
@@ -424,11 +424,11 @@ module.exports = async function reglagesTests(ctx) {
   const hadDefault = more.reserved().has(histDefault);
   shortcuts.assign('downloads', 'Ctrl+Alt+Y');
   const nowReserved = more.reserved();
-  check('extensions : un raccourci d’Orbe déplacé est réservé à sa nouvelle place, l’ancienne est libérée',
+  check('extensions : un raccourci d’Orbx déplacé est réservé à sa nouvelle place, l’ancienne est libérée',
     hadDefault && nowReserved.has(more.parseAccelerator('Ctrl+Alt+Y')) && !nowReserved.has(histDefault));
 
   // Coque : le libellé qui cite ⌘S suit le raccourci.
-  // (L'infobulle est celle d'Orbe : le raccourci y est lu au moment de l'afficher.)
+  // (L'infobulle est celle d'Orbx : le raccourci y est lu au moment de l'afficher.)
   const titleBefore = await ui('KEYS[document.getElementById("b-sidebar").dataset.tipKey]');
   shortcuts.assign('toggleSidebar', 'Ctrl+Alt+B');
   await until(async () => (await ui('KEYS[document.getElementById("b-sidebar").dataset.tipKey]')) === shortcuts.display('Ctrl+Alt+B'), 'infobulle à jour');
@@ -486,7 +486,7 @@ module.exports = async function reglagesTests(ctx) {
   const head = '<!DOCTYPE NETSCAPE-Bookmark-file-1>\n<TITLE>Bookmarks</TITLE><H1>Bookmarks</H1>\n<DL><p>\n';
   const hostile = bm.parse(head + [
     '<DT><A HREF="javascript:alert(1)">js</A>', '<DT><A HREF="JaVaScRiPt:alert(1)">js2</A>', '<DT><A HREF="file:///etc/passwd">fichier</A>',
-    '<DT><A HREF="data:text/html,<script>alert(1)</script>">data</A>', '<DT><A HREF="chrome://settings">chrome</A>', '<DT><A HREF="orbe://app/settings.html">orbe</A>',
+    '<DT><A HREF="data:text/html,<script>alert(1)</script>">data</A>', '<DT><A HREF="chrome://settings">chrome</A>', '<DT><A HREF="orbx://app/settings.html">orbx</A>',
     '<DT><A HREF="vbscript:x">vb</A>', '<DT><A HREF="https://utilisateur:secret@exemple.org/">identifiants</A>', '<DT><A HREF="  ">vide</A>', '<DT><A>sans adresse</A>',
     '<DT><A HREF="https://bon.exemple/">Bon <script>alert(1)</script><img src=x onerror=alert(2)> titre</A>',
     '<DT><H3>Dossier <b onclick="x()">piégé</b>&#0;&#x202e;</H3><DL><p><DT><A HREF="http://dedans.exemple/a?b=1&amp;c=2">Dedans</A></DL><p>',
@@ -574,11 +574,11 @@ module.exports = async function reglagesTests(ctx) {
   await until(() => sw.getContentSize()[1] < hGeneral[1] - 100, 'fenêtre réduite au volet Extensions');
   await until(async () => (await js('document.getElementById("panes").scrollHeight - document.getElementById("panes").clientHeight')) <= 0, 'hauteur ajustée');
   check('changer de volet : la hauteur de la fenêtre suit, le volet est mémorisé', store.state.window.settingsPane === 'extensions' && (await js('[...document.querySelectorAll(".pane")].filter((p) => !p.hidden).map((p) => p.id).join()')) === 'pane-extensions');
-  if (process.env.ORBE_SHOTS) {
+  if (process.env.ORBX_SHOTS) {
     for (const pane of panes.PANES) {
       await js(`document.querySelector('#tabs [data-pane="${pane}"]').click()`);
       await sleep(700);
-      fs.writeFileSync(path.join(process.env.ORBE_SHOTS, `reglages-${pane}.png`), (await sw.webContents.capturePage()).toPNG());
+      fs.writeFileSync(path.join(process.env.ORBX_SHOTS, `reglages-${pane}.png`), (await sw.webContents.capturePage()).toPNG());
     }
     await js('document.querySelector(\'#tabs [data-pane="extensions"]\').click()');
   }
@@ -612,7 +612,7 @@ module.exports = async function reglagesTests(ctx) {
   w.close(ext, { silent: true });
   if (w.data.tabs[stale2.id]) w.close(stale2.id, { silent: true });
   for (const space of [s2, sp]) {
-    for (const id of [...space.today]) { OrbeWindow.destroyView(id); delete w.data.tabs[id]; }
+    for (const id of [...space.today]) { OrbxWindow.destroyView(id); delete w.data.tabs[id]; }
     w.data.spaces.splice(w.data.spaces.indexOf(space), 1);
   }
   store.state.profiles.splice(store.state.profiles.findIndex((p) => p.id === pid), 1);
@@ -623,7 +623,7 @@ module.exports = async function reglagesTests(ctx) {
   const drift = Object.keys(before).filter((k) => JSON.stringify(before[k]) !== JSON.stringify(after[k]));
   check('après ces essais, tous les réglages ont retrouvé leur valeur', !drift.length, drift.join(', '));
   w.layout();
-  OrbeWindow.pushAll();
+  OrbxWindow.pushAll();
   menu.refresh(true);
   server.close();
   fs.rmSync(tmp, { recursive: true, force: true });
