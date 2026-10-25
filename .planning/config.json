@@ -31,7 +31,8 @@
     "base_branch": "dev"
   },
   "mempalace": {
-    "enabled": true
+    "enabled": true,
+    "wing": "orbx"
   },
   "intel": {
     "enabled": false

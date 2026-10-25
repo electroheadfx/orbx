@@ -1,0 +1,10 @@
+wing: orbx
+rooms:
+  - name: planning
+    keywords:
+      - planning
+      - specs
+  - name: decisions
+  - name: milestones
+  - name: problems
+  - name: general
