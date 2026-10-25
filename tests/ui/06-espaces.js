@@ -64,6 +64,14 @@ module.exports = {
       assert.equal(await pastilles.count(), 2);
       assert.equal(await active(), 1);
       assert.deepEqual(await pastilles.evaluateAll((els) => els.map((el) => el.title)), ['Personnel', 'Projets']);
+      const icones = await pastilles.evaluateAll((els) => els.map((el) => {
+        const em = el.querySelector('.em');
+        const cs = getComputedStyle(em);
+        return { texte: em.textContent, affichee: cs.display !== 'none', taille: parseFloat(cs.fontSize), opacite: Number(cs.opacity) };
+      }));
+      assert.deepEqual(icones.map((x) => x.texte), ['🏠', '✨'], 'chaque pastille porte l’icône de son Espace');
+      assert.deepEqual(icones.map((x) => x.affichee), [true, true], 'les icônes des Espaces inactifs restent affichées : ' + JSON.stringify(icones));
+      assert.ok(icones[1].taille > icones[0].taille && icones[0].opacite < 1, 'l’Espace affiché a une icône plus grande, l’inactif une icône atténuée : ' + JSON.stringify(icones));
     });
 
     await t.verifier('la couleur d’accent change avec l’Espace', async () => {
