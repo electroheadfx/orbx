@@ -39,7 +39,7 @@ animations des onglets, Boosts et Zap, extensions Chrome (expérimental).
 
 ## Limites connues
 
-- Orbe s'appuie sur Electron : les extensions Chrome ne sont pas encore
+- Orbx s'appuie sur Electron : les extensions Chrome ne sont pas encore
   prises en charge, et certains sites à DRM (Netflix…) demandent un composant
   supplémentaire.
 - Le lancement de l'application non signée demande une confirmation de macOS.

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-// Fabrique Orbe.app pour macOS, sans dépendance : copie le moteur Electron,
-// le renomme, y place le code d'Orbe et signe le tout localement.
+// Fabrique Orbx.app pour macOS, sans dépendance : copie le moteur Electron,
+// le renomme, y place le code d'Orbx et signe le tout localement.
 //
-//   npm run build               -> ~/.orbe-dev/dist/Orbe.app
+//   npm run build               -> ~/.orbx-dev/dist/Orbx.app
 //   npm run build -- --install  -> copie aussi dans /Applications
 //   npm run build -- --icon     -> régénère d'abord l'icône depuis le SVG
 //   npm run build -- --fuses    -> relit seulement les fusibles de l'application fabriquée
@@ -20,7 +20,7 @@ const pkg = require('../package.json');
 const root = dev.root;
 const args = process.argv.slice(2);
 const out = path.join(dev.runtime, 'dist');
-const appPath = path.join(out, 'Orbe.app');
+const appPath = path.join(out, 'Orbx.app');
 const contents = path.join(appPath, 'Contents');
 const plist = path.join(contents, 'Info.plist');
 const run = (cmd, a, opts) => execFileSync(cmd, a, { stdio: 'pipe', ...opts });
@@ -31,18 +31,18 @@ function plutil(key, type, value) {
 
 function makeIcon(cli) {
   const png = path.join(root, 'assets', 'icon.png');
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-icon-'));
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-icon-'));
   const tmpPng = path.join(tmp, 'icon.png');
   run(process.execPath, [cli, path.join(root, 'scripts', 'make-icon.js'), tmpPng]);
-  const set = path.join(tmp, 'orbe.iconset');
+  const set = path.join(tmp, 'orbx.iconset');
   fs.mkdirSync(set);
   for (const size of [16, 32, 128, 256, 512]) {
     run('sips', ['-z', String(size), String(size), tmpPng, '--out', path.join(set, `icon_${size}x${size}.png`)]);
     run('sips', ['-z', String(size * 2), String(size * 2), tmpPng, '--out', path.join(set, `icon_${size}x${size}@2x.png`)]);
   }
-  run('iconutil', ['-c', 'icns', set, '-o', path.join(tmp, 'orbe.icns')]);
+  run('iconutil', ['-c', 'icns', set, '-o', path.join(tmp, 'orbx.icns')]);
   fs.copyFileSync(tmpPng, png);
-  fs.copyFileSync(path.join(tmp, 'orbe.icns'), path.join(root, 'assets', 'orbe.icns'));
+  fs.copyFileSync(path.join(tmp, 'orbx.icns'), path.join(root, 'assets', 'orbx.icns'));
   console.log('Icône régénérée.');
 }
 
@@ -55,7 +55,7 @@ if (args.includes('--fuses')) {
 }
 
 const cli = dev.ensure();
-if (args.includes('--icon') || !fs.existsSync(path.join(root, 'assets', 'orbe.icns'))) makeIcon(cli);
+if (args.includes('--icon') || !fs.existsSync(path.join(root, 'assets', 'orbx.icns'))) makeIcon(cli);
 
 const electronApp = path.join(dev.runtime, 'node_modules', 'electron', 'dist', 'Electron.app');
 if (!fs.existsSync(electronApp)) run(process.execPath, [cli, '--version']);
@@ -64,9 +64,9 @@ console.log('Copie du moteur…');
 fs.rmSync(appPath, { recursive: true, force: true });
 fs.mkdirSync(out, { recursive: true });
 run('ditto', [electronApp, appPath]);
-fs.renameSync(path.join(contents, 'MacOS', 'Electron'), path.join(contents, 'MacOS', 'Orbe'));
+fs.renameSync(path.join(contents, 'MacOS', 'Electron'), path.join(contents, 'MacOS', 'Orbx'));
 
-console.log('Installation du code d’Orbe…');
+console.log('Installation du code d’Orbx…');
 const resources = path.join(contents, 'Resources');
 fs.rmSync(path.join(resources, 'default_app.asar'), { force: true });
 fs.rmSync(path.join(resources, 'electron.icns'), { force: true });
@@ -77,21 +77,21 @@ fs.copyFileSync(path.join(root, 'package.json'), path.join(target, 'package.json
 fs.copyFileSync(path.join(root, 'LICENSE'), path.join(target, 'LICENSE'));
 fs.mkdirSync(path.join(target, 'assets'));
 fs.copyFileSync(path.join(root, 'assets', 'blocklist.txt'), path.join(target, 'assets', 'blocklist.txt'));
-fs.copyFileSync(path.join(root, 'assets', 'orbe.icns'), path.join(resources, 'orbe.icns'));
+fs.copyFileSync(path.join(root, 'assets', 'orbx.icns'), path.join(resources, 'orbx.icns'));
 
-plutil('CFBundleName', '-string', 'Orbe');
-plutil('CFBundleDisplayName', '-string', 'Orbe');
-plutil('CFBundleExecutable', '-string', 'Orbe');
-plutil('CFBundleIdentifier', '-string', 'org.pixework.orbe');
-plutil('CFBundleIconFile', '-string', 'orbe.icns');
+plutil('CFBundleName', '-string', 'Orbx');
+plutil('CFBundleDisplayName', '-string', 'Orbx');
+plutil('CFBundleExecutable', '-string', 'Orbx');
+plutil('CFBundleIdentifier', '-string', 'com.electroheadfx.orbx');
+plutil('CFBundleIconFile', '-string', 'orbx.icns');
 plutil('CFBundleShortVersionString', '-string', pkg.version);
 plutil('CFBundleVersion', '-string', pkg.version);
 plutil('LSApplicationCategoryType', '-string', 'public.app-category.productivity');
 plutil('NSHumanReadableCopyright', '-string', 'Logiciel libre — licence MIT');
-plutil('NSCameraUsageDescription', '-string', 'Un site web ouvert dans Orbe demande à utiliser la caméra.');
-plutil('NSMicrophoneUsageDescription', '-string', 'Un site web ouvert dans Orbe demande à utiliser le micro.');
-plutil('NSLocationUsageDescription', '-string', 'Un site web ouvert dans Orbe demande ta position.');
-// Déclare Orbe comme navigateur web (liens http/https et fichiers HTML).
+plutil('NSCameraUsageDescription', '-string', 'Un site web ouvert dans Orbx demande à utiliser la caméra.');
+plutil('NSMicrophoneUsageDescription', '-string', 'Un site web ouvert dans Orbx demande à utiliser le micro.');
+plutil('NSLocationUsageDescription', '-string', 'Un site web ouvert dans Orbx demande ta position.');
+// Déclare Orbx comme navigateur web (liens http/https et fichiers HTML).
 plutil('CFBundleURLTypes', '-json', JSON.stringify([{ CFBundleURLName: 'Web', CFBundleTypeRole: 'Viewer', CFBundleURLSchemes: ['http', 'https'] }]));
 // Handoff : reprendre ici une page ouverte sur un autre appareil (événement « continue-activity »).
 plutil('NSUserActivityTypes', '-json', JSON.stringify(['NSUserActivityTypeBrowsingWeb']));
@@ -104,7 +104,7 @@ run('xattr', ['-cr', appPath]);
 // Moteur avec Widevine : la signature VMP (compte EVS de castlabs) se fait
 // après toute modification de l'application et avant la signature de code.
 // Sans elle, les flux de test se lisent mais les services commerciaux refusent.
-if (dev.drm && process.env.ORBE_EVS) {
+if (dev.drm && process.env.ORBX_EVS) {
   console.log('Signature VMP (EVS)…');
   run('python3', ['-m', 'castlabs_evs.vmp', 'sign-pkg', out]);
 }
@@ -113,7 +113,7 @@ checkFuses(framework);
 console.log('Application prête : ' + appPath);
 
 if (args.includes('--install')) {
-  const dest = '/Applications/Orbe.app';
+  const dest = '/Applications/Orbx.app';
   fs.rmSync(dest, { recursive: true, force: true });
   run('ditto', [appPath, dest]);
   console.log('Installée dans ' + dest);

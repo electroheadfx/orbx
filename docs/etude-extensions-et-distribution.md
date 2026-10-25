@@ -2,7 +2,7 @@
 
 Relevé fait sur Electron 44.7.0 (Chromium 152), en chargeant réellement les
 extensions concernées dans une sonde jetable. Ce document guide les prochains
-chantiers ; il ne décrit pas ce qu'Orbe fait déjà.
+chantiers ; il ne décrit pas ce qu'Orbx fait déjà.
 
 ## Extensions Chrome
 
@@ -15,7 +15,7 @@ mais n'offre qu'une partie des API de Chrome.
 - **Absentes** : `sidePanel`, `contextMenus`, `windows`, `webNavigation`,
   `identity`, `cookies`, `downloads`, `notifications`, `debugger`, `tabGroups`,
   `tts`, `commands`, `storage.sync`, et la messagerie native.
-- Electron n'affiche ni bouton ni fenêtre pour les extensions : c'est à Orbe de
+- Electron n'affiche ni bouton ni fenêtre pour les extensions : c'est à Orbx de
   le faire.
 
 | Extension | Electron seul | Avec une couche `tabs`/`windows`/boutons | Blocage principal |
@@ -33,7 +33,7 @@ mais n'offre qu'une partie des API de Chrome.
 
 **Conséquence.** Viser d'abord les extensions à scripts de contenu et à
 fenêtre surgissante. Pour le reste — capture de page entière, lecture vocale,
-mots de passe — mieux vaut des fonctions intégrées à Orbe.
+mots de passe — mieux vaut des fonctions intégrées à Orbx.
 
 **Couche manquante.** La bibliothèque `electron-chrome-extensions` apporte
 `tabs`, `windows`, `contextMenus`, `cookies` et les boutons d'extension, mais
@@ -49,15 +49,15 @@ Environ 250 lignes, sans dépendance.
 ## Vidéo protégée (Netflix, Disney+, Prime Video, Spotify web)
 
 Electron de série ne lit pas les contenus protégés par Widevine. Une variante
-maintenue par castlabs le fait ; Orbe peut l'utiliser à la demande :
+maintenue par castlabs le fait ; Orbx peut l'utiliser à la demande :
 
 ```sh
-ORBE_DRM=1 npm start          # moteur avec Widevine, installé dans ~/.orbe-dev-drm
-ORBE_DRM=1 npm run build      # application fabriquée avec ce moteur
+ORBX_DRM=1 npm start          # moteur avec Widevine, installé dans ~/.orbx-dev-drm
+ORBX_DRM=1 npm run build      # application fabriquée avec ce moteur
 ```
 
 Vérifié sur macOS (Apple Silicon) avec ce moteur : les flux de test publics
-(Shaka, Bitmovin) se lisent, les tests d'Orbe passent à l'identique.
+(Shaka, Bitmovin) se lisent, les tests d'Orbx passent à l'identique.
 
 Non vérifié : Netflix, Disney+, Prime Video et Spotify. Ils exigent très
 probablement une signature supplémentaire de l'application (« VMP »), fournie
@@ -66,7 +66,7 @@ gratuitement par castlabs contre la création d'un compte :
 ```sh
 python3 -m pip install --upgrade castlabs-evs
 python3 -m castlabs_evs.account signup
-ORBE_DRM=1 ORBE_EVS=1 npm run build
+ORBX_DRM=1 ORBX_EVS=1 npm run build
 ```
 
 À savoir : ce moteur suit Electron avec retard (correctifs de sécurité plus
@@ -76,10 +76,10 @@ défaut.
 
 ## Connexion Google
 
-Google refuse parfois les navigateurs qu'il ne reconnaît pas. Orbe se présente
+Google refuse parfois les navigateurs qu'il ne reconnaît pas. Orbx se présente
 comme un Chromium ordinaire (sans la mention « Electron »). À tester avec un
 vrai compte ; prévoir un bouton « ouvrir dans le navigateur par défaut » en
-secours. Orbe ne se fera pas passer pour Google Chrome.
+secours. Orbx ne se fera pas passer pour Google Chrome.
 
 ## Touch ID, clés d'accès, mots de passe
 
@@ -90,7 +90,7 @@ gestionnaire de mots de passe intégré est envisageable à plus long terme.
 
 ## Distribution
 
-Orbe est aujourd'hui signé localement : macOS demande de passer par
+Orbx est aujourd'hui signé localement : macOS demande de passer par
 *Réglages → Confidentialité et sécurité → Ouvrir quand même* au premier
 lancement d'une copie téléchargée. Pour une installation sans friction et des
 mises à jour automatiques, il faut le programme Apple Developer (payant, à

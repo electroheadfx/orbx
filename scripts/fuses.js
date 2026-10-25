@@ -1,11 +1,11 @@
 // Fusibles d'Electron : interrupteurs gravés dans le binaire, lus au démarrage.
 // Ils suivent une sentinelle : un octet de version, un octet de longueur, puis
 // un caractère par fusible (« 1 » actif, « 0 » coupé, « r » retiré). On coupe
-// ceux qui feraient d'Orbe un Node.js à tout faire pour un autre programme
+// ceux qui feraient d'Orbx un Node.js à tout faire pour un autre programme
 // (ELECTRON_RUN_AS_NODE, NODE_OPTIONS, --inspect) : il lirait sinon le coffre
-// de mots de passe sous l'identité d'Orbe.
+// de mots de passe sous l'identité d'Orbx.
 // Sur macOS, à faire avant la signature (binaire « Electron Framework ») ;
-// sous Windows, la table est dans Orbe.exe.
+// sous Windows, la table est dans Orbx.exe.
 const fs = require('fs');
 
 const FUSE_SENTINEL = Buffer.from('dL7pKGdnNz796PbbjQWNKmHXBZaB9tsX');

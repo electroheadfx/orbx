@@ -1,6 +1,6 @@
 # Améliorations : vitesse, fluidité, agrément
 
-Liste de contrôle **mesurée** des pistes pour rendre Orbe plus rapide, plus fluide et
+Liste de contrôle **mesurée** des pistes pour rendre Orbx plus rapide, plus fluide et
 plus agréable. Chaque point donne le problème avec un chiffre relevé sur cette machine,
 le changement proposé, le gain attendu, le risque, l'effort (S = quelques heures,
 M = un à deux jours, L = plus) et un état.
@@ -21,15 +21,15 @@ décompose le retard de la vue modale (DEM-12, DEM-13).
 | --- | --- |
 | Date | 8 octobre 2026 |
 | Machine | MacBook Pro M2 Pro (12 cœurs), 16 Go, macOS 26.4, écran intégré 3456 × 2234 à **120 Hz** (relevé : `screen.getPrimaryDisplay().displayFrequency` = 120) |
-| Moteur | Electron 44.7.0 (`~/.orbe-dev`), lancé depuis les sources |
+| Moteur | Electron 44.7.0 (`~/.orbx-dev`), lancé depuis les sources |
 | Code mesuré | branche `main`, commit `9988bbf`, **plus** les modifications en cours dans le dossier pendant la séance (marge de 10 pt, barre latérale à 50 ms, barre de commande ; enregistrées depuis, jusqu'au commit `95b3c75`) — voir la remarque ci-dessous |
 | Fenêtre | 1360 × 860 points, barre latérale de 250 points |
-| Profils | toujours temporaires (`ORBE_USER_DATA=<dossier temporaire>` + `--selftest`, trousseau factice) ; le vrai profil n'a jamais été ouvert |
+| Profils | toujours temporaires (`ORBX_USER_DATA=<dossier temporaire>` + `--selftest`, trousseau factice) ; le vrai profil n'a jamais été ouvert |
 
-**Méthode.** Orbe est lancé par `Electron -r hook.js <dépôt> --selftest` avec
-`ORBE_SCENARIO=<scénario>`. `hook.js` (chargé avant `main.js`) chronomètre les `require`,
+**Méthode.** Orbx est lancé par `Electron -r hook.js <dépôt> --selftest` avec
+`ORBX_SCENARIO=<scénario>`. `hook.js` (chargé avant `main.js`) chronomètre les `require`,
 les appels coûteux et les événements des vues sans toucher au code ; les scénarios pilotent
-la fenêtre (`OrbeWindow`, `store`) et lisent :
+la fenêtre (`OrbxWindow`, `store`) et lisent :
 
 - les temps : `performance.now()`, `process.getCreationTime()`, `performance.timeOrigin` des pages ;
 - la mémoire : `app.getAppMetrics()` pour la liste des processus, puis `/usr/bin/footprint <pid>`
@@ -76,7 +76,7 @@ Les scripts sont dans le dossier temporaire de la séance (`perfbench/`), ils ne
 | | dont processus graphique | 160–183 Mo | normal pour Chromium en Retina |
 | | chaque vue d'appoint déjà ouverte | **+18 à 25 Mo** chacune (un processus chacune) | à améliorer |
 | Mémoire, vrais sites | 10 sites / 30 sites vivants | **1,87 Go / 3,86 Go** | attendu ; politique de veille à affiner |
-| Navigation | surcoût d'Orbe sur une page légère | +0,5 ms sur 6,7 ms | négligeable |
+| Navigation | surcoût d'Orbx sur une page légère | +0,5 ms sur 6,7 ms | négligeable |
 | | page à 12 cadres | **+19 ms sur 31 ms** (+60 %) | à améliorer |
 | | page à 150 sous-ressources (bloqueur) | **+14 ms sur 45 ms** (+31 %) | à surveiller |
 | Barre latérale | un envoi d'état → image suivante, 50 / 400 / 1 000 onglets | 8,3 / 8,4 / 8,3 ms (une image à 120 Hz) | excellent |
@@ -88,11 +88,11 @@ Les scripts sont dans le dossier temporaire de la séance (`perfbench/`), ils ne
 | Saisie | frappe → suggestions peintes (8 000 visites) | **20–22 ms**, dont 14–15 ms de calcul sur le fil principal | à améliorer |
 | | ⌘T → champ peint | 3–6 ms (première fois 19–28 ms) | excellent |
 | | changement d'onglet (clic → page visible) | 4,5–5,4 ms + 2–3,5 ms | excellent |
-| Disque | `orbe.json` au plafond d'historique | **4,1 à 6,4 Mo** réécrits en entier, deux fois (copie de secours) | à améliorer |
+| Disque | `orbx.json` au plafond d'historique | **4,1 à 6,4 Mo** réécrits en entier, deux fois (copie de secours) | à améliorer |
 | | blocage du fil principal par sauvegarde | **9–12 ms** (`JSON.stringify`), soit plus d'une image | à améliorer |
 | | fréquence en naviguant | 1 écriture toutes les 2 s environ | à améliorer |
 
-Lecture rapide : Orbe est **déjà rapide là où on l'attendait le moins** (rendu de la barre
+Lecture rapide : Orbx est **déjà rapide là où on l'attendait le moins** (rendu de la barre
 latérale, changement d'onglet, ⌘T, coût par page). Les vrais gisements sont ailleurs :
 l'écriture du fichier d'état, la recherche dans l'historique à chaque frappe, les processus
 des vues d'appoint, l'instant où la fenêtre s'affiche, et les animations pilotées par un
@@ -119,15 +119,15 @@ Ce que fait le processus principal avant la fenêtre (profil CPU par `inspector`
 
 | Poste | Temps |
 | --- | --- |
-| Tous les `require` de `main.js` (20 modules d'Orbe) | **≈ 15 ms** au total ; le plus lourd : `shared/locales.js` 6 ms, `sessions.js` 7,5 ms (avec ses dépendances) |
+| Tous les `require` de `main.js` (20 modules d'Orbx) | **≈ 15 ms** au total ; le plus lourd : `shared/locales.js` 6 ms, `sessions.js` 7,5 ms (avec ses dépendances) |
 | `store.load` | 1 ms (profil neuf) ; **17 ms** avec un fichier de 4,9 Mo (400 onglets, 8 500 visites) |
 | `sessions.setupDefaultSession` (premier `protocol.handle`, crée la session par défaut) | 7 ms à chaud, **33–42 ms** refroidi |
 | `menu.build` | 3–4 ms |
-| `new OrbeWindow` | **108 ms** refroidi, dont ≈ 92 ms dans la création native de la fenêtre et 30 ms pour les deux vues d'interface |
+| `new OrbxWindow` | **108 ms** refroidi, dont ≈ 92 ms dans la création native de la fenêtre et 30 ms pour les deux vues d'interface |
 | `extensions.loadInto` (asynchrone, ne bloque pas) | 70–140 ms **sans aucune extension installée** |
 | `adblock.load` (différé de 1,2 s) | 6 ms pour 24 017 domaines |
 
-Conclusions : (1) le code d'Orbe pèse peu — environ 250 ms à chaud sont pris par Electron et
+Conclusions : (1) le code d'Orbx pèse peu — environ 250 ms à chaud sont pris par Electron et
 Chromium eux-mêmes avant et pendant la création de la fenêtre ; (2) entre « première vue créée »
 et « fenêtre affichée », 114 ms à chaud et **242 ms refroidi** passent à attendre que la coque
 ait fini de charger ; (3) un gros profil (400 onglets, 8 500 visites, 4,9 Mo) retarde la fenêtre de 28 ms (392 contre
@@ -140,7 +140,7 @@ de `store.load`.
 | --- | --- | --- | --- |
 | Référence | 369 | 397 | 427 |
 | Afficher la fenêtre tout de suite, sans attendre la coque | **309** (−60) | 389 | **365** (−62) |
-| Servir `orbe://` par lecture directe + cache mémoire (sans `net.fetch`) | 368 | 395 | 418 |
+| Servir `orbx://` par lecture directe + cache mémoire (sans `net.fetch`) | 368 | 395 | 418 |
 | Créer la vue modale après la coque | 373 | 397 | 419 |
 | Sans `vibrancy` | 369 | 395 | 416 |
 | `v8CacheOptions: 'bypassHeatCheck'` sur les vues d'interface | 371 | 399 | 426 |
@@ -157,7 +157,7 @@ Même comparaison, lancements espacés de 25 s (6 tours, plus bruité) :
 ### Points
 
 - ✅ **DEM-1 — Afficher la fenêtre sans attendre la fin du chargement de la coque.** *(fait le 8 oct.)*
-  *Problème* : `OrbeWindow` n'appelle `win.show()` que dans `did-finish-load` de la coque
+  *Problème* : `OrbxWindow` n'appelle `win.show()` que dans `did-finish-load` de la coque
   (`window.js`, constructeur). La fenêtre est prête 114 ms plus tôt à chaud, 242 ms refroidi.
   Et comme une page cachée ne peint pas, la première page attend aussi.
   *Changement* : appeler `this.layout(); this.win.show();` à la fin du constructeur ; garder
@@ -207,7 +207,7 @@ Même comparaison, lancements espacés de 25 s (6 tours, plus bruité) :
   « aucune extension ». *Effort* : S.
 
 - ➖ **DEM-6 — Cache de code V8 / instantané V8 pour le processus principal.** Écarté :
-  les 20 modules d'Orbe se chargent en ≈ 15 ms au total ; `v8CacheOptions` sur les vues
+  les 20 modules d'Orbx se chargent en ≈ 15 ms au total ; `v8CacheOptions` sur les vues
   d'interface ne change rien (371 contre 369 ms). Un instantané (`electron-mksnapshot`)
   gagnerait au mieux une dizaine de millisecondes pour une chaîne de fabrication bien plus fragile.
 
@@ -215,7 +215,7 @@ Même comparaison, lancements espacés de 25 s (6 tours, plus bruité) :
   mesurée (369 contre 369 ms) ; la création de la fenêtre native coûte le même prix sans.
 
 - ✅ **DEM-8 — Mesurer le paquet distribué.** Les chiffres ci-dessus viennent des sources. *(mesuré le 9 oct. : paquet 246 ms contre 243 ms depuis les sources pour la fenêtre, 304 contre 300 ms pour la coque chargée ; l’archive et les fusibles ne coûtent rien de mesurable)*
-  *À mesurer* : même scénario sur `Orbe.app` fabriquée, avec `--orbe-test` et un profil à part
+  *À mesurer* : même scénario sur `Orbx.app` fabriquée, avec `--orbx-test` et un profil à part
   (prévu par `testModeAllowed()`), pour vérifier l'effet de l'archive `asar` et des fusibles.
   *Effort* : S.
 
@@ -270,7 +270,7 @@ plusieurs minutes de chargement identique ; **à mesurer** si la comparaison est
 
 ### Essai : faire naître les vues d'appoint de la coque
 
-Dans un scénario, la coque ouvre elle-même ses vues (`window.open('orbe://app/overlay.html#toast')`)
+Dans un scénario, la coque ouvre elle-même ses vues (`window.open('orbx://app/overlay.html#toast')`)
 et `setWindowOpenHandler` renvoie `{ action: 'allow', overrideBrowserWindowOptions: { webPreferences: { preload: UI_PRELOAD, sandbox: true, contextIsolation: true } }, createWindow: (options) => new WebContentsView(options).webContents }`.
 Résultat mesuré pour six vues (modale, toast, recherche, statut, dépôt, aperçu) :
 
@@ -279,11 +279,11 @@ Résultat mesuré pour six vues (modale, toast, recherche, statut, dépôt, aper
 | Processus supplémentaires | 6 | **0** (même identifiant de processus que la coque) |
 | Mémoire supplémentaire | ≈ 110 Mo | **+11 Mo** (coque : 25 → 36 Mo) |
 | Délai de première ouverture | 75–178 ms | **7–15 ms** |
-| Pont `window.orbe` et messages `overlay` | oui | oui (vérifié : la notification s'affiche) |
+| Pont `window.orbx` et messages `overlay` | oui | oui (vérifié : la notification s'affiche) |
 
 ### Points
 
-- ✅ **MEM-1 — Un seul processus de rendu pour toute l'interface d'Orbe.** *(fait le 9 oct. : vues d’appoint nées de la coque ; quatre vues ouvertes : 10 → 5 processus, 979 → 536 Mo résidents ; première ouverture 125–156 ms → 4–19 ms)*
+- ✅ **MEM-1 — Un seul processus de rendu pour toute l'interface d'Orbx.** *(fait le 9 oct. : vues d’appoint nées de la coque ; quatre vues ouvertes : 10 → 5 processus, 979 → 536 Mo résidents ; première ouverture 125–156 ms → 4–19 ms)*
   *Problème* : chaque vue d'appoint (`makeUiView`) démarre son propre processus : +18 à 25 Mo
   chacune, ≈ 130 Mo pour les sept, et 80–100 ms d'attente à la première ouverture.
   *Changement* : dans `makeUiView(page)`, pour tout sauf la coque, demander à la coque
@@ -298,7 +298,7 @@ Résultat mesuré pour six vues (modale, toast, recherche, statut, dépôt, aper
   retarderait la barre de commande (mesuré : le rendu de la barre coûte 0,04 à 0,4 ms, donc
   sans effet) ; un plantage de ce processus emporte toute l'interface (prévoir de la recréer
   sur `render-process-gone`) ; `window.opener` devient visible entre vues de confiance (même
-  origine `orbe://app`, pas de fuite). La barre latérale flottante peut rester à part ou suivre.
+  origine `orbx://app`, pas de fuite). La barre latérale flottante peut rester à part ou suivre.
   *Effort* : M.
 
 - ➖ **MEM-2 — À défaut de MEM-1 : détruire les vues d'appoint inactives.** *(sans objet depuis MEM-1 : les vues d’appoint ne coûtent plus un processus)*
@@ -387,7 +387,7 @@ Décision du bloqueur elle-même (`adblock.decide`) : **0,25 µs** par requête 
 Lecture :
 
 - sur une page sans cadre, les deux scripts de préchargement coûtent **0,5 ms** : rien à faire ;
-- sur une page à 12 cadres, Orbe ajoute 19 ms (+60 %) : ≈ 8 ms pour exécuter les scripts dans
+- sur une page à 12 cadres, Orbx ajoute 19 ms (+60 %) : ≈ 8 ms pour exécuter les scripts dans
   les sous-cadres, ≈ 10 ms pour le passage de chaque requête par le bloqueur, ≈ 3,5 ms pour
   les scripts eux-mêmes ;
 - le bloqueur coûte ≈ **0,09 ms par requête** (14 ms pour 150), et ce n'est pas la recherche
@@ -473,15 +473,15 @@ navigation active — le double en comptant la copie `.bak` refaite à chaque é
 - ✅ **PERF-1 — Historique dans son propre fichier, en journal d'ajouts.** *(fait le 8 oct. : history.json à part, écrit au plus toutes les 20 s)*
   *Problème* : voir ci-dessus ; l'historique fait 90 % du fichier et change à chaque page.
   *Changement* (`store.js`) :
-  1. `orbe.json` ne contient plus `history` (ni, dans un second temps, `archive`).
+  1. `orbx.json` ne contient plus `history` (ni, dans un second temps, `archive`).
   2. `history.log` : une ligne JSON par événement (`{"u":url,"t":titre,"f":icône,"a":date}`),
      ajoutée par `fs.appendFile` ; `visit()` et `touchHistory()` écrivent une ligne au lieu
      d'appeler `save()`.
   3. Au démarrage, **après** l'affichage de la fenêtre : lire le journal, reconstruire la table
      en mémoire (dernier gagne, compteur de visites cumulé), puis, s'il dépasse 2 fois la taille
      utile, le réécrire compacté (`history.log.tmp` puis `rename`).
-  4. Migration : au premier lancement, si `orbe.json` contient `history`, l'écrire en journal
-     et le retirer ; garder `orbe.json.bak` tel quel.
+  4. Migration : au premier lancement, si `orbx.json` contient `history`, l'écrire en journal
+     et le retirer ; garder `orbx.json.bak` tel quel.
   5. `lib:clear` et « effacer les données » tronquent le journal.
   *Gain mesuré* : blocage par sauvegarde **9–12 ms → 0,2–0,8 ms**, écriture 4,1–6,4 Mo → 0,4 Mo,
   démarrage −17 ms (DEM-4), une visite = 0,03 à 0,1 ms.
@@ -500,9 +500,9 @@ navigation active — le double en comptant la copie `.bak` refaite à chaque é
   Complète PERF-1, ne le remplace pas.
 
 - ✅ **PERF-3 — `write()` : ne pas recopier le fichier à chaque fois.** *(fait le 8 oct.)*
-  *Problème* : chaque écriture fait `writeFile(tmp)` + `copyFile(orbe.json → .bak)` + `rename` :
+  *Problème* : chaque écriture fait `writeFile(tmp)` + `copyFile(orbx.json → .bak)` + `rename` :
   le fichier est écrit **deux fois** (24,5 ms au total pour 4,1 Mo, dont 9,3 de `stringify`).
-  *Changement* : remplacer la copie par `rename(orbe.json → .bak)` puis `rename(tmp → orbe.json)`,
+  *Changement* : remplacer la copie par `rename(orbx.json → .bak)` puis `rename(tmp → orbx.json)`,
   ou ne rafraîchir `.bak` qu'une fois par session. *Gain* : moitié des octets écrits.
   *Risque* : faible (entre les deux `rename`, seul `.bak` existe : `load()` le lit déjà en secours).
   *Effort* : S.
@@ -695,7 +695,7 @@ latérale masquée, la barre flottante (`shell.html#flottant`) est préparée de
 Réserve vide (coque pas encore chargée, rafale) : la vue naît à part, comme avant.
 
 *Sécurité.* Aucune frontière de confiance n'est franchie : toutes ces vues avaient déjà la même
-origine (`orbe://app`), le même script de préchargement, les mêmes droits (`trusted`) et le même
+origine (`orbx://app`), le même script de préchargement, les mêmes droits (`trusted`) et le même
 canal vers le processus principal ; une seule compromise avait déjà tous les droits des autres.
 Les vues qui portent davantage — liste des mots de passe (`pw-overlay.html`), feuilles
 d'autorisation (`sheet.html`), réglages, pages internes ouvertes dans un onglet — ne passent pas
@@ -720,7 +720,7 @@ Lancements alternés, profil d'un onglet, charge 5 ; en ms depuis la création d
 | Espacés de 25 s : coque chargée | 634 (609–681) | 617 (579–740) |
 | Barre de commande, première ouverture | 25 (19–28) | **14** (11–16) |
 | Processus / mémoire résidente au démarrage | 6 / 620 Mo | **5 / 531 Mo** |
-| Les cinq fichiers de la coque servis par `orbe://` | 1,7–2,0 ms | **0,9 ms** |
+| Les cinq fichiers de la coque servis par `orbx://` | 1,7–2,0 ms | **0,9 ms** |
 | `store.load` avec 4 Mo d'historique (8 000 visites) | 12,4 ms (11,2–15,3) | **0,11 ms** |
 
 Lecture honnête : **le temps jusqu'à la coque chargée ne change pas** (les écarts sont dans le
@@ -740,7 +740,7 @@ création de la fenêtre.
 
 Ce que la séance précédente n'avait pas pu mesurer (écran verrouillé : aucune image présentée).
 Deux applications fabriquées par `scripts/build-mac.js` dans des dossiers à part
-(`ORBE_RUNTIME`), l'une depuis l'étiquette `v0.11.1`, l'autre depuis cette branche ; même
+(`ORBX_RUNTIME`), l'une depuis l'étiquette `v0.11.1`, l'autre depuis cette branche ; même
 moteur (Electron 44.7.0), profil d'un onglet, 14 lancements alternés, charge 5,6 à 12,2 ;
 médiane (min–max), en ms depuis la création du processus :
 
@@ -909,11 +909,11 @@ cas ; les deux autres demandent un écran déverrouillé (l'intégration continu
 
 ## 8 ter. Deuxième tour de recherche (branche `recherche-2`, 11 oct.) : de la 0.12 à la 0.15.1
 
-Orbe a beaucoup grandi depuis le premier tour (0.12 → 0.15.1 : lecteurs miniatures, centre de
+Orbx a beaucoup grandi depuis le premier tour (0.12 → 0.15.1 : lecteurs miniatures, centre de
 contrôle du site, survols, thèmes, sons, sauvegardes, recherche de mise à jour, trois scripts de
 préchargement, rendu à clés de la barre latérale…). Le code du processus principal est passé de
 677 Ko à 1 039 Ko (+53 %), celui de la coque de 105 à 150 Ko. Ce tour mesure ce que cette
-croissance a coûté, version contre version, puis ce que coûte Orbe **quand rien ne se passe**.
+croissance a coûté, version contre version, puis ce que coûte Orbx **quand rien ne se passe**.
 
 **Lecture rapide.** Presque tout a tenu : gestes, frappe, navigation, mémoire et disque sont au
 niveau de la 0.12. Deux régressions réelles ont été trouvées, toutes deux corrigées ici :
@@ -944,7 +944,7 @@ cœur, des heures durant), et **une vingtaine de millisecondes** de plus avant l
 **Fenêtres discrètes.** Depuis `13f7c44` les fenêtres d'essai sont invisibles sur macOS
 (`tests/discret.js`). `scripts/mesures.js` charge désormais ce module de la même façon : l'écran
 reste libre pendant les mesures. `--visible 1` les montre (sans jamais prendre le clavier :
-`ORBE_TEST_VISIBLE=inactif`), `--compare-visible 1` alterne les deux. Une application empaquetée
+`ORBX_TEST_VISIBLE=inactif`), `--compare-visible 1` alterne les deux. Une application empaquetée
 (`--app`) ne charge pas le module et reste visible.
 
 Ce que la transparence change (démarrage, branche, 5 tours en alternance) :
@@ -1030,7 +1030,7 @@ Toutes les minuteries périodiques du code (recherche de `setInterval`), et ce q
 
 Rien à reprendre de ce côté : aucune minuterie ne tourne sans raison. **Le coût au repos venait
 des animations CSS**, pas des minuteries. Relevé en coupant chaque animation tour à tour
-(`ORBE_BENCH_CSS`, lecteur miniature présent, 10 s, deux tours, charge 4–5) :
+(`ORBX_BENCH_CSS`, lecteur miniature présent, 10 s, deux tours, charge 4–5) :
 
 | Lecteur miniature (`main`) | graphique (ms/s) | coque (ms/s) | réveils/s | animations en cours |
 | --- | --- | --- | --- | --- |
@@ -1047,7 +1047,7 @@ Les deux animations du lecteur duraient autant que la lecture : la musique d'une
 travail coûtait un cinquième de cœur en continu, écran allumé.
 
 **Fenêtre recouverte.** Essai court, fenêtres visibles, sans le drapeau qui empêche Chromium de
-ralentir (`--naturel 1 --visible 1`, `main`, 8 s) : recouverte par une autre fenêtre **d'Orbe**,
+ralentir (`--naturel 1 --visible 1`, `main`, 8 s) : recouverte par une autre fenêtre **d'Orbx**,
 la coque reste « visible » et le coût ne baisse pas (169 → 173 ms/s graphique). Le cas d'une
 fenêtre recouverte par **une autre application** n'a pas été mesuré (il aurait fallu occuper
 l'écran) ; le constat de 8 bis (minuteries ralenties à une par seconde) laisse penser que
@@ -1121,7 +1121,7 @@ Classés par gain ressenti rapporté au risque.
   rangée des favoris (ou la ligne d'adresse pendant une capture) reste à pleine opacité ;
   (c) estomper les éléments un à un plutôt que le groupe : **53** et 29 — presque invisible, mais
   pas identique (une tuile active laisse voir son fond à travers l'icône). Recommandé : (a), qui
-  règle aussi ENER-3 pour le cas le plus long (Orbe derrière une autre application). Effort S.
+  règle aussi ENER-3 pour le cas le plus long (Orbx derrière une autre application). Effort S.
 - ⬜ **DEM-11 — Charger au besoin les modules que le lancement n'utilise pas.**
   Après DEM-10 il reste 20 à 28 ms de `require` avant « prêt » (13–21 en 0.12). `sessions.js`
   en tire 5 à 9 : `passwords` 1,1–2,1 ms, `ext-api` 1,3–1,8, `permissions` 0,7–1,4, `extensions`
@@ -1164,7 +1164,7 @@ Classés par gain ressenti rapporté au risque.
   à cette occasion, a été écarté après mesure.
   Risque : faible (ordre d'exécution inchangé). Essai : « coque : tous ses scripts sont différés… ».
 - ➖ **DEM-14 — Chaque page de l'interface demande un `favicon.ico` qui n'existe pas ; les vues chargent leurs scripts un par un.** Écarté après mesure (13 oct., `mesures.js modale`, arbre d'avant contre arbre modifié, tours en alternance), **rien à gagner** :
-  (a) répondre tout de suite à `orbe://app/favicon.ico` (réponse vide, sans passer par
+  (a) répondre tout de suite à `orbx://app/favicon.ico` (réponse vide, sans passer par
   `net.fetch` d'un fichier absent) : coque chargée → vue modale prête 111 (96–167) → 116
   (99–223) ms, « vue modale prête » 645 → 641 ms (13 tours, charge 13 à 18) : dans le bruit ;
   la demande part après `load`, hors de tout chemin d'affichage.
@@ -1204,7 +1204,7 @@ Deux points ouverts de 8 ter, repris par la mesure. Aucun changement dans l'appl
 causes sont trouvées et chiffrées, les suites sont des décisions (ENER-7) ou sans gain (DEM-12).
 Outils ajoutés : `mesures.js repos --variante <nom>…` (une animation posée dans la coque, une
 chose changée à la fois, variantes en alternance ; table `VARIANTES` de `tests/mesures.js`),
-`ORBE_BENCH_TRACE=<fichier>` (trace du compositeur, 3 s) et la mesure `modale`.
+`ORBX_BENCH_TRACE=<fichier>` (trace du compositeur, 3 s) et la mesure `modale`.
 
 **Lecture des chiffres.** Ce sont des temps de processeur (ms de calcul par seconde écoulée),
 pas des durées. Ils dépendent de la charge autrement qu'on l'attend : le même égaliseur coûte
@@ -1288,7 +1288,7 @@ Conséquences :
 
 - Le cas le plus long des animations sans fin est aussi le plus cher : une musique dans un
   favori ou une visioconférence **pendant qu'on travaille dans une autre application**, donc
-  fenêtre d'Orbe sans le clavier : 11 à 19 % d'un cœur dans le processus graphique, plus 2 à 3 %
+  fenêtre d'Orbx sans le clavier : 11 à 19 % d'un cœur dans le processus graphique, plus 2 à 3 %
   dans la coque, tant que dure l'état.
 - Les +45 ms/s d'ENER-3 étaient sous-estimés (élément d'essai hors de la barre).
 - Les chiffres d'ENER-1 et d'ENER-2 ont tous été pris fenêtre sans le clavier, avant comme
@@ -1485,7 +1485,7 @@ quand une inertie suit ; les constantes sont regroupées dans `PAGER` (`shell.js
 
 - ✅ **ANIM-4 — Courbes de ressort pour tout ce qui est en CSS.** *(fait le 8 oct., branche animations)*
   *Constat* : toute l'interface utilise une seule courbe, `--ease: cubic-bezier(0.33, 1, 0.68, 1)`
-  (décélération simple, sans rebond). Chromium accepte `linear()` depuis la version 113 (Orbe
+  (décélération simple, sans rebond). Chromium accepte `linear()` depuis la version 113 (Orbx
   est en 152), ce qui permet d'écrire un vrai ressort en CSS.
   *Changement* : ajouter dans `base.css` deux variables, calculées une fois par un petit script
   (oscillateur amorti échantillonné en 30 à 40 points) :
@@ -1665,7 +1665,7 @@ Mesuré, et à laisser tel quel :
 - les onglets restaurés chargés seulement quand on les ouvre (un seul processus d'onglet au démarrage, quel que soit le nombre d'onglets) ;
 - la liste du bloqueur chargée 1,2 s après le démarrage (6 ms) et la décision à 0,25 µs ;
 - les scripts de préchargement sur les pages sans cadre (0,5 ms) ;
-- les `require` du processus principal (15 ms pour tout Orbe en 0.12 ; 20 à 28 ms en 0.15.1 après DEM-10, voir 8 ter) ;
+- les `require` du processus principal (15 ms pour tout Orbx en 0.12 ; 20 à 28 ms en 0.15.1 après DEM-10, voir 8 ter) ;
 - les minuteries périodiques : aucune ne tourne sans raison (tableau en 8 ter) ;
 - l'état envoyé à la coque (12 Ko et 0,12 ms à 200 onglets, aucun envoi au repos).
 
@@ -1702,7 +1702,7 @@ PERF-22 (état partiel), DESIGN-4 (sons), MEM-6 (limite de processus), DEM-8 (me
 
 ## 13. Sources
 
-Relevés locaux : `~/.orbe-dev/node_modules/electron/electron.d.ts` (44.7.0) pour toutes les
+Relevés locaux : `~/.orbx-dev/node_modules/electron/electron.d.ts` (44.7.0) pour toutes les
 interfaces citées (`View.setBounds` et `BoundsOptions`, `setBackgroundBlur`, `vibrancy`,
 `visualEffectState`, `input-event`, `swipe`, `rotate-gesture`, `getAnimationSettings`,
 `v8CacheOptions`, `registerPreloadScript`).

@@ -1,18 +1,18 @@
 #!/usr/bin/env node
-// Fabrique Orbe pour Windows, sans dépendance : copie le moteur Electron, le
-// renomme, y place le code d'Orbe, coupe les fusibles, inscrit l'icône et les
-// informations de version dans Orbe.exe, puis en fait une archive zip.
+// Fabrique Orbx pour Windows, sans dépendance : copie le moteur Electron, le
+// renomme, y place le code d'Orbx, coupe les fusibles, inscrit l'icône et les
+// informations de version dans Orbx.exe, puis en fait une archive zip.
 //
-//   node scripts/build-win.js          -> <runtime>/dist/Orbe/Orbe.exe
-//                                         <runtime>/dist/Orbe-<version>-windows-x64.zip
-//   node scripts/build-win.js --icon   -> régénère d'abord assets/orbe.ico
+//   node scripts/build-win.js          -> <runtime>/dist/Orbx/Orbx.exe
+//                                         <runtime>/dist/Orbx-<version>-windows-x64.zip
+//   node scripts/build-win.js --icon   -> régénère d'abord assets/orbx.ico
 //   node scripts/build-win.js --fuses  -> relit seulement les fusibles de l'application fabriquée
 //
 // À lancer sous Windows (le moteur installé doit être celui de Windows).
-// ORBE_WIN_DIST=<dossier> : moteur Windows déjà décompressé, pour fabriquer
+// ORBX_WIN_DIST=<dossier> : moteur Windows déjà décompressé, pour fabriquer
 // depuis un autre système (l'archive « electron-v…-win32-x64.zip »).
 //
-// L'archive contient un dossier « Orbe » : Orbe.exe et LISEZMOI.txt. Rien
+// L'archive contient un dossier « Orbx » : Orbx.exe et LISEZMOI.txt. Rien
 // n'est signé : Windows SmartScreen prévient au premier lancement.
 const { execFileSync } = require('child_process');
 const fs = require('fs');
@@ -25,13 +25,13 @@ const peResources = require('./pe-resources');
 const pkg = require('../package.json');
 const root = dev.root;
 const args = process.argv.slice(2);
-const arch = process.env.ORBE_WIN_ARCH || (process.arch === 'arm64' && process.platform === 'win32' ? 'arm64' : 'x64');
-const name = 'Orbe';
-const zipName = `Orbe-${pkg.version}-windows-${arch}.zip`;
+const arch = process.env.ORBX_WIN_ARCH || (process.arch === 'arm64' && process.platform === 'win32' ? 'arm64' : 'x64');
+const name = 'Orbx';
+const zipName = `Orbx-${pkg.version}-windows-${arch}.zip`;
 const out = path.join(dev.runtime, 'dist');
 const appDir = path.join(out, name);
-const exe = path.join(appDir, 'Orbe.exe');
-const ico = path.join(root, 'assets', 'orbe.ico');
+const exe = path.join(appDir, 'Orbx.exe');
+const ico = path.join(root, 'assets', 'orbx.ico');
 
 if (args.includes('--fuses')) {
   // Relecture seule de l'application déjà fabriquée.
@@ -44,7 +44,7 @@ if (args.includes('--icon') || !fs.existsSync(ico)) {
   console.log('Icône régénérée.');
 }
 
-let dist = process.env.ORBE_WIN_DIST;
+let dist = process.env.ORBX_WIN_DIST;
 if (!dist) {
   const cli = dev.ensure();
   dist = path.join(dev.runtime, 'node_modules', 'electron', 'dist');
@@ -54,7 +54,7 @@ if (!dist) {
   }
 }
 if (!fs.existsSync(path.join(dist, 'electron.exe'))) {
-  console.error(`Moteur Windows introuvable dans ${dist}. Ce script se lance sous Windows (ou avec ORBE_WIN_DIST).`);
+  console.error(`Moteur Windows introuvable dans ${dist}. Ce script se lance sous Windows (ou avec ORBX_WIN_DIST).`);
   process.exit(1);
 }
 
@@ -64,32 +64,32 @@ fs.mkdirSync(out, { recursive: true });
 fs.cpSync(dist, appDir, { recursive: true });
 fs.renameSync(path.join(appDir, 'electron.exe'), exe);
 
-console.log('Installation du code d’Orbe…');
+console.log('Installation du code d’Orbx…');
 const resources = path.join(appDir, 'resources');
 fs.rmSync(path.join(resources, 'default_app.asar'), { force: true });
 const target = path.join(resources, 'app');
 fs.mkdirSync(path.join(target, 'assets'), { recursive: true });
 fs.cpSync(path.join(root, 'src'), path.join(target, 'src'), { recursive: true });
 for (const f of ['package.json', 'LICENSE']) fs.copyFileSync(path.join(root, f), path.join(target, f));
-for (const f of ['blocklist.txt', 'orbe.ico']) fs.copyFileSync(path.join(root, 'assets', f), path.join(target, 'assets', f));
+for (const f of ['blocklist.txt', 'orbx.ico']) fs.copyFileSync(path.join(root, 'assets', f), path.join(target, 'assets', f));
 
-// Fusibles d'Electron (scripts/fuses.js) : sous Windows, la table est dans Orbe.exe.
+// Fusibles d'Electron (scripts/fuses.js) : sous Windows, la table est dans Orbx.exe.
 cutFuses(exe);
 
-// Icône et informations de version inscrites dans Orbe.exe (scripts/pe-resources.js) :
+// Icône et informations de version inscrites dans Orbx.exe (scripts/pe-resources.js) :
 // ce que montrent l'Explorateur, la barre des tâches et les propriétés du fichier.
 console.log('Icône et informations de version…');
 peResources.edit(exe, {
   icon: ico,
   decodePng,
   version: {
-    ProductName: 'Orbe',
-    FileDescription: 'Orbe',
-    CompanyName: 'PIXEWORK',
+    ProductName: 'Orbx',
+    FileDescription: 'Orbx',
+    CompanyName: 'Laurent Marques',
     FileVersion: pkg.version,
     ProductVersion: pkg.version,
-    OriginalFilename: 'Orbe.exe',
-    InternalName: 'Orbe',
+    OriginalFilename: 'Orbx.exe',
+    InternalName: 'Orbx',
     LegalCopyright: 'Logiciel libre — licence MIT',
     // Marque posée par Electron pour l'installateur Squirrel, sans objet ici.
     SquirrelAwareVersion: null,

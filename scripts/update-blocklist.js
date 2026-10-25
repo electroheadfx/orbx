@@ -4,7 +4,7 @@
 //   node scripts/update-blocklist.js            écrit assets/blocklist.txt
 //   node scripts/update-blocklist.js --dry      affiche le bilan sans écrire
 //
-// Orbe est sous licence MIT : seules des listes dont la licence autorise la
+// Orbx est sous licence MIT : seules des listes dont la licence autorise la
 // redistribution, y compris commerciale, sont embarquées. Écartées exprès :
 //   - EasyList / EasyPrivacy, AdGuard, OISD, HaGeZi : GPLv3 ou CC BY-SA ;
 //   - le fichier unifié de StevenBlack : son dépôt est MIT, mais il agrège des
@@ -103,13 +103,13 @@ async function main() {
   if (kept.length < MIN_DOMAINS) throw new Error(`seulement ${kept.length} domaines : abandon, fichier inchangé`);
 
   const header = [
-    '# Orbe — liste de blocage (publicités et traqueurs)',
+    '# Orbx — liste de blocage (publicités et traqueurs)',
     '# Fichier généré par scripts/update-blocklist.js : ne pas modifier à la main.',
     `# Mise à jour : ${new Date().toISOString().slice(0, 10)} — ${kept.length} domaines`,
     '#',
     '# Un domaine par ligne ; un domaine listé couvre aussi ses sous-domaines.',
     '#',
-    '# Ces données ne sont PAS sous la licence MIT du code d\'Orbe : chaque source',
+    '# Ces données ne sont PAS sous la licence MIT du code d\'Orbx : chaque source',
     '# garde sa licence, citée ci-dessous. Toutes autorisent la redistribution et',
     '# la modification, y compris commerciales, à condition de conserver ces',
     '# mentions (CC BY 3.0 : https://creativecommons.org/licenses/by/3.0/ ;',

@@ -6,7 +6,7 @@ param([int]$ProcessId, [string]$Out = '')
 $ErrorActionPreference = 'Continue'
 
 Write-Host "--- Processus"
-Get-CimInstance Win32_Process | Where-Object { $_.Name -match 'electron|Orbe|WerFault|consent|rundll32|dllhost' } | ForEach-Object {
+Get-CimInstance Win32_Process | Where-Object { $_.Name -match 'electron|Orbx|WerFault|consent|rundll32|dllhost' } | ForEach-Object {
   $cmd = ($_.CommandLine -replace '\s+', ' ')
   if ($cmd.Length -gt 170) { $cmd = $cmd.Substring(0, 170) }
   "{0,6} (parent {1,6}) {2} {3}" -f $_.ProcessId, $_.ParentProcessId, $_.Name, $cmd
@@ -22,7 +22,7 @@ try {
 Write-Host "--- Fenêtres de premier niveau visibles (toutes applications)"
 Add-Type @"
 using System; using System.Text; using System.Runtime.InteropServices; using System.Collections.Generic;
-public class OrbeWin {
+public class OrbxWin {
   public delegate bool EnumProc(IntPtr h, IntPtr l);
   [DllImport("user32.dll")] public static extern bool EnumWindows(EnumProc cb, IntPtr l);
   [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
@@ -50,7 +50,7 @@ public class OrbeWin {
   }
 }
 "@
-[OrbeWin]::List() | ForEach-Object { $_ }
+[OrbxWin]::List() | ForEach-Object { $_ }
 "(classe #32770 = boîte de dialogue du système)"
 
 if ($Out) {
@@ -68,15 +68,15 @@ if ($Out) {
 
 $cdb = @("${env:ProgramFiles(x86)}\Windows Kits\10\Debuggers\x64\cdb.exe", "${env:ProgramFiles}\Windows Kits\10\Debuggers\x64\cdb.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
 if (-not $cdb) { Write-Host "--- Piles d'appels : débogueur (cdb.exe) absent de cette machine"; exit 0 }
-$sym = Join-Path $env:TEMP 'orbe-symboles'
+$sym = Join-Path $env:TEMP 'orbx-symboles'
 function Stacks([string]$path, [int]$seconds, [string]$title) {
   Write-Host "--- $title"
-  $log = Join-Path $env:TEMP ("orbe-cdb-" + [guid]::NewGuid().ToString('N') + ".txt")
+  $log = Join-Path $env:TEMP ("orbx-cdb-" + [guid]::NewGuid().ToString('N') + ".txt")
   $proc = Start-Process -FilePath $cdb -ArgumentList @('-pv', '-p', "$ProcessId", '-y', "`"$path`"", '-c', '"~0 k 70; ~* k 14; qd"') -RedirectStandardOutput $log -NoNewWindow -PassThru
   if (-not $proc.WaitForExit($seconds * 1000)) { try { $proc.Kill() } catch {}; Write-Host "(débogueur arrêté après $seconds s)" }
   if (Test-Path $log) { Get-Content $log | Where-Object { $_ -notmatch '^(ModLoad|\*\*\* (WARNING|ERROR): (Unable to verify|Symbol file could not be found))' } | Select-Object -First 420 }
 }
 Stacks "srv*$sym*https://msdl.microsoft.com/download/symbols" 120 "Piles d'appels (symboles de Windows seulement ; fil 0 = fil principal)"
-if ($env:ORBE_DIAG_SYMBOLS -eq '1') {
+if ($env:ORBX_DIAG_SYMBOLS -eq '1') {
   Stacks "srv*$sym*https://msdl.microsoft.com/download/symbols;srv*$sym*https://symbols.electronjs.org" 420 "Piles d'appels avec les symboles d'Electron (téléchargement long)"
 }

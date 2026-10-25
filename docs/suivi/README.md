@@ -6,7 +6,7 @@ le point ouvert suivant.
 
 | Fichier | Contenu |
 | --- | --- |
-| `arc-inventaire.md` | Tout ce qu'Arc sait faire (fonctions, gestes, animations, détails visuels et sonores), point par point, avec l'état dans Orbe |
-| `ameliorations.md` | Pistes pour rendre Orbe plus rapide, plus fluide et plus agréable (performances, animations, design) |
+| `arc-inventaire.md` | Tout ce qu'Arc sait faire (fonctions, gestes, animations, détails visuels et sonores), point par point, avec l'état dans Orbx |
+| `ameliorations.md` | Pistes pour rendre Orbx plus rapide, plus fluide et plus agréable (performances, animations, design) |
 
 États : ✅ fait et vérifié · 🟡 partiel ou non vérifié · ⬜ à faire · ➖ écarté (avec la raison).

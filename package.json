@@ -1,12 +1,12 @@
 {
-  "name": "orbe",
-  "productName": "Orbe",
+  "name": "orbx",
+  "productName": "Orbx",
   "version": "0.15.5",
-  "description": "Orbe — un navigateur Chromium à barre latérale, en français, inspiré d'Arc.",
+  "description": "Orbx — un navigateur Chromium à barre latérale, en français, inspiré d'Arc.",
   "main": "src/main/main.js",
   "license": "MIT",
-  "author": "Amadou Ba (PIXEWORK)",
-  "repository": "github:amadoubaui/orbe",
+  "author": "Laurent Marques",
+  "repository": "github:electroheadfx/orbx",
   "scripts": {
     "start": "node scripts/dev.js",
     "test": "node scripts/dev.js --selftest",
@@ -15,7 +15,7 @@
     "build": "node scripts/build-mac.js",
     "build:win": "node scripts/build-win.js"
   },
-  "orbe": {
+  "orbx": {
     "electron": "44.7.0",
     "electronDrm": "44.5.1+wvcus"
   }

@@ -1,17 +1,17 @@
-# Orbe
+# Orbx
 
 **Un navigateur à barre latérale, en français, bâti sur Chromium.**
 
-Orbe reprend l'organisation et les raccourcis clavier du navigateur Arc — barre
+Orbx reprend l'organisation et les raccourcis clavier du navigateur Arc — barre
 latérale, Espaces, onglets épinglés, barre de commande, vue scindée — avec une
 interface entièrement en français (anglais disponible dans les réglages).
 
-> Projet libre et indépendant, sans lien avec The Browser Company. Orbe ne
+> Projet libre et indépendant, sans lien avec The Browser Company. Orbx ne
 > contient aucun code ni aucune ressource d'Arc : tout est réécrit.
 
 État : **version 0.15, macOS et Windows**. La version Windows est validée en intégration continue, pas encore essayée sur une machine réelle : voir [docs/windows.md](docs/windows.md).
 
-![Orbe : barre latérale, favoris, onglets épinglés et barre de commande](docs/captures/barre-de-commande.png)
+![Orbx : barre latérale, favoris, onglets épinglés et barre de commande](docs/captures/barre-de-commande.png)
 
 | Vue scindée | Thème clair |
 | --- | --- |
@@ -50,8 +50,8 @@ interface entièrement en français (anglais disponible dans les réglages).
   ⇧clic, s'ouvre par-dessus la page ; ⌘O en fait un onglet, Échap le ferme.
 - **Profils** : cookies, connexions et favoris séparés, un profil par Espace.
 - **Import depuis Arc** : Espaces, épinglés, dossiers, favoris et profils
-  (menu Orbe → Importer depuis Arc…). Relancée plus tard, la même commande met
-  Orbe à jour d'après Arc (ordre, noms, dossiers, onglets ajoutés) sans rien
+  (menu Orbx → Importer depuis Arc…). Relancée plus tard, la même commande met
+  Orbx à jour d'après Arc (ordre, noms, dossiers, onglets ajoutés) sans rien
   supprimer, après une sauvegarde.
 - **Vidéo et son** : la vidéo en cours passe en image dans l'image quand tu
   changes d'onglet ; un lecteur miniature dans la barre latérale pilote le son.
@@ -107,19 +107,19 @@ Identiques à ceux d'Arc. La liste complète est dans l'application :
 | Nouveau tableau / capturer vers un tableau | ⌃⇧E / ⌥⇧⌘2 |
 | Réglages | ⌘, |
 
-## Lancer Orbe depuis les sources
+## Lancer Orbx depuis les sources
 
 Il faut [Node.js](https://nodejs.org) 20 ou plus récent.
 
 ```sh
-git clone https://github.com/amadoubaui/orbe.git
-cd orbe
+git clone https://github.com/electroheadfx/orbx.git
+cd orbx
 npm start        # lance le navigateur
 npm test         # tests de bout en bout (plus de 1 500 vérifications)
 npm run test:ui  # tests d'interface Playwright, souris et clavier réels (504 vérifications)
 npm run test:ext # couche d'API des extensions, dans le vrai navigateur (175 vérifications)
 # tests au clavier réel (prennent le clavier) : voir tests/natif/
-npm run build    # fabrique ~/.orbe-dev/dist/Orbe.app (-- --install pour /Applications)
+npm run build    # fabrique ~/.orbx-dev/dist/Orbx.app (-- --install pour /Applications)
 ```
 
 Les essais se surveillent eux-mêmes : aucune boîte de dialogue native ne peut
@@ -131,15 +131,15 @@ besoin d'images ou de son sont ignorées une par une, avec la raison.
 
 Sur macOS, les fenêtres d'essai sont invisibles : transparentes, insensibles à
 la souris, sans clavier ni icône dans le Dock, pour qu'on puisse continuer à
-travailler pendant les tests (`tests/discret.js`). `ORBE_TEST_VISIBLE=1` les
+travailler pendant les tests (`tests/discret.js`). `ORBX_TEST_VISIBLE=1` les
 montre.
 
-Vidéos protégées (Widevine) : `ORBE_DRM=1 npm start` utilise un moteur qui les
+Vidéos protégées (Widevine) : `ORBX_DRM=1 npm start` utilise un moteur qui les
 lit ; voir [docs/etude-extensions-et-distribution.md](docs/etude-extensions-et-distribution.md).
 
-Au premier lancement, le moteur (Electron) est téléchargé dans `~/.orbe-dev`,
+Au premier lancement, le moteur (Electron) est téléchargé dans `~/.orbx-dev`,
 en dehors du projet. Les données du navigateur sont dans
-`~/Library/Application Support/Orbe`.
+`~/Library/Application Support/Orbx`.
 
 ## Organisation du code
 
@@ -160,21 +160,10 @@ simples, pour un démarrage rapide et une interface fluide.
 Voir [docs/feuille-de-route.md](docs/feuille-de-route.md). Les prochains
 chantiers : extensions Chrome, synchronisation, puis la version Windows.
 
-## Du même auteur
-
-- [**Atoll**](https://github.com/amadoubaui/atoll) : le navigateur qui démarre
-  comme un système d'exploitation. Bureau, Dock, dossiers, fenêtres, espaces et
-  Mission Control ; chaque site devient une application. [atoll.pixework.pro](https://atoll.pixework.pro)
-- [**KoraCut**](https://github.com/amadoubaui/koracut) : studio multimédia libre
-  (montage, étalonnage, audio, motion design) pilotable par des agents IA.
-
-## Soutenir le projet
-
-Orbe est gratuit et libre. Si tu veux aider à financer les mises à jour et les
-nouvelles fonctions : [buymeacoffee.com/amadouba](https://buymeacoffee.com/amadouba).
-
 ## Licence
 
 Le code est sous licence [MIT](LICENSE). La liste de blocage
 (`assets/blocklist.txt`) réunit des listes publiques qui gardent chacune leur
 licence (MIT et CC BY 3.0), rappelée en tête du fichier.
+
+Projet inspiré d'[Orbe](https://github.com/amadoubaui/orbe), le navigateur d'Amadou Ba.

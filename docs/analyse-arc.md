@@ -1,12 +1,12 @@
 # Analyse d'Arc
 
 Relevé fait sur Arc 1.166 (macOS) : la barre de menus a été lue par
-l'accessibilité du système, avec chaque raccourci. C'est la référence qu'Orbe
-suit. Colonne « Orbe » : ✅ fait, 🟡 partiel, ⏳ à venir.
+l'accessibilité du système, avec chaque raccourci. C'est la référence qu'Orbx
+suit. Colonne « Orbx » : ✅ fait, 🟡 partiel, ⏳ à venir.
 
 ## Fichier
 
-| Arc | Raccourci | Orbe |
+| Arc | Raccourci | Orbx |
 | --- | --- | --- |
 | New Tab… | ⌘T | ✅ Nouvel onglet… |
 | New Window | ⌘N | ✅ Nouvelle fenêtre |
@@ -26,7 +26,7 @@ suit. Colonne « Orbe » : ✅ fait, 🟡 partiel, ⏳ à venir.
 
 ## Édition
 
-| Arc | Raccourci | Orbe |
+| Arc | Raccourci | Orbx |
 | --- | --- | --- |
 | Copy URL | ⇧⌘C | ✅ |
 | Copy URL as Markdown | ⌥⇧⌘C | ✅ |
@@ -36,7 +36,7 @@ suit. Colonne « Orbe » : ✅ fait, 🟡 partiel, ⏳ à venir.
 
 ## Présentation
 
-| Arc | Raccourci | Orbe |
+| Arc | Raccourci | Orbx |
 | --- | --- | --- |
 | Appearance (Automatic, Light, Dark) | — | ✅ |
 | Hide Sidebar | ⌘S | ✅ avec réapparition au survol |
@@ -57,7 +57,7 @@ suit. Colonne « Orbe » : ✅ fait, 🟡 partiel, ⏳ à venir.
 
 ## Espaces
 
-| Arc | Raccourci | Orbe |
+| Arc | Raccourci | Orbx |
 | --- | --- | --- |
 | New Space… | — | ✅ |
 | Edit Theme… | — | ✅ couleur et icône |
@@ -68,7 +68,7 @@ suit. Colonne « Orbe » : ✅ fait, 🟡 partiel, ⏳ à venir.
 
 ## Onglets
 
-| Arc | Raccourci | Orbe |
+| Arc | Raccourci | Orbx |
 | --- | --- | --- |
 | Pin / Unpin Tab | ⌘D | ✅ |
 | New Folder… | — | ✅ |
@@ -79,7 +79,7 @@ suit. Colonne « Orbe » : ✅ fait, 🟡 partiel, ⏳ à venir.
 
 ## Archive et fenêtre
 
-| Arc | Raccourci | Orbe |
+| Arc | Raccourci | Orbx |
 | --- | --- | --- |
 | Go Back / Forward | ⌘[ / ⌘] | ✅ |
 | View History | ⌘Y | ✅ |
@@ -101,7 +101,7 @@ suit. Colonne « Orbe » : ✅ fait, 🟡 partiel, ⏳ à venir.
 
 ## Dimensions relevées sur Arc (capture à la résolution native, octobre 2026)
 
-| Élément | Arc | Orbe |
+| Élément | Arc | Orbx |
 | --- | --- | --- |
 | Largeur de la barre latérale (réglage de l'utilisateur) | 228 pt | réglable, 250 pt par défaut |
 | Marge intérieure de la barre | 8 pt | 8 pt |

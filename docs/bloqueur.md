@@ -27,7 +27,7 @@ ses.webRequest.onBeforeRequest(adblock.FILTER, (details, callback) => {
 });
 ```
 
-Dans Orbe, le branchement est fait ainsi :
+Dans Orbx, le branchement est fait ainsi :
 
 - `sessions.js` appelle `adblock.attach(ses)` pour chaque profil et pour la
   navigation privée ;

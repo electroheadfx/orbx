@@ -1,10 +1,10 @@
-# Orbe — liste de blocage (publicités et traqueurs)
+# Orbx — liste de blocage (publicités et traqueurs)
 # Fichier généré par scripts/update-blocklist.js : ne pas modifier à la main.
 # Mise à jour : 2026-10-08 — 24017 domaines
 #
 # Un domaine par ligne ; un domaine listé couvre aussi ses sous-domaines.
 #
-# Ces données ne sont PAS sous la licence MIT du code d'Orbe : chaque source
+# Ces données ne sont PAS sous la licence MIT du code d'Orbx : chaque source
 # garde sa licence, citée ci-dessous. Toutes autorisent la redistribution et
 # la modification, y compris commerciales, à condition de conserver ces
 # mentions (CC BY 3.0 : https://creativecommons.org/licenses/by/3.0/ ;

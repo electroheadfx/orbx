@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Fabrique les sons d'Orbe (originaux, synthétisés ici : aucun fichier tiers,
+// Fabrique les sons d'Orbx (originaux, synthétisés ici : aucun fichier tiers,
 // aucun son repris d'une autre application).
 //   node scripts/make-sounds.js  -> src/renderer/sons/*.wav
 // Chaque son est court (moins d'une demi-seconde), discret, et mixé comme les

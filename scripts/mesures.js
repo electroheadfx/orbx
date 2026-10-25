@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Mesures de vitesse et de mémoire d'Orbe (voir docs/suivi/ameliorations.md).
-//   node scripts/mesures.js <mesure> [--tours 8] [--variante <nom>]… [--arbre <dossier>]… [--app <Orbe.app>] [--avec "--drapeau=…"] [--historique 8500] [--onglets 300] [--espaces 13] [--profils 10] [--pause 0] [--naturel 1] [--visible 1]
+// Mesures de vitesse et de mémoire d'Orbx (voir docs/suivi/ameliorations.md).
+//   node scripts/mesures.js <mesure> [--tours 8] [--variante <nom>]… [--arbre <dossier>]… [--app <Orbx.app>] [--avec "--drapeau=…"] [--historique 8500] [--onglets 300] [--espaces 13] [--profils 10] [--pause 0] [--naturel 1] [--visible 1]
 // Mesures : demarrage, modale, coque, memoire, navigation, commande, etat, voisins, gestes, repos (tests/mesures.js).
 // --espaces / --profils : les onglets du profil sont répartis dans autant d'Espaces et de profils
 // (forme d'un vrai profil ancien). --naturel 1 : sans le drapeau qui empêche Chromium de mettre
@@ -51,7 +51,7 @@ for (const flags of opt('avec', [])) {
 const variants = opt('variante', []);
 if (variants.length) {
   const bases = targets.splice(0);
-  for (const t of bases) for (const v of variants) targets.push({ ...t, name: (bases.length > 1 ? t.name + ' ' : '') + v, env: { ORBE_BENCH_VARIANTE: v, ORBE_BENCH_PERIODES: 'variante' } });
+  for (const t of bases) for (const v of variants) targets.push({ ...t, name: (bases.length > 1 ? t.name + ' ' : '') + v, env: { ORBX_BENCH_VARIANTE: v, ORBX_BENCH_PERIODES: 'variante' } });
 }
 
 function wav(seconds = 60) {
@@ -105,13 +105,13 @@ const SWITCHES = natural ? [] : ['--disable-backgrounding-occluded-windows'];
 
 function launch(target, env) {
   const scenario = path.join(root, 'tests', 'mesures.js');
-  const base = { ...process.env, ORBE_SCENARIO: scenario, ...env, ...(target.env || {}) };
-  if (target.visible) base.ORBE_TEST_VISIBLE = 'inactif'; else delete base.ORBE_TEST_VISIBLE;
-  delete base.ORBE_UI_FOCUS;
+  const base = { ...process.env, ORBX_SCENARIO: scenario, ...env, ...(target.env || {}) };
+  if (target.visible) base.ORBX_TEST_VISIBLE = 'inactif'; else delete base.ORBX_TEST_VISIBLE;
+  delete base.ORBX_UI_FOCUS;
   // Le module vient de cet arbre-ci : les versions anciennes mesurées ne l'ont pas.
   const discreet = process.platform === 'darwin' && !process.env.CI ? ['-r', path.join(root, 'tests', 'discret.js')] : [];
   const child = target.app
-    ? spawn(path.join(target.app, 'Contents', 'MacOS', 'Orbe'), ['--selftest', '--orbe-test', ...SWITCHES, ...(target.extra || [])], { env: base })
+    ? spawn(path.join(target.app, 'Contents', 'MacOS', 'Orbx'), ['--selftest', '--orbx-test', ...SWITCHES, ...(target.extra || [])], { env: base })
     : spawn(process.execPath, [ensure(), ...discreet, target.dir, '--selftest', ...SWITCHES, ...(target.extra || [])], { env: base });
   let text = '';
   child.stdout.on('data', (d) => { text += d; });
@@ -142,16 +142,16 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 (async () => {
   const server = await serve();
   const base = `http://127.0.0.1:${server.address().port}`;
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-mesures-'));
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-mesures-'));
   for (const t of targets) {
     t.profile = path.join(tmp, t.name + '-' + targets.indexOf(t));
     t.runs = [];
-    await launch(t, { ORBE_BENCH: 'prepare', ORBE_BENCH_BASE: base, ORBE_USER_DATA: t.profile, ORBE_BENCH_HISTORY: String(history), ORBE_BENCH_TABS: String(tabs), ORBE_BENCH_SPACES: String(spaces), ORBE_BENCH_PROFILES: String(profiles) });
+    await launch(t, { ORBX_BENCH: 'prepare', ORBX_BENCH_BASE: base, ORBX_USER_DATA: t.profile, ORBX_BENCH_HISTORY: String(history), ORBX_BENCH_TABS: String(tabs), ORBX_BENCH_SPACES: String(spaces), ORBX_BENCH_PROFILES: String(profiles) });
   }
   for (let i = 0; i < rounds; i++) {
     for (const t of targets) {
       if (pause) await sleep(pause * 1000);
-      const r = await launch(t, { ORBE_BENCH: bench, ORBE_BENCH_BASE: base, ORBE_USER_DATA: t.profile });
+      const r = await launch(t, { ORBX_BENCH: bench, ORBX_BENCH_BASE: base, ORBX_USER_DATA: t.profile });
       if (r) t.runs.push(flatten(r));
     }
   }

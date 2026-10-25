@@ -87,7 +87,7 @@ Fiche : `{ id, name, version, description, permissions, hostPermissions, icon,
 dir, enabled, manifestVersion }`. `icon` est un chemin absolu ou `''`.
 `hostPermissions` réunit `host_permissions`, les motifs d'URL de `permissions`
 (Manifest V2) et les `matches` des scripts de contenu. Les noms `__MSG_x__`
-sont résolus dans `_locales` : langue d'Orbe (`lang`, `fr` par défaut), puis
+sont résolus dans `_locales` : langue d'Orbx (`lang`, `fr` par défaut), puis
 `en`, puis `default_locale`.
 
 `parseCrx` ne vérifie **aucune** signature : appeler `verifyCrx` ensuite.
@@ -119,7 +119,7 @@ Dans `sessions.js`, à la fin de `configure(ses, { persist })` :
 
 ```js
 if (persist) extensions.loadInto(ses).then((r) => {
-  for (const f of r.failed) console.error('[orbe] extension', f.id, f.error);
+  for (const f of r.failed) console.error('[orbx] extension', f.id, f.error);
 });
 ```
 
@@ -147,7 +147,7 @@ par le bloqueur.
 
 ## Couche d'API `chrome.*`
 
-Electron ne fournit qu'une partie des API de Chrome. Orbe ajoute le reste avec
+Electron ne fournit qu'une partie des API de Chrome. Orbx ajoute le reste avec
 sa propre couche, écrite à partir de la documentation publique de Chrome et
 d'Electron (licence MIT, aucun code tiers, aucune dépendance) :
 
@@ -155,14 +155,14 @@ d'Electron (licence MIT, aucun code tiers, aucune dépendance) :
 | --- | --- |
 | `src/preload/ext.js` | complète `chrome` (et `browser`) dans les pages d'extension et les service workers |
 | `src/main/ext-api.js` | les API elles-mêmes, les autorisations, les événements |
-| `src/main/ext-host.js` | onglets et fenêtres d'Orbe vus comme ceux de Chrome, fenêtre surgissante |
+| `src/main/ext-host.js` | onglets et fenêtres d'Orbx vus comme ceux de Chrome, fenêtre surgissante |
 | `src/main/ext-panel.js` | `sidePanel` : panneau latéral dans la fenêtre (habillage : `src/renderer/panel.*`, `src/preload/panel.js`) |
 | `src/main/ext-debug.js` | `debugger`, sur le débogueur d'Electron, avec son bandeau |
 | `src/main/ext-access.js` | `activeTab` : accès aux pages accordé par l'utilisateur |
 | `src/main/ext-more.js` | raccourcis de `commands`, `identity`, `tabGroups`, zoom, `downloads` |
 
 Les quatre derniers ajoutent leurs méthodes à `ext-api.js` par `extApi.extend({...})` et
-se servent de ses outils (`extApi.internals`). `ORBE_EXT_TRACE=1` écrit dans le
+se servent de ses outils (`extApi.internals`). `ORBX_EXT_TRACE=1` écrit dans le
 terminal chaque appel, refus et événement : c'est le moyen le plus rapide de voir
 ce qu'une extension attend.
 
@@ -202,7 +202,7 @@ rechargement. Une écriture faite par un script de contenu n'est annoncée au
 service worker que si une page de l'extension est ouverte.
 
 Un service worker qui n'a pas encore tourné depuis le chargement de l'extension
-(démarrage d'Orbe) est lancé au premier événement, qui lui est remis une fois
+(démarrage d'Orbx) est lancé au premier événement, qui lui est remis une fois
 ses écouteurs posés.
 
 `chrome-extension://` est déclaré « standard » dans `sessions.js` : sans cela
@@ -215,7 +215,7 @@ range ses captures.
 | Espace | Ce qui est fait |
 | --- | --- |
 | `permissions` | `contains`, `getAll`, `request`, `remove`, `onAdded`, `onRemoved`. Une autorisation optionnelle est demandée à l'utilisateur, puis retenue (`Extensions/api-state.json`). Une **origine** hors du manifeste est refusée : Electron ne sait pas l'accorder après coup. |
-| `tabs` | `query` (onglet actif, fenêtre courante, motifs d'URL…), `get`, `getCurrent`, `create`, `remove`, `update`, `reload`, `duplicate`, `goBack`, `goForward`, `captureVisibleTab`, `onCreated`, `onUpdated`, `onActivated`, `onRemoved`. `url` et `title` ne sont donnés qu'avec `tabs`, un accès au site ou `activeTab`. `getZoom`/`setZoom` agissent sur l'onglet d'Orbe ; `captureVisibleTab` est limité à deux appels par seconde, comme dans Chrome ; `group`/`ungroup` : voir `tabGroups`. `sendMessage` et `connect` sont ceux d'Electron. |
+| `tabs` | `query` (onglet actif, fenêtre courante, motifs d'URL…), `get`, `getCurrent`, `create`, `remove`, `update`, `reload`, `duplicate`, `goBack`, `goForward`, `captureVisibleTab`, `onCreated`, `onUpdated`, `onActivated`, `onRemoved`. `url` et `title` ne sont donnés qu'avec `tabs`, un accès au site ou `activeTab`. `getZoom`/`setZoom` agissent sur l'onglet d'Orbx ; `captureVisibleTab` est limité à deux appels par seconde, comme dans Chrome ; `group`/`ungroup` : voir `tabGroups`. `sendMessage` et `connect` sont ceux d'Electron. |
 | `windows` | `get`, `getCurrent`, `getLastFocused`, `getAll`, `update` (premier plan), `onFocusChanged`, `onCreated`, `onRemoved`. `create` ouvre les adresses en onglets ; `remove` est refusé. |
 | `cookies` | `get`, `getAll`, `set`, `remove`, `getAllCookieStores`, `onChanged`, limités aux sites du manifeste. |
 | `contextMenus` | `create`, `update`, `remove`, `removeAll`, `onClicked` (et `onclick` en Manifest V2). Les éléments s'ajoutent au menu contextuel des pages. |
@@ -225,11 +225,11 @@ range ses captures.
 | `notifications` | minimum : `create`/`clear`/`onClicked`. |
 | `downloads` | `download` (adresse web, `data:`, ou `blob:` de l'extension ; `filename` réduit à un nom de fichier, dans le dossier des téléchargements), `search`, `show`, `onCreated`, `onChanged`. |
 | `fontSettings` | `getFontList` (liste fixe). |
-| `commands` | `getAll`, `onCommand`. Les raccourcis du manifeste (`suggested_key`) sont lus dans les vues d'Orbe (`before-input-event`) : rien n'est enregistré auprès du système, ils ne valent que quand Orbe a le clavier. Un raccourci déjà pris par Orbe n'est pas attribué (`shortcut` vide). `_execute_action` vaut un clic sur le bouton. |
+| `commands` | `getAll`, `onCommand`. Les raccourcis du manifeste (`suggested_key`) sont lus dans les vues d'Orbx (`before-input-event`) : rien n'est enregistré auprès du système, ils ne valent que quand Orbx a le clavier. Un raccourci déjà pris par Orbx n'est pas attribué (`shortcut` vide). `_execute_action` vaut un clic sur le bouton. |
 | `sidePanel` | `setOptions`, `getOptions`, `open`, `close`, `setPanelBehavior`, `getPanelBehavior`, `getLayout`, `onOpened`, `onClosed` ; `side_panel.default_path` du manifeste ; `runtime.getContexts` annonce le panneau (`SIDE_PANEL`). Voir « Panneau latéral ». |
 | `debugger` | `attach`, `detach`, `sendCommand`, `getTargets`, `onEvent`, `onDetach`, sur les onglets seulement. Voir « Débogueur ». |
-| `tabGroups`, `tabs.group` | groupes tenus en mémoire (`get`, `query`, `update`, `move`, événements, `groupId` des onglets). Orbe ne les dessine pas : ses onglets se rangent en Espaces et en dossiers. |
-| `identity` | `launchWebAuthFlow` : petite fenêtre dans la session du profil, refermée dès que la page va vers `https://<id>.chromiumapp.org/…`, adresse rendue à l'extension (sans `interactive`, fenêtre invisible et « User interaction required » si rien ne redirige) ; `getRedirectURL`. `getAuthToken` est refusé : Orbe n'a pas de compte Google. |
+| `tabGroups`, `tabs.group` | groupes tenus en mémoire (`get`, `query`, `update`, `move`, événements, `groupId` des onglets). Orbx ne les dessine pas : ses onglets se rangent en Espaces et en dossiers. |
+| `identity` | `launchWebAuthFlow` : petite fenêtre dans la session du profil, refermée dès que la page va vers `https://<id>.chromiumapp.org/…`, adresse rendue à l'extension (sans `interactive`, fenêtre invisible et « User interaction required » si rien ne redirige) ; `getRedirectURL`. `getAuthToken` est refusé : Orbx n'a pas de compte Google. |
 | `activeTab` | voir « Accès à l'onglet en cours ». |
 | `runtime`, `extension` | `openOptionsPage` (dans un onglet), `isAllowedIncognitoAccess`, `isAllowedFileSchemeAccess`. |
 
@@ -243,14 +243,14 @@ après coup (`permissions.request({ origins })`).
 
 ```js
 const { panel } = require('./ext-host');
-panel.shownIn(orbeWindow)       // { extId, tabId, url, wc, view } ou null
-panel.userClose(orbeWindow)     // ferme le panneau affiché
-panel.setWidth(orbeWindow, px)  // largeur, bornée et retenue (api-state.json, `_ui.panelWidth`)
+panel.shownIn(orbxWindow)       // { extId, tabId, url, wc, view } ou null
+panel.userClose(orbxWindow)     // ferme le panneau affiché
+panel.setWidth(orbxWindow, px)  // largeur, bornée et retenue (api-state.json, `_ui.panelWidth`)
 ```
 
 Le panneau est une `WebContentsView` posée à droite de la zone des pages : la
 page de l'extension, dans la session du profil de l'onglet, sous un en-tête
-d'Orbe (nom, fermeture) dont le bord gauche se tire pour régler la largeur
+d'Orbx (nom, fermeture) dont le bord gauche se tire pour régler la largeur
 (260 px au moins, 380 par défaut). `window.js` ne sait rien du panneau : il
 appelle `hooks.rightInset(fenêtre)` dans `contentRect()` — la place à laisser à
 droite — et `hooks.layout(fenêtre)` à la fin de `layout()`.
@@ -265,7 +265,7 @@ de l'extension ouvre et referme le panneau.
 Écarts : `open()` ne vérifie pas qu'un geste de l'utilisateur vient d'avoir
 lieu ; un `windowId` inconnu désigne la fenêtre courante (l'onglet qu'Electron
 donne dans `sender.tab` porte `windowId: 0`, et des extensions le repassent tel
-quel). Un panneau s'ouvre à la demande de l'extension ; Orbe n'a pas de menu
+quel). Un panneau s'ouvre à la demande de l'extension ; Orbx n'a pas de menu
 pour ouvrir le panneau d'une extension qui ne le fait pas elle-même.
 
 ### Débogueur
@@ -286,7 +286,7 @@ Chrome ouvre l'onglet en cours à une extension le temps d'un clic sur son
 bouton. Electron ne connaît pas cet accès temporaire et ne sait pas accorder un
 site après le chargement : sans accès déclaré, `scripting.executeScript` est
 refusé. Pour une extension qui déclare `activeTab` sans accès à tous les sites,
-Orbe demande donc au premier clic s'il peut lui donner cet accès ; si oui, il
+Orbx demande donc au premier clic s'il peut lui donner cet accès ; si oui, il
 ajoute `<all_urls>` au manifeste installé (reporté à chaque mise à jour) et
 recharge l'extension. La couche d'API continue de raisonner sur le manifeste
 d'origine, et n'accepte une injection que dans un onglet ouvert par un geste
@@ -298,16 +298,16 @@ l'extension a accès à tous les sites — c'est ce que dit la question posée.
 
 ```js
 const extHost = require('./ext-host');
-extHost.actionsFor(orbeWindow)                 // [{ id, name, title, icon, badgeText, badgeColor, badgeTextColor, popup, enabled }]
-extHost.openPopup(orbeWindow, id, { x, y })    // fenêtre ancrée, ou action.onClicked s'il n'y a pas de fenêtre
-extHost.closePopup(orbeWindow)
+extHost.actionsFor(orbxWindow)                 // [{ id, name, title, icon, badgeText, badgeColor, badgeTextColor, popup, enabled }]
+extHost.openPopup(orbxWindow, id, { x, y })    // fenêtre ancrée, ou action.onClicked s'il n'y a pas de fenêtre
+extHost.closePopup(orbxWindow)
 ```
 
 Depuis l'interface : `O.send('ext:actions')` et
 `O.send('ext:popup', { id, x, y })` (`x`, `y` : point dans la fenêtre). L'état
 envoyé à la coque est rafraîchi quand une extension change son bouton
 (`extApi.hooks.actionChanged`). La fenêtre surgissante est une fenêtre sans
-cadre, enfant de la fenêtre d'Orbe, dans la session du profil de l'onglet
+cadre, enfant de la fenêtre d'Orbx, dans la session du profil de l'onglet
 actif ; elle prend la taille de son contenu (800 × 600 au plus) et se ferme en
 perdant le focus ou avec Échap. Le bouton lui-même reste à dessiner dans la
 barre latérale ; en attendant, Réglages → Extensions → « Ouvrir ».
@@ -315,7 +315,7 @@ barre latérale ; en attendant, Réglages → Extensions → « Ouvrir ».
 ## Relevé sur Electron 44.7.0 (Chromium 152)
 
 Extensions à panneau latéral, capture et débogueur (`node scripts/test-ext.js
-reelles`, `ORBE_EXT=peeper,gofullpage,claude`) :
+reelles`, `ORBX_EXT=peeper,gofullpage,claude`) :
 
 | | Avant | Avec ces API |
 | --- | --- | --- |
@@ -325,7 +325,7 @@ reelles`, `ORBE_EXT=peeper,gofullpage,claude`) :
 
 Trois extensions vérifiées plus tôt :
 
-Installation réelle depuis le Store dans un profil jetable d'Orbe, pages
+Installation réelle depuis le Store dans un profil jetable d'Orbx, pages
 `fr.wikipedia.org`, `wordpress.org` et `www.lemonde.fr`.
 
 | | Dark Reader 4.9.133 | Wappalyzer 6.12.7 | uBlock Origin Lite 2026.1006 |
@@ -354,7 +354,7 @@ Avec elle (`tests/ext-reelles.js`) :
   `rgb(25, 27, 28)`) et se retrouve après redémarrage.
 - **Wappalyzer** : sur `wordpress.org`, la fenêtre liste WordPress, PHP, MySQL,
   Gutenberg, Google Tag Manager… ; pastille « 10 » ; page d'accueil ouverte par
-  `tabs.create` dans un onglet d'Orbe.
+  `tabs.create` dans un onglet d'Orbx.
 - **uBlock Origin Lite** : fenêtre « www.lemonde.fr — filtering mode optimal ».
 
 ## ⌘E et extension qui plante (`cycle`, `backgroundGone` dans `src/main/ext-host.js`)
@@ -374,7 +374,7 @@ Avec elle (`tests/ext-reelles.js`) :
 
 - **Bouton** : chaque extension a son bouton sous l'adresse. Clic droit : nom,
   « Options », « Détacher de la barre latérale », « Désactiver », « Retirer
-  d'Orbe… » (avec confirmation), « Gérer les extensions… ». Une extension
+  d'Orbx… » (avec confirmation), « Gérer les extensions… ». Une extension
   détachée (réglage `extHidden`) reste dans le menu du bouclier et dans le menu
   Extensions ; Réglages → Extensions la ré-épingle.
 - **Réglages → Extensions** : par extension, « Ouvrir » (fenêtre), « Options »
@@ -386,18 +386,18 @@ Avec elle (`tests/ext-reelles.js`) :
   demande davantage (API, sites, scripts de contenu sur de nouveaux sites)
   n'est installée qu'après une question qui liste ces ajouts : Chromium
   accorde à une extension dépaquetée tout ce que dit son manifeste, sans rien
-  demander — c'est donc avant la bascule qu'Orbe demande. Une extension à qui
+  demander — c'est donc avant la bascule qu'Orbx demande. Une extension à qui
   l'accès à tous les sites a déjà été donné (manifeste, ou accord `activeTab`
   d'`ext-access.js`, reporté à chaque mise à jour) n'y gagne aucun site.
 - **Réglages → Raccourcis** : chaque commande déclarée (`commands` du manifeste)
-  a sa ligne, avec ou sans raccourci, modifiable comme ceux d'Orbe (réglage
+  a sa ligne, avec ou sans raccourci, modifiable comme ceux d'Orbx (réglage
   `extShortcuts`, `{ '<id>/<commande>': accélérateur | '' }`). Un raccourci
-  d'Orbe ou du système est refusé ou demande confirmation ; pris à une autre
+  d'Orbx ou du système est refusé ou demande confirmation ; pris à une autre
   extension, la question la nomme. `chrome.commands.getAll` rend le raccourci en
   vigueur.
 
-Ces actions ne viennent que des pages de l'interface (`orbe://`, porte IPC
-`orbe`) : aucune n'est exposée aux extensions ni aux pages web.
+Ces actions ne viennent que des pages de l'interface (`orbx://`, porte IPC
+`orbx`) : aucune n'est exposée aux extensions ni aux pages web.
 
 Non fait, et pourquoi :
 

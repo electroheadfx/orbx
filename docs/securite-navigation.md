@@ -14,13 +14,13 @@ Principes communs à tout ce qui suit :
   et présenté comme une citation quand c'est le site qui l'a choisi (domaine
   d'authentification, nom d'une fenêtre, adresse d'un lien).
 - **Rien n'affaiblit l'existant** : les pages web n'ont toujours ni
-  préchargement privilégié ni `window.orbe` ; le gestionnaire de mots de passe
+  préchargement privilégié ni `window.orbx` ; le gestionnaire de mots de passe
   et l'isolement des extensions ne sont pas touchés.
 
 ## Feuilles d'onglet (`src/main/sheets.js`, `src/renderer/sheet.*`)
 
 Toutes les questions liées à une page passent par une « feuille » : une vue
-d'Orbe (`orbe://app/sheet.html`, son propre `webContents`) posée par-dessus
+d'Orbx (`orbx://app/sheet.html`, son propre `webContents`) posée par-dessus
 l'onglet concerné, aux dimensions exactes de sa page.
 
 | Menace | Réponse |
@@ -29,7 +29,7 @@ l'onglet concerné, aux dimensions exactes de sa page.
 | La page répond à la place de l'utilisateur | La réponse (`sheet:answer`) n'est acceptée que de la vue de la feuille, reconnue à son `webContents` ; une page web n'a aucun canal vers le processus principal. Vérifié : « une page ne peut pas répondre à la place de la feuille ». |
 | Clic piégé (la page fait cliquer au moment où la feuille apparaît) | Une réponse qui engage (autoriser, partager, continuer, se connecter, ouvrir) est refusée **par le processus principal** pendant 500 ms à compter du moment où la feuille devient visible — y compris quand elle réapparaît parce que celle du dessus s'est fermée, ou au retour sur l'onglet. La vue applique le même délai, remis à zéro par le processus principal. Une feuille non visible ne peut pas être validée. |
 | La page ferme ou recouvre la feuille | La feuille est une vue native au-dessus de la page ; la page ne peut ni la fermer ni dessiner par-dessus. |
-| Une réponse sert à une autre page | Une feuille se ferme sans réponse quand son onglet change de page (début d'une navigation, **ou arrivée d'une navigation lancée avant elle**) ou disparaît. Avant de retenir une réponse ou d'ouvrir un lien, Orbe vérifie que la page (ou le cadre) qui demandait est toujours là, avec la même origine. |
+| Une réponse sert à une autre page | Une feuille se ferme sans réponse quand son onglet change de page (début d'une navigation, **ou arrivée d'une navigation lancée avant elle**) ou disparaît. Avant de retenir une réponse ou d'ouvrir un lien, Orbx vérifie que la page (ou le cadre) qui demandait est toujours là, avec la même origine. |
 | Une page noie l'utilisateur sous les feuilles | Quatre feuilles au plus par onglet ; au-delà la demande est refusée. |
 | Un autre onglet usurpe la demande | La feuille n'est visible que sur l'onglet demandeur, et nomme l'origine rapportée par Electron. |
 
@@ -55,14 +55,14 @@ pour les autorisations simples.
 - **Accord du système** (macOS : `askForMediaAccess` ; Windows : réglage de
   confidentialité) demandé *après* l'accord du site ; s'il manque, la page
   n'obtient rien et une feuille dit lequel manque et ouvre les réglages.
-- **Témoin** (`src/main/capture-state.js`) : allumé quand Orbe accorde l'accès,
+- **Témoin** (`src/main/capture-state.js`) : allumé quand Orbx accorde l'accès,
   éteint quand la page est remplacée, détruite ou arrêtée par l'utilisateur.
   Electron ne dit pas si un flux est encore ouvert : le témoin peut donc rester
   allumé après qu'une page a rendu la caméra, jamais l'inverse. Un témoin
   qu'une page pourrait éteindre ne vaudrait rien, d'où ce choix. « Arrêter »
   recharge la page : c'est le seul arrêt garanti.
 - Appareils USB, HID, série, Bluetooth : aucun n'est jamais accordé. Sans
-  écouteur, Electron choisirait **le premier appareil** (Bluetooth) : Orbe
+  écouteur, Electron choisirait **le premier appareil** (Bluetooth) : Orbx
   annule la demande et le dit.
 
 - **Autres autorisations demandées** : détection d'inactivité (`idle-detection`), stockage
@@ -83,7 +83,7 @@ toutes ses garanties.
 | --- | --- |
 | La page fournit ce que le panneau affiche | Tout vient du processus principal : origine de l'adresse **engagée** par l'onglet (`webContents.getURL()`), compteur du bloqueur, autorisations retenues, cookies comptés dans la session, réglages. Le nom du site et le nom d'une extension (choisis par d'autres) sont affichés par `textContent`. Vérifié avec un nom d'extension piégé. |
 | L'action vaut pour un autre site que celui affiché à l'ouverture | Chaque action est revérifiée **au moment où elle arrive** : l'onglet du panneau existe encore, il est l'onglet actif de sa fenêtre, et l'origine de son adresse engagée est celle pour laquelle le panneau a été dressé. Sinon rien n'est fait et le panneau se ferme. Le panneau se ferme aussi de lui-même à toute navigation de l'onglet. Vérifié en neutralisant cette fermeture puis en changeant l'onglet de site : aucun cookie effacé, ni d'un côté ni de l'autre. |
-| La page actionne le panneau, le recouvre ou y fait cliquer | Vue d'Orbe posée sur la page : la page n'y a ni accès ni canal (un message `sheet:act` venu d'une page est sans effet : vérifié). Les actions qui changent quelque chose (bloqueur, autorisations, cookies, cache, Boost, mode développeur) sont refusées par le processus principal pendant la demi-seconde qui suit l'apparition du panneau, comme les réponses des feuilles. |
+| La page actionne le panneau, le recouvre ou y fait cliquer | Vue d'Orbx posée sur la page : la page n'y a ni accès ni canal (un message `sheet:act` venu d'une page est sans effet : vérifié). Les actions qui changent quelque chose (bloqueur, autorisations, cookies, cache, Boost, mode développeur) sont refusées par le processus principal pendant la demi-seconde qui suit l'apparition du panneau, comme les réponses des feuilles. |
 | Une extension se fait ouvrir par un identifiant forgé | Seule une extension présente dans la liste du moment, et active, peut être ouverte ; le panneau ne transmet qu'un identifiant, relu dans cette liste. |
 | « Effacer » emporte plus que demandé | Cookies et données : l'origine de l'onglet seulement (`clearStorageData({ origin })`). Le cache HTTP n'est pas rangé par site dans Chromium : le bouton dit qu'il vide celui de tout le profil. |
 
@@ -92,11 +92,11 @@ navigation privée, qu'Electron ne permet pas de faire respecter (voir `docs/ext
 
 ## Téléchargements automatiques (`downloadGate` dans `src/main/permissions.js`)
 
-Une page peut lancer un téléchargement que personne n'a demandé ; Orbe pose alors la question
+Une page peut lancer un téléchargement que personne n'a demandé ; Orbx pose alors la question
 (« Télécharger des fichiers automatiquement »), retenue par site comme les autres autorisations,
 dès le premier téléchargement automatique. Restent « demandés » : un téléchargement que le
 moteur rattache à un geste, celui qui suit un geste dans l'onglet de moins de cinq secondes (un
-seul par geste), et ceux qu'Orbe lance lui-même (« Enregistrer l'image »). La décision est
+seul par geste), et ceux qu'Orbx lance lui-même (« Enregistrer l'image »). La décision est
 synchrone (`will-download`) : le téléchargement qui déclenche la question est refusé, puis
 relancé si la réponse est oui et que la page est toujours là. Une seule question par page ; un
 refus vaut pour le site.
@@ -105,7 +105,7 @@ refus vaut pour le site.
 
 Sur `localhost`, `*.localhost`, `127.0.0.1` et `::1`, la barre d'outils et l'adresse entière
 s'affichent d'elles-mêmes, avec un liseré jaune et noir. Cela ne donne **aucun droit** au
-site : le mode développeur ne change que ce qu'Orbe affiche. Un nom qui ressemble à
+site : le mode développeur ne change que ce qu'Orbx affiche. Un nom qui ressemble à
 `localhost` (`localhost.exemple.fr`) n'est pas un site local.
 
 ## Partage d'écran (`src/main/display-media.js`)
@@ -115,7 +115,7 @@ site : le mode développeur ne change que ce qu'Orbe affiche. Un nom qui ressemb
 | Capture sans consentement | Aucune autorisation retenue : chaque partage passe par le sélecteur. La demande doit venir d'un geste (`request.userGesture`). |
 | La feuille renvoie une source arbitraire | Elle ne renvoie qu'un identifiant ; il est relu dans la liste dressée par le processus principal. Une source hors liste est refusée (vérifié). |
 | Nom de fenêtre piégé (HTML) | Affiché comme du texte. |
-| Vignettes : fuite vers la page | Les vignettes ne vont qu'à la feuille d'Orbe, jamais à la page. |
+| Vignettes : fuite vers la page | Les vignettes ne vont qu'à la feuille d'Orbx, jamais à la page. |
 | Le son du système part sans le dire | Case décochée par défaut, proposée seulement là où c'est possible (onglet ; écran sous Windows). |
 
 Sans l'accord de macOS pour l'enregistrement de l'écran, seul « Cet onglet »
@@ -137,12 +137,12 @@ Relevé par essai sur Electron 44.7 (revue de sécurité du 9 octobre 2026) :
 - pour un vrai `getDisplayMedia`, le sélecteur est appelé **pendant** l'appel
   `callback(true)` (de façon synchrone).
 
-Réponse d'Orbe (`displayGate`, `answerDisplay` dans `permissions.js`) :
+Réponse d'Orbx (`displayGate`, `answerDisplay` dans `permissions.js`) :
 
 1. la demande est refusée si la page n'est pas un onglet, ou si l'utilisateur
    n'y a pas agi dans les 5 secondes (vraie entrée vue par le processus
    principal). Une page ne peut donc rien obtenir sans un clic ou une frappe ;
-2. sinon Orbe répond « oui » et regarde si le sélecteur a été appelé avant le
+2. sinon Orbx répond « oui » et regarde si le sélecteur a été appelé avant le
    retour de l'appel. S'il ne l'a pas été, c'était l'ancienne capture : tous
    les processus de la page (cadres compris) sont **arrêtés sur-le-champ**,
    dans le même tour de boucle, avant que le flux — dont l'ouverture demande
@@ -158,7 +158,7 @@ fonctionne toujours » échouerait aussitôt.
 
 ## Certificats (`src/main/certs.js`)
 
-- Un certificat refusé par Chromium **reste refusé** : Orbe ne répond « oui »
+- Un certificat refusé par Chromium **reste refusé** : Orbx ne répond « oui »
   à `certificate-error` que pour une exception posée par l'utilisateur.
 - L'exception vaut pour **un hôte (avec son port) + l'empreinte de ce
   certificat + la session en cours**. Elle n'est jamais écrite sur disque
@@ -168,14 +168,14 @@ fonctionne toujours » échouerait aussitôt.
 - « Continuer quand même » n'est **pas proposé** pour un certificat révoqué
   (−206), invalide (−207) ou incohérent (−203), la transparence exigée (−214),
   une interception connue (−217), ni pour un site qui impose HTTPS (**HSTS**).
-  Electron n'expose pas l'état HSTS : Orbe le lit par une sonde, une requête
+  Electron n'expose pas l'état HSTS : Orbx le lit par une sonde, une requête
   `HEAD http://hôte/` sans cookies ni suivi de redirection dans la session ; un
   site HSTS répond par une redirection interne de Chromium (307,
   `Non-Authoritative-Reason: HSTS`) avant tout échange.
 - **Vérifié par essai** (hôte de la liste préchargée détourné vers un serveur
   local par `--host-resolver-rules`) : la sonde répond « HSTS » en quelques
   millisecondes sans trafic ; Electron 44 émet bien `certificate-error` pour un
-  site HSTS, et **`callback(true)` passerait outre HSTS**. La sonde d'Orbe est
+  site HSTS, et **`callback(true)` passerait outre HSTS**. La sonde d'Orbx est
   donc la seule barrière : elle **échoue fermée**. Seule une preuve que le site
   n'impose pas HTTPS rend « continuer » possible — une réponse HTTP, une
   redirection ordinaire, ou une erreur de transport en HTTP simple (connexion
@@ -199,18 +199,18 @@ fonctionne toujours » échouerait aussitôt.
 - La feuille nomme l'hôte donné par Electron (`authInfo`) ; le domaine (realm)
   est cité comme message du serveur.
 - Quand c'est **la page en cours de chargement** qui demande (reconnue à
-  l'adresse de la navigation principale en cours, suivie par Orbe), la feuille
+  l'adresse de la navigation principale en cours, suivie par Orbx), la feuille
   **couvre entièrement l'ancienne page** et affiche l'adresse demandée : la
   question ne peut pas passer pour celle du site encore affiché.
 - Un **cadre ou une ressource d'un autre hôte** que la page (publicité, image,
   script, requête) ne fait pas apparaître la question : demande annulée
   (hameçonnage classique). Un cadre du même hôte le peut.
 - En HTTP simple, la feuille prévient que le mot de passe partira en clair.
-- Rien n'est retenu par Orbe (Chromium garde l'identification pour la session).
+- Rien n'est retenu par Orbx (Chromium garde l'identification pour la session).
 - **À faire** : proposer les comptes du gestionnaire de mots de passe. Il
   faudrait une clé « hôte + domaine » et passer par le déverrouillage du
   coffre ; ce n'est ni trivial ni sans risque, donc laissé de côté.
-- Certificat client : Electron enverrait le premier du trousseau ; Orbe n'en
+- Certificat client : Electron enverrait le premier du trousseau ; Orbx n'en
   envoie aucun sans un choix explicite.
 
 ## « Quitter la page ? » (`src/main/unload.js`)
@@ -220,16 +220,16 @@ fonctionne toujours » échouerait aussitôt.
 - Chromium n'émet l'événement que si l'utilisateur a agi dans la page : une
   page jamais touchée ne peut retenir ni un onglet ni une fenêtre.
 - Une page qui ne répond pas ne retient rien (délai de 4 s). Ce délai est celui
-  d'Orbe : Chromium, lui, ferme d'office une page consultée qui n'a pas répondu
+  d'Orbx : Chromium, lui, ferme d'office une page consultée qui n'a pas répondu
   en une seconde, puis de nouveau une seconde après la réponse de l'utilisateur
   si la page tarde à en accuser réception. Sur une machine chargée, la page
   disparaissait donc juste après « Rester ». Chromium n'applique pas ce délai à
-  une page dont le débogueur est attaché : Orbe attache celui d'Electron, sans
+  une page dont le débogueur est attaché : Orbx attache celui d'Electron, sans
   rien lui demander, le temps de la consultation (« bouclier », `shield`), et le
   rend dès que la page a répondu (au plus dix secondes). Une extension ou la
   capture de page entière qui veut le débogueur à cet instant le reçoit.
 - Si une page disparaît malgré tout dans les quinze secondes qui suivent
-  « Rester » sans qu'Orbe l'ait demandé, son onglet garde sa ligne et se
+  « Rester » sans qu'Orbx l'ait demandé, son onglet garde sa ligne et se
   recharge : il n'est pas archivé comme une page qui se ferme d'elle-même, et le
   journal de la page est écrit dans la console.
 - Veille automatique et fermeture demandée en même temps sur la même page : la
@@ -245,7 +245,7 @@ fonctionne toujours » échouerait aussitôt.
 ## Fenêtres surgissantes (`src/main/popups.js`)
 
 Electron 44 ne dit pas à `setWindowOpenHandler` si l'ouverture vient d'un
-geste, et n'embarque pas le bloqueur de Chrome. Heuristique d'Orbe :
+geste, et n'embarque pas le bloqueur de Chrome. Heuristique d'Orbx :
 
 - un geste = une vraie entrée reçue par la page (`before-mouse-event`,
   `before-input-event`), qu'un script ne peut pas fabriquer ;
@@ -276,7 +276,7 @@ un onglet sans lien `window.opener` avec la page.
   après — la marque partait sur un fichier qui n'existait pas, et un
   exécutable renommé n'était plus signalé.)
 - Fichiers exécutables (`.dmg`, `.pkg`, `.exe`, `.app`, `.command`, scripts…) :
-  signalés, jamais ouverts automatiquement ; les ouvrir depuis Orbe demande
+  signalés, jamais ouverts automatiquement ; les ouvrir depuis Orbx demande
   une confirmation qui nomme l'hôte d'origine.
 - Seuls les PDF s'ouvrent seuls, dans la visionneuse de Chromium (bac à
   sable), jamais dans une application du système. « PDF » se juge sur le
@@ -296,7 +296,7 @@ un onglet sans lien `window.opener` avec la page.
   deux fenêtres d'enregistrement à moins de 10 s d'intervalle.
 - Reprise : même session (mêmes cookies) que le téléchargement d'origine ;
   validée par Chromium avec `ETag` / `Last-Modified`.
-- Marque « venu d'Internet » : Electron ne la pose pas, Orbe le fait à la fin de
+- Marque « venu d'Internet » : Electron ne la pose pas, Orbx le fait à la fin de
   chaque téléchargement (`quarantine`) — attribut `com.apple.quarantine` sur
   macOS, flux `Zone.Identifier` (zone 3) sur Windows — pour que le système
   avertisse à l'ouverture (Gatekeeper, SmartScreen). En navigation privée,
@@ -308,7 +308,7 @@ un onglet sans lien `window.opener` avec la page.
     `xattr` en échec), une seconde tentative est faite ; en cas de nouvel
     échec le fichier est noté **sans marque** (`marked: false`). Il n'est
     alors jamais ouvert d'office, la Bibliothèque le signale, et l'ouvrir, le
-    copier, le partager ou le glisser hors d'Orbe repose d'abord la marque
+    copier, le partager ou le glisser hors d'Orbx repose d'abord la marque
     puis, si elle manque toujours, demande confirmation (le glisser, qui ne
     peut pas attendre une réponse, est refusé tant que l'accord n'a pas été
     donné).
@@ -325,8 +325,8 @@ un onglet sans lien `window.opener` avec la page.
   n'est jamais demandée pour un exécutable ou un fichier sans marque : le
   système lirait le fichier lui-même (icône d'un `.exe`, cible d'un raccourci).
 - Bibliothèque : le menu d'un fichier, la corbeille, la copie et le glisser hors
-  d'Orbe ne reçoivent de la page qu'un identifiant de téléchargement ; le chemin
-  vient toujours des données d'Orbe (`library.js`, `downloads.js`).
+  d'Orbx ne reçoivent de la page qu'un identifiant de téléchargement ; le chemin
+  vient toujours des données d'Orbx (`library.js`, `downloads.js`).
 - Quitter pendant un téléchargement en cours demande confirmation.
 
 ## Liens vers d'autres applications (`permissions.js`, `openExternal`)
@@ -346,7 +346,7 @@ un onglet sans lien `window.opener` avec la page.
 - Schémas jamais transmis au système : `file:`, `javascript:`, `data:`,
   `ms-msdt:`, `search-ms:`, `ms-officecmd:`, `shell:`, `smb:`… (liste dans
   `BLOCKED_SCHEMES`).
-- Orbe ouvre le lien lui-même (`shell.openExternal`) et répond toujours « non »
+- Orbx ouvre le lien lui-même (`shell.openExternal`) et répond toujours « non »
   à Chromium : une seule porte, vérifiable.
 
 ## Boosts (`src/main/boosts.js`, `src/main/boost-editor.js`)
@@ -357,17 +357,17 @@ JavaScript si l'utilisateur l'a permis.
 
 | Menace | Réponse |
 | --- | --- |
-| Le script d'un Boost atteint Orbe (pont `window.orbe`, Node) | Il s'exécute dans le **monde principal de la page** (`frame.executeJavaScript`), celui des scripts du site : il a les droits de la page, rien de plus. Les pages web n'ont ni préchargement privilégié ni `window.orbe`. Vérifié : `typeof window.orbe`, `require` et `process` valent `undefined` dans le script. |
+| Le script d'un Boost atteint Orbx (pont `window.orbx`, Node) | Il s'exécute dans le **monde principal de la page** (`frame.executeJavaScript`), celui des scripts du site : il a les droits de la page, rien de plus. Les pages web n'ont ni préchargement privilégié ni `window.orbx`. Vérifié : `typeof window.orbx`, `require` et `process` valent `undefined` dans le script. |
 | Le script s'exécute ailleurs que sur son site | Le site est relu **dans le processus principal, sur le cadre principal, au moment d'exécuter** (`hostOf(frame.url)`), jamais d'après la page. Le script part une fois par chargement (`dom-ready`), dans le cadre principal seulement — pas dans les cadres intégrés. Entre cette vérification et l'exécution la page peut encore changer : le script commence donc par vérifier **dans la page** (`scriptCode`) que `location.host` et le protocole sont ceux qui ont été vérifiés, et ne fait rien sinon. |
 | Le CSS d'un Boost atterrit dans la page d'un autre site (navigation pendant l'insertion) | Le site est celui du **document en place** dans le cadre principal (`mainFrame.url`), pas celui d'une navigation en attente (`getURL()`). Il est vérifié juste avant `insertCSS` et juste après : si la page a changé de site entre-temps, le CSS est retiré aussitôt. À chaque changement de document (`did-navigate`), le CSS posé pour un autre site est retiré. |
 | Page « http: » : le réseau peut servir autre chose que le site, sous son nom | Les Boosts sont rangés par nom d'hôte, sans le protocole. Le **script** d'un Boost ne part donc jamais sur une page `http:` (sauf la machine elle-même : `localhost`, `127.0.0.1`, `*.localhost`). Le CSS, l'apparence et les éléments masqués restent appliqués en `http:` — c'est le choix le plus strict qui laisse les Boosts utilisables. |
 | Navigation privée | Aucun chemin n'y applique un Boost : chargement, réglages, éditeur, centre de contrôle et Bibliothèque passent tous par `applyBoosts`, qui écarte fenêtres privées et pages internes (la Bibliothèque avait son propre chemin, sans ce filtre : corrigé). |
-| Le script s'exécute dans une page d'Orbe, une feuille, un aperçu, une petite fenêtre | `canScript` n'accepte que la page web d'un onglet ordinaire : ni page interne (`orbe://`), ni navigation privée ; aperçus, petites fenêtres, feuilles et vues de l'interface ne sont pas des onglets et ne reçoivent ni CSS ni script. Vérifié cas par cas. |
+| Le script s'exécute dans une page d'Orbx, une feuille, un aperçu, une petite fenêtre | `canScript` n'accepte que la page web d'un onglet ordinaire : ni page interne (`orbx://`), ni navigation privée ; aperçus, petites fenêtres, feuilles et vues de l'interface ne sont pas des onglets et ne reçoivent ni CSS ni script. Vérifié cas par cas. |
 | Un script s'exécute sans que l'utilisateur l'ait voulu | Trois accords : les Boosts sont actifs, le réglage « Autoriser le JavaScript des Boosts » est coché (**décoché par défaut**), et la case du Boost l'est aussi. |
 | Un Boost importé exécute du code, ou vole des données par son CSS (sélecteurs d'attributs + images distantes) | À l'import **rien n'est appliqué ni exécuté** : le Boost arrive désactivé, son script coupé, et ne remplace jamais un Boost existant. Le fichier est du JSON borné (2 Mo, 300 Boosts) ; seuls les champs connus sont lus, chacun borné. Il arrive aussi **« à relire »** (`review`) : tant qu'il l'est, aucun message ne peut l'activer ni armer son script (`boosts.set` le refuse). La première activation passe par une étape de relecture (liste des Boosts, éditeur, Bibliothèque) qui montre son CSS, ses éléments masqués et son script tels quels, avec un avertissement explicite quand le CSS contient `url(` ou `@import` (adresses chargées à chaque visite, choisies par l'auteur du fichier). « Activer ce Boost » l'active ; le script reste coupé (case à part). Un Boost revenu d'une sauvegarde après avoir été supprimé ou modifié suit le même chemin. |
 | Sélecteur de « Zap » piégé (venu de la page cliquée ou d'un fichier) qui ferme la règle et injecte du CSS | `validSelector` : ni accolade, ni point-virgule, ni arobase, ni commentaire ; parenthèses, crochets et guillemets fermés ; pas de virgule hors parenthèses ; 500 caractères au plus ; **pas de `url(`**, même échappé (`\75rl(`) — le moteur CSS lit ce qui suit `url(` comme une adresse sans guillemets, où parenthèses et guillemets ne se comptent plus comme le fait ce filtre. En plus du filtre, chaque sélecteur venu de la page ou d'un fichier est **lu par le moteur CSS lui-même** (`vet` : `CSSStyleSheet.replaceSync` puis `document.querySelector`, dans la coque d'une fenêtre — page de l'interface en bac à sable —, jamais dans la page qui l'a fourni) : il doit donner exactement une règle, qui ne fait que masquer. Une règle par sélecteur. |
 | La page cliquée au « Zap » rend un sélecteur qui masque tout (`html`, `body`, `*`, `:root`) | `tooBroad` : refusé, seul, enchaîné (`html > body`, `body *`) ou habillé (`body:not(.x)`, `:is(body, .a)`). Le sélecteur d'élément est lancé **sans** « geste de l'utilisateur » prêté à la page (`executeJavaScript(…, false)`) : il n'en a pas besoin, et la page n'en hérite pas. |
-| Valeur d'apparence piégée (couleur, police, taille…) | Le CSS de l'apparence est **fabriqué** par Orbe à partir de nombres bornés et de valeurs prises dans une liste ; aucun texte du Boost n'y est recopié. |
+| Valeur d'apparence piégée (couleur, police, taille…) | Le CSS de l'apparence est **fabriqué** par Orbx à partir de nombres bornés et de valeurs prises dans une liste ; aucun texte du Boost n'y est recopié. |
 | Une page web écrit ou lit des Boosts | Les messages `boost:*` ne sont acceptés que de la **fenêtre de l'éditeur** (reconnue à son `webContents`). L'éditeur est lié au site de l'onglet à son ouverture : si l'onglet change de site, rien n'est écrit pour le nouveau. Le sélecteur rendu par la page au « Zap » est rangé pour le site que le processus principal voit affiché. |
 | L'éditeur est pointé sur un autre Boost pendant qu'un enregistrement différé de l'ancien site est en route | Chaque message de l'éditeur d'un site (`boost:set`, `zap`, `reset`, `reload`, `export`) **nomme le site** qu'il croit modifier ; le processus principal refuse celui qui ne correspond plus au site de l'éditeur. La page relève ce nom à la frappe, pas à l'envoi. |
 | Retirer un Boost | Décocher, « Tout réinitialiser » ou supprimer depuis la liste retire le CSS aussitôt. Un script déjà exécuté ne se « retire » pas : il faut recharger la page (bouton de l'éditeur) — c'est dit dans l'éditeur. |
@@ -380,22 +380,22 @@ page au service de traduction de Google, sur un clic seulement.
 
 ## Sauvegardes de l'état (`src/main/backups.js`)
 
-Une sauvegarde est une copie entière d'`orbe.json` : onglets, archive, liste
-des téléchargements, notes, autorisations des sites, Boosts. Orbe en garde les
+Une sauvegarde est une copie entière d'`orbx.json` : onglets, archive, liste
+des téléchargements, notes, autorisations des sites, Boosts. Orbx en garde les
 dix dernières du jour et une par jour sur dix jours (une vingtaine de fichiers,
 dans « sauvegardes », à côté de l'état), sur l'ordinateur seulement.
 
 | Menace | Réponse |
 | --- | --- |
 | Un autre compte de la machine lit les sauvegardes | Dossier en `0700`, fichiers en `0600` (posé à la création, et au lancement pour les sauvegardes d'une version précédente). Sans effet sous Windows, où le profil n'est ouvert qu'à l'utilisateur. |
-| Une donnée supprimée par l'utilisateur reste dix jours dans les sauvegardes | **Supprimé veut dire supprimé** (`forget`) : supprimer une entrée de l'archive, vider l'archive, « oublier » une suggestion de la barre de commande, masquer un téléchargement ou vider la liste, supprimer une note, effacer l'historique (Bibliothèque, « Effacer les données de navigation ») et réinitialiser les autorisations retirent la même donnée des sauvegardes déjà faites, qui sont récrites. Avec une entrée d'archive partent les onglets des sauvegardes fermés depuis (ils y figuraient encore comme ouverts). Les copies de secours `orbe.json.bak` et `history.json.bak` sont traitées de même. Une sauvegarde qu'on ne peut pas récrire est supprimée. Les demandes rapprochées sont groupées (une récriture par fichier), et exécutées au plus tard à l'arrêt, avant toute restauration et avant toute nouvelle sauvegarde ; la sauvegarde horaire écrit d'abord l'état en mémoire, pour ne pas recopier une suppression pas encore écrite. La question « Vider l'archive ? » le dit. |
-| Restaurer rend un droit que l'utilisateur avait retiré | `plan` : les **autorisations des sites restent celles du moment** (rien de ce qui a été retiré depuis ne revient) ; « Autoriser le JavaScript des Boosts » n'est **jamais rallumé** ; un Boost supprimé ou modifié depuis revient **désactivé, script coupé, à relire** (comme un Boost importé) ; un Boost inchangé garde son état du moment. La question de la restauration le dit, compte les Boosts concernés, et rappelle ce qu'Orbe garde comme sauvegardes. |
-| La restauration coupe Orbe d'un coup (`app.exit`) : historique en attente perdu, téléchargement en cours abandonné sans question | La restauration demande un **arrêt normal** (`app.quit`) : la question « Des téléchargements sont en cours » est posée d'abord (« Annuler » abandonne la restauration, rien n'est touché), chaque module écrit ce qu'il a en attente, une page peut encore retenir l'arrêt (« Rester » abandonne la restauration). L'état n'est remplacé qu'à `will-quit`, quand plus rien ne retient ni n'écrira, puis Orbe se relance. |
+| Une donnée supprimée par l'utilisateur reste dix jours dans les sauvegardes | **Supprimé veut dire supprimé** (`forget`) : supprimer une entrée de l'archive, vider l'archive, « oublier » une suggestion de la barre de commande, masquer un téléchargement ou vider la liste, supprimer une note, effacer l'historique (Bibliothèque, « Effacer les données de navigation ») et réinitialiser les autorisations retirent la même donnée des sauvegardes déjà faites, qui sont récrites. Avec une entrée d'archive partent les onglets des sauvegardes fermés depuis (ils y figuraient encore comme ouverts). Les copies de secours `orbx.json.bak` et `history.json.bak` sont traitées de même. Une sauvegarde qu'on ne peut pas récrire est supprimée. Les demandes rapprochées sont groupées (une récriture par fichier), et exécutées au plus tard à l'arrêt, avant toute restauration et avant toute nouvelle sauvegarde ; la sauvegarde horaire écrit d'abord l'état en mémoire, pour ne pas recopier une suppression pas encore écrite. La question « Vider l'archive ? » le dit. |
+| Restaurer rend un droit que l'utilisateur avait retiré | `plan` : les **autorisations des sites restent celles du moment** (rien de ce qui a été retiré depuis ne revient) ; « Autoriser le JavaScript des Boosts » n'est **jamais rallumé** ; un Boost supprimé ou modifié depuis revient **désactivé, script coupé, à relire** (comme un Boost importé) ; un Boost inchangé garde son état du moment. La question de la restauration le dit, compte les Boosts concernés, et rappelle ce qu'Orbx garde comme sauvegardes. |
+| La restauration coupe Orbx d'un coup (`app.exit`) : historique en attente perdu, téléchargement en cours abandonné sans question | La restauration demande un **arrêt normal** (`app.quit`) : la question « Des téléchargements sont en cours » est posée d'abord (« Annuler » abandonne la restauration, rien n'est touché), chaque module écrit ce qu'il a en attente, une page peut encore retenir l'arrêt (« Rester » abandonne la restauration). L'état n'est remplacé qu'à `will-quit`, quand plus rien ne retient ni n'écrira, puis Orbx se relance. |
 
 Limites : les onglets fermés par la suppression d'un Espace ou d'un profil ne
 sont pas retirés des sauvegardes (ils en sortent avec elles, en dix jours au
 plus) ; un Boost supprimé y reste lui aussi (il ne reviendrait que désactivé,
-à relire). `orbe.json` lui-même garde les droits par défaut du système (`0644`
+à relire). `orbx.json` lui-même garde les droits par défaut du système (`0644`
 dans un dossier de profil que macOS réserve déjà à l'utilisateur).
 
 ## Aiguillage des liens (`src/main/prefs.js`, `routeFor`)
@@ -412,7 +412,7 @@ applications et aux liens cliqués dans une page qui s'ouvriraient en aperçu
   l'adresse (`new URL(url).hostname`) : égal, ou sous-domaine (`gist.github.com`
   pour `github.com`). Elle peut préciser un port (`localhost:3000`) et, si elle
   contient un chemin, un **début de chemin** comparé segment par segment
-  (`github.com/orbe` ne vaut pas pour `github.com/orbeX`). Paramètres,
+  (`github.com/orbx` ne vaut pas pour `github.com/orbxX`). Paramètres,
   fragment et identifiant (`github.com@evil.tld`) ne comptent jamais ; seules
   les adresses `http(s):` sont aiguillées. Le même code sert aux deux chemins
   (`openUrl` et `peekTarget`).
@@ -473,20 +473,20 @@ sauf mention).
 
 ## Mises à jour (`src/main/updates.js`)
 
-Orbe est signé « ad hoc » sur macOS et pas du tout sous Windows : il ne peut pas
+Orbx est signé « ad hoc » sur macOS et pas du tout sous Windows : il ne peut pas
 se remplacer lui-même (Sparkle et Squirrel demandent une application signée par
 un compte de développeur). Il fait donc seulement ceci : demander à GitHub la
 dernière version publiée, comparer les numéros, et le dire.
 
 - **Quand** : une fois par jour au plus (application fabriquée seulement), et à
-  la demande (menu Orbe → « Rechercher les mises à jour… », Réglages → Avancé).
+  la demande (menu Orbx → « Rechercher les mises à jour… », Réglages → Avancé).
   Le réglage « Rechercher les mises à jour automatiquement » le coupe. Jamais en
   test ni depuis les sources : les essais remplacent GitHub par un serveur local
   (`tests/mises-a-jour.js`), accepté uniquement en mode test et sur `127.0.0.1`.
 - **Ce qui part** : une requête `GET` vers
-  `https://api.github.com/repos/amadoubaui/orbe/releases/latest`, depuis une
-  session à part, en mémoire (`orbe-mises-a-jour`) : aucun cookie, aucun
-  référent, aucun identifiant, agent « Orbe » sans numéro de version. Rien
+  `https://api.github.com/repos/electroheadfx/orbx/releases/latest`, depuis une
+  session à part, en mémoire (`orbx-mises-a-jour`) : aucun cookie, aucun
+  référent, aucun identifiant, agent « Orbx » sans numéro de version. Rien
   d'autre : ni statistique, ni la version installée.
 - **Ce qui est cru** : rien. Hôte et chemin fixes, HTTPS, redirection refusée,
   réponse bornée à 512 Ko. Le numéro de version doit avoir la forme `x.y.z` ;
@@ -509,7 +509,7 @@ dernière version publiée, comparer les numéros, et le dire.
   du fichier (`digest`) ; sinon seule la page de la version l'est. Taille et
   empreinte sont vérifiées, puis le fichier est **marqué comme venu
   d'Internet** avant de prendre son nom : attribut `com.apple.quarantine`
-  (`0081;<date>;Orbe;`) sur macOS, flux `Zone.Identifier` (zone 3) sous
+  (`0081;<date>;Orbx;`) sur macOS, flux `Zone.Identifier` (zone 3) sous
   Windows. Gatekeeper, XProtect et SmartScreen le contrôlent donc comme un
   fichier téléchargé par un navigateur ; la carte le dit (« Ouvrir quand
   même » dans Réglages Système → Confidentialité et sécurité). Si la marque ne
@@ -555,7 +555,7 @@ signature de développeur le ferait.
   chemin, pas de `..`). Un chemin relatif de `profiles.ini` ne sort pas du
   dossier de Firefox.
 - **Safari** : macOS protège `~/Library/Safari`. Sans « Accès complet au
-  disque », la lecture est refusée ; Orbe le reconnaît (`EPERM`), l'explique et
+  disque », la lecture est refusée ; Orbx le reconnaît (`EPERM`), l'explique et
   propose d'ouvrir le bon volet des Réglages Système. Il ne tente rien d'autre.
 - **Aperçu, puis accord** : les comptes sont montrés avant tout import, et ce
   qui est importé est exactement ce qui a été montré (jeton d'aperçu à usage
@@ -635,9 +635,9 @@ pour ouvrir une fenêtre ou passer en plein écran.
 
 **Empreinte.** `src/preload/media.js` note les gestionnaires que la page déclare
 par `setActionHandler`. Rien n'est posé sur `navigator.mediaSession` (plus de
-`__orbeActions`) : la table vit dans une fermeture, et la fonction est un
+`__orbxActions`) : la table vit dans une fermeture, et la fonction est un
 mandataire de l'originale — même `name`, même `length`, texte « [native code] »,
-mêmes erreurs. Orbe l'atteint par une clé de 128 bits tirée au hasard pour chaque
+mêmes erreurs. Orbx l'atteint par une clé de 128 bits tirée au hasard pour chaque
 document, que le script de préchargement transmet au processus principal (acceptée
 du cadre principal seulement). Seule la session du cadre lui-même est notée et
 servie : un autre cadre qui emprunte la fonction n'y lit ni n'y écrit rien. Reste
@@ -683,10 +683,10 @@ des adresses et des titres de pages.
   fixes, aucun fichier n'est lu ni décodé par la barre. Ouvrir et glisser passent par
   les mêmes portes que la Bibliothèque (`dl:open`, `drag`) : fichier exécutable
   confirmé, fichier sans marque « venu d'Internet » jamais glissé sans accord.
-- **Captures d'Orbe.** Elles sont rangées dans la Bibliothèque, sauf en navigation
+- **Captures d'Orbx.** Elles sont rangées dans la Bibliothèque, sauf en navigation
   privée, où le fichier est écrit sans laisser de fiche.
 - **« Afficher les médias de : » Bureau, Documents, Téléchargements.** macOS demande
-  l'accord de l'utilisateur à la première lecture de ces dossiers. Orbe ne les lit
+  l'accord de l'utilisateur à la première lecture de ces dossiers. Orbx ne les lit
   donc que lorsqu'un dossier vient d'être choisi dans la section Médias : jamais au
   démarrage, et le choix n'est pas retenu d'une ouverture à l'autre. Seul le premier
   niveau est lu ; liens symboliques, fichiers cachés et autres types sont écartés ;
