@@ -54,7 +54,7 @@ function drawSpaces() {
     const b = document.createElement('button');
     b.dataset.space = sp.id;
     b.className = i === sel ? 'sel' : '';
-    b.textContent = `${sp.icon}  ${sp.name}`;
+    b.textContent = iconLabel(sp.icon, sp.name, '  ');
     list.appendChild(b);
   });
   document.getElementById('space-none').hidden = found.length > 0;

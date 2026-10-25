@@ -230,7 +230,8 @@ function drawSpaces() {
   rows.forEach((r, i) => {
     const line = el('div', 'line click');
     line.dataset.i = i;
-    const dot = el('span', 'dot', r.icon);
+    const dot = el('span', 'dot');
+    dot.appendChild(iconEl(r.icon));
     const body = el('div', 'grow');
     body.append(el('div', 'name', r.name), el('div', 'sub', `${t('lib.spaceCount', { pinned: r.pinned, today: r.today })} · ${r.profile}`));
     line.append(dot, body);

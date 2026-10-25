@@ -248,6 +248,7 @@ body.dragging #fav:empty { min-height: 40px; border: 1.5px dashed var(--line); b
 }
 #space-name, .g-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #space-icon, .g-icon { font-size: 13px; }
+#space-icon svg.lucide, .g-icon svg.lucide { width: 14px; height: 14px; vertical-align: -2px; }
 
 .list { display: flex; flex-direction: column; gap: 4px; flex: none; min-height: 4px; position: relative; }
 
@@ -277,6 +278,10 @@ body.dragging #fav:empty { min-height: 40px; border: 1.5px dashed var(--line); b
 /* Icône choisie par l'utilisateur (émoji) à la place de celle du site ou du dossier. */
 .ic .emoji, .more .emoji { font-size: 13px; line-height: 16px; width: 16px; text-align: center; color: var(--fg); }
 .tile .ic .emoji { font-size: 19px; line-height: 22px; width: 22px; }
+/* Icônes Lucide : les mêmes emplacements, dimensionnés explicitement (un SVG
+   n'hérite pas de font-size). */
+.row .ic svg.lucide, .more svg.lucide { width: 14px; height: 14px; }
+.tile .ic svg.lucide { width: 18px; height: 18px; }
 .row .title { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .row.tab:not(.live):not(.active) .title { color: var(--secondary, color-mix(in srgb, var(--fg) 78%, transparent)); }
 .row .act {
@@ -442,10 +447,12 @@ body.fullscreen #page-drag, .floating #page-drag { display: none; }
   flex: none;
 }
 .sp .em { font-size: 12px; opacity: 1; }
+.sp .em svg.lucide { width: 13px; height: 13px; }
 .sp:hover { color: var(--dim); }
 .sp:active { transform: scale(0.86); transition: transform var(--press); }
 /* L'icône de l'Espace qui devient courant grossit à sa place. */
 .sp.active .em { font-size: 14px; opacity: 1; animation: sp-in var(--spring-bouncy); }
+.sp.active .em svg.lucide { width: 15px; height: 15px; }
 @keyframes sp-in { from { transform: scale(0.4); opacity: 0; } }
 .sp.active { width: 26px; color: var(--fg); }
 

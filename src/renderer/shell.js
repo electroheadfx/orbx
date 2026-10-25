@@ -18,20 +18,19 @@ const FLOATING = location.hash === '#flottant';
 if (FLOATING) document.documentElement.classList.add('floating');
 
 const icon = (name, cls = 'i') => `<svg class="${cls}"><use href="#i-${name}"/></svg>`;
-const emojiEl = (text) => Object.assign(document.createElement('span'), { className: 'emoji', textContent: text });
 
 // --- Rendu ------------------------------------------------------------------
 function setIcon(el, it) {
   // Navigation privée : aucune icône n'est téléchargée par l'interface.
   const src = S && S.incognito ? '' : (it.favicon || guessIcon(it.url));
-  // Icône choisie par l'utilisateur (un émoji) : elle remplace celle du site.
+  // Icône choisie par l'utilisateur (émoji ou Lucide) : elle remplace celle du site.
   const key = it.loading ? 'L' : (it.icon ? 'E' + it.icon : (src || '#' + it.title.charAt(0)));
   if (el._icon === key) return;
   el._icon = key;
   const slot = el._ic;
   slot.textContent = '';
   if (it.icon && !it.loading) {
-    slot.appendChild(emojiEl(it.icon));
+    slot.appendChild(iconEl(it.icon));
   } else if (it.loading) {
     const sp = document.createElement('span');
     sp.className = 'spinner';
@@ -74,7 +73,7 @@ function tabRow(el, it) {
   if (el._mk !== moreKey) {
     el._mk = moreKey;
     el._more.textContent = '';
-    for (const p of it.partners || []) el._more.appendChild(p.icon ? emojiEl(p.icon) : faviconEl(S && S.incognito ? '' : (p.favicon || guessIcon(p.url)), p.title));
+    for (const p of it.partners || []) el._more.appendChild(p.icon ? iconEl(p.icon) : faviconEl(S && S.incognito ? '' : (p.favicon || guessIcon(p.url)), p.title));
   }
   if (el._m !== it.muted) { el._m = it.muted; el._snd.setAttribute('href', it.muted ? '#i-mute' : '#i-sound'); }
   setIcon(el, it);
@@ -134,7 +133,7 @@ function folderRow(el, it) {
   if ((el._fi || '') !== (it.icon || '')) {
     el._fi = it.icon || '';
     const slot = el._head.firstChild;
-    if (it.icon) { slot.textContent = ''; slot.appendChild(emojiEl(it.icon)); } else slot.innerHTML = icon('folder');
+    if (it.icon) { slot.textContent = ''; slot.appendChild(iconEl(it.icon)); } else slot.innerHTML = icon('folder');
   }
   reconcile(el._children, it.children);
 }
@@ -312,7 +311,7 @@ function drawSpaces(list, current) {
   if (spaces._sig === sig) return;
   spaces._sig = sig;
   spaces.innerHTML = list.length > 1
-    ? list.map((x) => `<button class="sp${x.id === current ? ' active' : ''}" data-space="${esc(x.id)}" title="${esc(x.name)}" draggable="true"><span class="em">${esc(x.icon) || '•'}</span></button>`).join('')
+    ? list.map((x) => `<button class="sp${x.id === current ? ' active' : ''}" data-space="${esc(x.id)}" title="${esc(x.name)}" draggable="true"><span class="em">${iconMarkup(x.icon) || '•'}</span></button>`).join('')
     : '';
 }
 
@@ -393,7 +392,13 @@ function render(s) {
   $('reload-icon').setAttribute('href', s.nav.loading ? '#i-stop' : '#i-reload');
 
   if (editing !== s.space.id) $('space-name').textContent = s.space.name;
-  $('space-icon').textContent = s.space.icon;
+  // Le SVG de l'en-tête n'est reconstruit que si l'icône a changé.
+  const spaceIcon = $('space-icon');
+  if (spaceIcon._v !== s.space.icon) {
+    spaceIcon._v = s.space.icon;
+    spaceIcon.textContent = '';
+    spaceIcon.appendChild(iconEl(s.space.icon));
+  }
 
   // La forme des listes change : relevé des lignes avant, glissement après (voir `flip`).
   flip = animate && prev && !reducedMotion.matches && document.body.classList.contains('open') && structSig(prev) !== structSig(s) ? flipFirst() : null;
@@ -923,7 +928,7 @@ function ghostNode(it) {
     el.className = 'folder' + (it.open ? ' open' : '');
     el.innerHTML = `<div class="row"><span class="ic">${icon('folder')}</span><span class="title"></span>${icon('chevron', 'i chev')}</div><div class="children"></div>`;
     el.querySelector('.title').textContent = it.name;
-    if (it.icon) { const slot = el.querySelector('.ic'); slot.textContent = ''; slot.appendChild(emojiEl(it.icon)); }
+    if (it.icon) { const slot = el.querySelector('.ic'); slot.textContent = ''; slot.appendChild(iconEl(it.icon)); }
     for (const child of it.children) el.lastChild.appendChild(ghostNode(child));
   } else {
     tabRow(el, it);
@@ -939,7 +944,8 @@ function ghostPanel(vm) {
   el.innerHTML = `<div class="g-head"><span class="g-icon"></span><span class="g-name grow"></span></div><div class="list"></div>`
     + `<div class="g-divider"><span class="rule"></span></div>`
     + `<div class="row g-new"><span class="ic">${icon('plus')}</span><span class="title"></span></div><div class="list"></div>`;
-  el.querySelector('.g-icon').textContent = vm.space.icon;
+  const gIcon = el.querySelector('.g-icon');
+  gIcon.appendChild(iconEl(vm.space.icon));
   el.querySelector('.g-name').textContent = vm.space.name;
   el.querySelector('.g-new .title').textContent = t('side.newTab');
   const lists = el.querySelectorAll('.list');

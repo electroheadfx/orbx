@@ -151,6 +151,47 @@ function faviconEl(url, fallbackText) {
   return img;
 }
 
+// --- Icône choisie par l'utilisateur : un émoji, ou une icône Lucide ----------
+// Une page qui n'a pas besoin d'afficher de Lucide ne charge pas lucide.js : les
+// accès au jeu sont protégés par `typeof`.
+function emojiEl(text) {
+  return Object.assign(document.createElement('span'), { className: 'emoji', textContent: text });
+}
+
+function lucideEntry(value) {
+  return typeof LUCIDE_BY_NAME === 'undefined' ? null : LUCIDE_BY_NAME.get(value.slice('lucide:'.length)) || null;
+}
+
+// Nœud d'icône : un span texte pour un émoji, un SVG pour une icône Lucide
+// connue, une puce neutre pour un nom inconnu (jamais la valeur encodée).
+function iconEl(value) {
+  if (typeof value !== 'string' || !value.startsWith('lucide:')) return emojiEl(value == null ? '' : value);
+  const entry = lucideEntry(value);
+  if (!entry) return emojiEl('•');
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('class', 'i lucide');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  // Seul contenu posé en innerHTML : le corps vendorisé, indexé par nom connu.
+  svg.innerHTML = entry.body;
+  return svg;
+}
+
+// Même icône en balisage, pour les gabarits construits d'un seul innerHTML.
+function iconMarkup(value) {
+  if (typeof value !== 'string' || !value) return '';
+  if (!value.startsWith('lucide:')) return esc(value);
+  const entry = lucideEntry(value);
+  if (!entry) return '•';
+  return `<svg class="i lucide" viewBox="0 0 24 24" aria-hidden="true" focusable="false">${entry.body}</svg>`;
+}
+
+// Libellé texte d'un Espace : nom seul pour une icône Lucide ou absente.
+function iconLabel(icon, name, gap = ' ') {
+  return typeof icon === 'string' && icon && !icon.startsWith('lucide:') ? icon + gap + name : String(name);
+}
+
 document.documentElement.lang = lang;
 document.addEventListener('DOMContentLoaded', () => applyI18n());
 O.on('keys', (k) => { KEYS = k || {}; applyI18n(); });

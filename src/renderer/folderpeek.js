@@ -1,6 +1,6 @@
 // Survol d'un dossier replié : la liste de ses onglets, avec un champ pour y chercher
 // (comme dans Arc). Un clic sur une ligne affiche l'onglet, sans ouvrir le dossier.
-// Chargé après shell.js (`send`, `S`, `t`, `faviconEl`, `emojiEl`, `guessIcon`). Tout vient
+// Chargé après shell.js (`send`, `S`, `t`, `faviconEl`, `iconEl`, `guessIcon`). Tout vient
 // de l'état déjà reçu par la barre : aucun message nouveau vers le processus principal
 // (« activate » est celui d'un clic sur une ligne). Les titres viennent des sites : ils ne
 // sont posés que par textContent. Le panneau vit dans la barre latérale, par-dessus les
@@ -60,7 +60,7 @@
       row.dataset.tab = r.tab.id;
       row.setAttribute('role', 'menuitem');
       const ic = el('span', 'fp-ic');
-      ic.appendChild(r.tab.icon ? emojiEl(r.tab.icon) : faviconEl(S && S.incognito ? '' : (r.tab.favicon || guessIcon(r.tab.url)), r.tab.title));
+      ic.appendChild(r.tab.icon ? iconEl(r.tab.icon) : faviconEl(S && S.incognito ? '' : (r.tab.favicon || guessIcon(r.tab.url)), r.tab.title));
       row.append(ic, el('span', 'fp-name', r.tab.title));
       if (r.path) row.appendChild(el('span', 'fp-sub', r.path));
       panel.list.appendChild(row);
