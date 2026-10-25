@@ -428,10 +428,10 @@ body.fullscreen #page-drag, .floating #page-drag { display: none; }
 #update-note:hover #update-close, #update-close:focus-visible { opacity: 1; transform: none; }
 
 #bottom { height: 42px; display: flex; align-items: center; gap: 4px; flex: none; }
-#spaces { display: flex; align-items: center; justify-content: center; gap: 3px; overflow: hidden; }
+#spaces { display: flex; align-items: center; justify-content: center; gap: 6px; overflow: hidden; }
 /* Comme dans Arc : chaque Espace montre son icône ; la pastille de l'Espace affiché est plus large. */
 .sp {
-  width: 14px;
+  width: 12px;
   height: 26px;
   border-radius: 8px;
   display: grid;
