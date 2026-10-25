@@ -5,10 +5,10 @@ current_phase: 1
 current_phase_name: Portes, CI et spikes
 status: planning
 stopped_at: ROADMAP.md et STATE.md écrits ; en attente de l'approbation du roadmap.
-last_updated: "2026-10-25T09:54:08.930Z"
+last_updated: "2026-10-25T09:57:59.048Z"
 last_activity: 2026-10-25
 last_activity_desc: "Completed quick task 261025-eik: Préparer Orbx pour son dépôt indépendant (README anglais, licence, config GSD)."
-state_head: a4818a688e01ae53d4b14f5ed85c0f7e393a4279
+state_head: d915fcd7ef95cd55e6886be419bea8df32cba68b
 progress:
   total_phases: 5
   completed_phases: 0
@@ -95,6 +95,7 @@ None yet.
 | 10 | Porter à 6 px l'espacement des pastilles d'Espace (pastille inactive 12 px pour que 9 Espaces tiennent dans la largeur par défaut). | 2026-10-25 | 288fe9b | — |
 | 261025-eik | Préparer Orbx pour son dépôt indépendant : rattacher GSD et MemPalace, README en anglais sans captures, licence au nom du nouveau mainteneur. | 2026-10-25 | e202cdb | [261025-eik-rebranding-orbx-commit-planning-mempalac](./quick/261025-eik-rebranding-orbx-commit-planning-mempalac/) |
 | 12 | Retirer la ligne d'état Windows du README. | 2026-10-25 | 414ee26 | — |
+| 13 | Passer la version à 0.15.6. | 2026-10-25 | a2a2ab6 | — |
 
 ## Deferred Items
 
