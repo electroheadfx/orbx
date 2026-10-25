@@ -437,18 +437,18 @@ body.fullscreen #page-drag, .floating #page-drag { display: none; }
 /* Chaque Espace montre son icône ; l'Espace affiché se distingue par la couleur seule.
    Largeur et taille d'icône sont identiques partout : aucun décalage à la sélection. */
 .sp {
-  width: 18px;
+  width: 13px;
   height: 26px;
   border-radius: 8px;
   display: grid;
   place-items: center;
-  font-size: 16px;
+  font-size: 13px;
   color: var(--faint);
   transition: color 120ms, transform var(--spring-bouncy);
   flex: none;
 }
-.sp .em { font-size: 16px; opacity: 1; }
-.sp .em svg.lucide { width: 16px; height: 16px; }
+.sp .em { font-size: 13px; opacity: 1; }
+.sp .em svg.lucide { width: 13px; height: 13px; }
 .sp:hover { color: var(--dim); }
 .sp:active { transform: scale(0.86); transition: transform var(--press); }
 .sp.active { color: var(--fg); }
