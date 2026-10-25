@@ -2,7 +2,7 @@
 // raccourcis), traduite. Reconstruite seulement quand un libellé change.
 const { Menu, BaseWindow, app } = require('electron');
 const { store } = require('./store');
-const { OrbeWindow } = require('./window');
+const { OrbxWindow } = require('./window');
 const commands = require('./commands');
 const platform = require('./platform');
 const shortcuts = require('./shortcuts');
@@ -11,7 +11,7 @@ const t = (k, v) => store.t(k, null, v);
 let lastSignature = '';
 let timer = null;
 
-// Orbe est-il le navigateur par défaut ? (coche du menu, comme dans Arc.) La
+// Orbx est-il le navigateur par défaut ? (coche du menu, comme dans Arc.) La
 // réponse du système est relue au plus toutes les dix secondes.
 let defaultAt = 0;
 let defaultIs = false;
@@ -31,15 +31,15 @@ function extensionActions(w) {
 
 function dispatch(name, arg) {
   const focused = BaseWindow.getFocusedWindow();
-  const win = OrbeWindow.focused;
+  const win = OrbxWindow.focused;
   // Fenêtre annexe au premier plan (réglages, petite fenêtre) : elle gère
   // elle-même la fermeture, le reste s'adresse à la fenêtre principale.
   if (focused && !win) {
     if (name === 'closeTab' || name === 'closeWindow') return focused.close();
     if (name === 'stayOnTop') { focused.setAlwaysOnTop(!focused.isAlwaysOnTop()); return refresh(true); }
-    if (focused.orbeLittle && focused.orbeLittle.run(name)) return undefined;
+    if (focused.orbxLittle && focused.orbxLittle.run(name)) return undefined;
   }
-  return commands.run(win || OrbeWindow.primary, name, arg);
+  return commands.run(win || OrbxWindow.primary, name, arg);
 }
 
 function item(name, extra = {}) {
@@ -48,7 +48,7 @@ function item(name, extra = {}) {
 }
 
 function build() {
-  const w = OrbeWindow.focused || OrbeWindow.primary;
+  const w = OrbxWindow.focused || OrbxWindow.primary;
   const s = store.state.settings;
   const sep = { type: 'separator' };
   const loc = w && w.activeId ? w.locate(w.activeId) : null;
@@ -60,7 +60,7 @@ function build() {
   const exts = extensionActions(w);
   const template = [
     {
-      label: 'Orbe',
+      label: 'Orbx',
       submenu: [
         { label: t('app.about'), role: 'about' },
         item('checkUpdates'),
@@ -173,7 +173,7 @@ function build() {
               label: p.name,
               type: 'radio',
               checked: !!w && w.space.profileId === p.id,
-              click: () => { const win = OrbeWindow.focused || OrbeWindow.primary; if (win) win.setProfile(p.id); },
+              click: () => { const win = OrbxWindow.focused || OrbxWindow.primary; if (win) win.setProfile(p.id); },
             })),
             sep,
             item('newProfile'),
@@ -188,7 +188,7 @@ function build() {
           type: 'checkbox',
           checked: !!w && sp.id === w.spaceId,
           accelerator: i < 9 ? platform.accel(`Ctrl+${i + 1}`) : undefined,
-          click: () => { const win = OrbeWindow.focused || OrbeWindow.primary; if (win) win.switchSpace(sp.id); },
+          click: () => { const win = OrbxWindow.focused || OrbxWindow.primary; if (win) win.switchSpace(sp.id); },
         })),
       ],
     },
@@ -213,7 +213,7 @@ function build() {
           visible: false,
           acceleratorWorksWhenHidden: true,
           accelerator: platform.accel(`Cmd+${n}`),
-          click: () => { const win = OrbeWindow.focused; if (win) win.tabAt(n); },
+          click: () => { const win = OrbxWindow.focused; if (win) win.tabAt(n); },
         })),
       ],
     },
@@ -228,7 +228,7 @@ function build() {
         ...exts.map((x) => ({
           label: x.title || x.name || x.id,
           enabled: x.enabled !== false,
-          click: () => { const win = OrbeWindow.focused || OrbeWindow.primary; if (win) require('./ext-host').openPopup(win, x.id); },
+          click: () => { const win = OrbxWindow.focused || OrbxWindow.primary; if (win) require('./ext-host').openPopup(win, x.id); },
         })),
         // ⌘E : d'une extension à la suivante, comme dans Arc.
         ...(exts.length ? [sep, item('cycleExtensions'), sep] : []),
@@ -248,7 +248,7 @@ function build() {
         sep, { label: t('window.front'), role: 'front' },
       ],
     },
-    { label: t('menu.help'), role: 'help', submenu: [item('welcome'), item('shortcuts'), item('helpCenter'), item('whatsNew'), item('reportIssue'), item('support'), item('github'), sep, item('exportNotes'), sep, { label: t('help.troubleshooting'), submenu: [item('revealData'), item('copyInfo'), item('taskManager'), item('recordTrace', { labelKey: commands.tracing() ? 'help.stopTrace' : 'help.recordTrace' }), sep, { label: t('backup.menu'), submenu: require('./backups').menuItems() }] }] },
+    { label: t('menu.help'), role: 'help', submenu: [item('welcome'), item('shortcuts'), item('helpCenter'), item('whatsNew'), item('reportIssue'), item('github'), sep, item('exportNotes'), sep, { label: t('help.troubleshooting'), submenu: [item('revealData'), item('copyInfo'), item('taskManager'), item('recordTrace', { labelKey: commands.tracing() ? 'help.stopTrace' : 'help.recordTrace' }), sep, { label: t('backup.menu'), submenu: require('./backups').menuItems() }] }] },
   ];
   Menu.setApplicationMenu(Menu.buildFromTemplate(platform.menuTemplate(template)));
   if (platform.isMac && app.dock) app.dock.setMenu(Menu.buildFromTemplate(dockTemplate()));
@@ -282,7 +282,7 @@ function refresh(force) {
   timer = setTimeout(() => {
     timer = null;
     forced = false;
-    const w = OrbeWindow.focused || OrbeWindow.primary;
+    const w = OrbxWindow.focused || OrbxWindow.primary;
     const s = store.state.settings;
     const loc = w && w.activeId ? w.locate(w.activeId) : null;
     const tab = w && w.activeId ? w.data.tabs[w.activeId] : null;

@@ -5,10 +5,10 @@
 // Il signale au processus principal un balayage horizontal que la page n'a pas
 // consommé — ni défilement horizontal possible sous le pointeur, ni
 // `preventDefault` —, avec le déplacement cumulé ; l'indicateur qui suit les
-// doigts est dessiné par une vue d'Orbe, hors de la page (src/main/swipe.js).
+// doigts est dessiné par une vue d'Orbx, hors de la page (src/main/swipe.js).
 const { ipcRenderer } = require('electron');
 
-const CHANNEL = 'orbe-swipe';
+const CHANNEL = 'orbx-swipe';
 const IDLE = 110; // sans événement pendant ce temps (ms), le geste est fini
 
 function start() {

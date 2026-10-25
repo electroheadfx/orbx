@@ -72,7 +72,7 @@ function savedSize() {
   };
 }
 const littles = new Map(); // id webContents de la barre -> LittleWindow
-const hooks = { openInOrbe: () => {}, profileId: () => 'default', spaces: () => [], profiles: () => ['default'], profileOfSpace: () => null };
+const hooks = { openInOrbx: () => {}, profileId: () => 'default', spaces: () => [], profiles: () => ['default'], profileOfSpace: () => null };
 
 class LittleWindow {
   static ownerOf(wc) { return littles.get(wc.id) || null; }
@@ -126,7 +126,7 @@ class LittleWindow {
       minHeight: MIN.height,
       ...platform.windowChrome({ traffic: { x: 14, y: 13 }, dark: nativeTheme.shouldUseDarkColors }),
     });
-    this.win.orbeLittle = this;
+    this.win.orbxLittle = this;
     this.ui = new WebContentsView({ webPreferences: { preload: UI_PRELOAD, sandbox: true, contextIsolation: true } });
     this.ui.setBackgroundColor('#00000000');
     trusted.add(this.ui.webContents);
@@ -206,7 +206,7 @@ class LittleWindow {
 
   load(input) {
     const url = suggest.resolve(input);
-    // Une petite fenêtre n'affiche que des pages web : jamais une page d'Orbe.
+    // Une petite fenêtre n'affiche que des pages web : jamais une page d'Orbx.
     if (isInternal(url)) return;
     this.url = url;
     if (!this.view) {
@@ -225,12 +225,12 @@ class LittleWindow {
       wc.on('did-navigate-in-page', (e, u, main) => { if (main) nav(u); });
       // « Quitter la page ? » : la question est posée (unload.js).
       wc.on('will-prevent-unload', (e) => { if (require('./unload').confirm(this.win, wc)) e.preventDefault(); });
-      // Comme pour un onglet : une page web ne mène jamais à une page d'Orbe.
+      // Comme pour un onglet : une page web ne mène jamais à une page d'Orbx.
       const guard = (e, u) => { if (isInternal(u)) e.preventDefault(); };
       wc.on('will-navigate', guard);
       wc.on('will-redirect', guard);
       wc.setVisualZoomLevelLimits(1, 5).catch(() => {});
-      wc.setWindowOpenHandler((d) => { if (/^https?:/i.test(d.url)) hooks.openInOrbe(d.url); return { action: 'deny' }; });
+      wc.setWindowOpenHandler((d) => { if (/^https?:/i.test(d.url)) hooks.openInOrbx(d.url); return { action: 'deny' }; });
       this.layout();
     }
     this.view.webContents.loadURL(url).catch(() => {});
@@ -269,7 +269,7 @@ class LittleWindow {
   openInSpace(id) {
     if (!this.url || !hooks.spaces().some((sp) => sp.id === id)) return;
     rememberProfile(this.url, hooks.profileOfSpace(id));
-    hooks.openInOrbe(this.url, id);
+    hooks.openInOrbx(this.url, id);
     this.win.close();
   }
 
@@ -277,16 +277,16 @@ class LittleWindow {
     if (this.url) clipboard.writeText(cleanUrl(this.url));
   }
 
-  openInOrbe() {
+  openInOrbx() {
     if (!this.url) return;
-    hooks.openInOrbe(this.url);
+    hooks.openInOrbx(this.url);
     this.win.close();
   }
 
   handle(action, a) {
     if (action === 'ready') return this.send();
     if (action === 'navigate') return this.load(String(a));
-    if (action === 'openInOrbe') return this.openInOrbe();
+    if (action === 'openInOrbx') return this.openInOrbx();
     if (action === 'openInMenu') return this.openInMenu();
     if (action === 'closeMenu') return this.closeMenu();
     if (action === 'openInSpace') return this.openInSpace(String(a));
@@ -311,7 +311,7 @@ class LittleWindow {
       case 'actualSize': if (wc) wc.setZoomLevel(0); return true;
       case 'print': if (wc) wc.print(); return true;
       // Comme dans Arc : ⌘O envoie la page dans la fenêtre principale.
-      case 'expandPeek': case 'togglePin': this.openInOrbe(); return true;
+      case 'expandPeek': case 'togglePin': this.openInOrbx(); return true;
       case 'openInSpace': this.openInMenu(); return true;
       default: return false;
     }

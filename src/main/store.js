@@ -1,4 +1,4 @@
-// Données persistantes d'Orbe : espaces, onglets, archive, historique, réglages.
+// Données persistantes d'Orbx : espaces, onglets, archive, historique, réglages.
 // Un seul fichier JSON, écrit de façon atomique et différée pour ne jamais
 // bloquer l'interface.
 const fs = require('fs');
@@ -15,7 +15,7 @@ const SPACE_COLORS = ['#7c6cf0', '#3b82f6', '#06b6d4', '#10b981', '#84cc16', '#f
 const uid = () => crypto.randomBytes(6).toString('base64url');
 // Une icône « data: » volumineuse n'a pas sa place dans l'historique.
 const lightIcon = (u) => !!u && !(u.startsWith('data:') && u.length > 2048);
-const INTERNAL_PAGE = /^orbe:\/\/app\/(library|shortcuts|welcome|notes|easel)\.html/;
+const INTERNAL_PAGE = /^orbx:\/\/app\/(library|shortcuts|welcome|notes|easel)\.html/;
 
 const DEFAULT_SETTINGS = {
   lang: 'fr',
@@ -92,7 +92,7 @@ class Store {
   }
 
   load(dir) {
-    this.file = path.join(dir, 'orbe.json');
+    this.file = path.join(dir, 'orbx.json');
     let raw = null;
     try {
       raw = JSON.parse(fs.readFileSync(this.file, 'utf8'));
@@ -134,7 +134,7 @@ class Store {
     for (const id of Object.keys(s.favs)) if (!profileIds.has(id)) delete s.favs[id];
     for (const id of profileIds) s.favs[id] = (s.favs[id] || []).filter((tid) => s.tabs[tid] && !favSeen.has(tid) && favSeen.add(tid));
     s.archive = s.archive || [];
-    // Non énumérable : JSON.stringify(état) ne l'emporte pas dans orbe.json.
+    // Non énumérable : JSON.stringify(état) ne l'emporte pas dans orbx.json.
     // Lu à la demande (`historyPending`) : le premier accès charge le fichier en entier,
     // d'un coup ; personne ne voit donc jamais un historique partiel.
     let history = s.history && typeof s.history === 'object' ? s.history : {};
@@ -221,7 +221,7 @@ class Store {
       await fs.promises.writeFile(tmp, JSON.stringify(this.state));
       await fs.promises.rename(tmp, this.file);
     } catch (err) {
-      console.error('[orbe] sauvegarde impossible', err);
+      console.error('[orbx] sauvegarde impossible', err);
     }
     this.writing = false;
     if (this.dirty) { this.dirty = false; this.save(); }
@@ -277,7 +277,7 @@ class Store {
       await fs.promises.rename(tmp, this.historyFile);
     } catch (err) {
       this.historyDirty = true;
-      console.error('[orbe] historique : sauvegarde impossible', err);
+      console.error('[orbx] historique : sauvegarde impossible', err);
     }
     this.historyWriting = false;
     if (this.historyAgain) { this.historyAgain = false; this.saveHistory(); }
@@ -293,7 +293,7 @@ class Store {
         fs.renameSync(this.historyFile + '.sync.tmp', this.historyFile);
         this.historyDirty = false;
       } catch (err) {
-        console.error('[orbe] historique : sauvegarde impossible', err);
+        console.error('[orbx] historique : sauvegarde impossible', err);
       }
     }
     if (this.timer) { clearTimeout(this.timer); this.timer = null; }
@@ -304,7 +304,7 @@ class Store {
       fs.writeFileSync(tmp, JSON.stringify(this.state));
       fs.renameSync(tmp, this.file);
     } catch (err) {
-      console.error('[orbe] sauvegarde impossible', err);
+      console.error('[orbx] sauvegarde impossible', err);
     }
   }
 

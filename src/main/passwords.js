@@ -4,7 +4,7 @@
 //   1. Le coffre est un fichier à part (passwords.json), chiffré en entier par
 //      `safeStorage` ; sans chiffrement réel du système, rien n'est enregistré.
 //   2. La page ne sait rien : ni les comptes enregistrés, ni même s'il y en a.
-//      La liste des comptes s'affiche dans une vue d'Orbe posée par-dessus la
+//      La liste des comptes s'affiche dans une vue d'Orbx posée par-dessus la
 //      page, jamais dans son DOM. Le script de page (src/preload/page.js, monde
 //      isolé) ne reçoit un mot de passe qu'après un choix explicite.
 //   3. Ce qui décide « quels comptes pour ce cadre » est l'origine réelle du
@@ -19,7 +19,7 @@ const { boundsOf } = require('./motion');
 const platform = require('./platform');
 
 const PAGE_PRELOAD = path.join(__dirname, '../preload/page.js');
-const CHANNEL = 'orbe-pw';
+const CHANNEL = 'orbx-pw';
 const MAX_USER = 300;
 const MAX_PASS = 1000;
 // Délais que les tests raccourcissent.
@@ -31,7 +31,7 @@ const AUTH_GRACE = 90e3; // après Touch ID, pas de nouvelle demande pendant ce 
 const CLIPBOARD_TTL = 60e3;
 
 // Fournis par main.js (évite une dépendance circulaire avec window.js).
-const env = { trusted: null, uiPreload: '', internal: 'orbe://app/', toast: () => {} };
+const env = { trusted: null, uiPreload: '', internal: 'orbx://app/', toast: () => {} };
 // Remplaçables par les tests : aucune boîte de dialogue ni Touch ID en test.
 const hooks = {
   confirm: async (parent, opts) => (await (parent ? dialog.showMessageBox(parent, opts) : dialog.showMessageBox(opts))).response === 0,
@@ -67,9 +67,15 @@ function emptyData() {
   return { profiles: {} };
 }
 
+// Marqueur hérité des coffres écrits sous l'ancien nom. Il reste lu sans être
+// réécrit : la migration de profil ne touche jamais passwords.json (le coffre
+// est chiffré et ne se relit qu'au premier accès au trousseau). Le prochain
+// enregistrement réécrit le fichier avec le marqueur actuel.
+const LEGACY_VAULT_MARKER = 'orbe';
+
 function readFile(file) {
   const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
-  if (!raw || raw.orbe !== 'passwords' || typeof raw.data !== 'string') throw new Error('format');
+  if (!raw || (raw.orbx !== 'passwords' && raw[LEGACY_VAULT_MARKER] !== 'passwords') || typeof raw.data !== 'string') throw new Error('format');
   const data = JSON.parse(safeStorage.decryptString(Buffer.from(raw.data, 'base64')));
   if (!data || typeof data !== 'object' || !data.profiles) throw new Error('contenu');
   return data;
@@ -101,14 +107,14 @@ function open() {
   // Illisible (clé du trousseau perdue, fichier abîmé) : on n'écrit plus rien,
   // pour ne pas écraser des données peut-être récupérables.
   vault.status = 'error';
-  console.error('[orbe] coffre de mots de passe illisible');
+  console.error('[orbx] coffre de mots de passe illisible');
   return false;
 }
 
 // Écriture atomique et immédiate : fichier temporaire, puis remplacement.
 function write() {
   if (vault.status !== 'open') return false;
-  const body = JSON.stringify({ orbe: 'passwords', version: 1, data: safeStorage.encryptString(JSON.stringify(vault.data)).toString('base64') });
+  const body = JSON.stringify({ orbx: 'passwords', version: 1, data: safeStorage.encryptString(JSON.stringify(vault.data)).toString('base64') });
   const tmp = vault.file + '.tmp';
   try {
     const fd = fs.openSync(tmp, 'w', 0o600);
@@ -118,7 +124,7 @@ function write() {
     vault.lastGood = true;
     return true;
   } catch (err) {
-    console.error('[orbe] coffre de mots de passe : écriture impossible', err.code || '');
+    console.error('[orbx] coffre de mots de passe : écriture impossible', err.code || '');
     try { fs.unlinkSync(tmp); } catch {}
     return false;
   }
@@ -163,7 +169,7 @@ let pslSession = null;
 
 async function cookieAllowed(domain) {
   if (suffixCache.has(domain)) return suffixCache.get(domain);
-  if (!pslSession) pslSession = session.fromPartition('orbe-suffixes');
+  if (!pslSession) pslSession = session.fromPartition('orbx-suffixes');
   let ok;
   try {
     await pslSession.cookies.set({ url: `https://x.${domain}/`, name: 's', value: '1', domain: '.' + domain });
@@ -639,7 +645,7 @@ function fill(st, focus, entry) {
   return true;
 }
 
-// --- Vues d'Orbe posées sur la page ------------------------------------------
+// --- Vues d'Orbx posées sur la page ------------------------------------------
 // Fenêtre et vue qui affichent ce webContents, en parcourant les vraies vues :
 // aucune dépendance aux structures de window.js.
 function locate(wc) {
@@ -703,7 +709,7 @@ function tell(view, payload) {
 
 // La liste s'ouvre sous le champ. La position vient de la page, donc sans
 // valeur de preuve : elle est bornée à la vue de l'onglet, et ne recouvre
-// jamais l'interface d'Orbe.
+// jamais l'interface d'Orbx.
 function showPicker(st, focus, items, at) {
   const where = locate(st.wc);
   if (!where) return;
@@ -949,7 +955,7 @@ function managerState(pid) {
   };
 }
 
-// Actions de l'interface (canal `orbe`, déjà réservé aux pages orbe:// de
+// Actions de l'interface (canal `orbx`, déjà réservé aux pages orbx:// de
 // confiance). Les actions sensibles n'obéissent qu'à la fenêtre du gestionnaire.
 async function action(name, a, sender) {
   if (name === 'pw:open') { openManager(); return true; }
@@ -1047,7 +1053,7 @@ async function exportDialog(pid) {
   if (!(await authenticate(t('pw.authExport'), manager, { fresh: true }))) return null;
   const sure = await hooks.confirm(manager, { type: 'warning', message: t('pw.exportTitle'), detail: t('pw.exportPlain'), buttons: [t('pw.export'), t('pw.cancel')], defaultId: 1, cancelId: 1 });
   if (!sure) return null;
-  const r = await dialog.showSaveDialog(manager, { title: t('pw.export'), defaultPath: path.join(app.getPath('documents'), 'Mots de passe Orbe.csv'), filters: [{ name: 'CSV', extensions: ['csv'] }] });
+  const r = await dialog.showSaveDialog(manager, { title: t('pw.export'), defaultPath: path.join(app.getPath('documents'), 'Mots de passe Orbx.csv'), filters: [{ name: 'CSV', extensions: ['csv'] }] });
   if (r.canceled || !r.filePath) return null;
   try {
     fs.writeFileSync(r.filePath, exportCsv(pid), { mode: 0o600 });
@@ -1076,11 +1082,11 @@ async function resetVault(pid) {
 function attach(ses, profileId) {
   if (!ses || profiles.has(ses)) return;
   profiles.set(ses, profileId || 'default');
-  ses.registerPreloadScript({ type: 'frame', filePath: PAGE_PRELOAD, id: 'orbe-pw' });
+  ses.registerPreloadScript({ type: 'frame', filePath: PAGE_PRELOAD, id: 'orbx-pw' });
   if (ipcReady) return;
   ipcReady = true;
   ipcMain.on(CHANNEL, (e, msg) => { onPageMessage(e, msg).catch(() => {}); });
-  // Un mot de passe copié ne survit pas à la fermeture d'Orbe.
+  // Un mot de passe copié ne survit pas à la fermeture d'Orbx.
   app.on('before-quit', (e) => {
     if (!clipboardSecret) return;
     e.preventDefault();
@@ -1096,5 +1102,5 @@ module.exports = {
   attach, configure, action, sync, contextMenuItems, openManager, forgetProfile, hooks,
   // Pour les tests et l'import.
   save, remove, setNever, matchesFor, relation, registrable, importCsv, importList, exportCsv, parseCsv, generate, originOf, status, encryptionAvailable,
-  internals: { vault, states, overlays, limits, allowed, CHOICE_TTL, copySecret, clearClipboardIfOurs, authenticate, open, bucket, get manager() { return manager; } },
+  internals: { LEGACY_VAULT_MARKER, vault, states, overlays, limits, allowed, CHOICE_TTL, copySecret, clearClipboardIfOurs, authenticate, open, bucket, get manager() { return manager; } },
 };

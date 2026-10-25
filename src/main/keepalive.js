@@ -36,7 +36,7 @@ const RULES = [
   { host: 'deezer.com', sub: true },
 ];
 
-// Site de la liste d'Orbe (ci-dessus).
+// Site de la liste d'Orbx (ci-dessus).
 function builtin(url) {
   let u;
   try { u = new URL(String(url)); } catch { return false; }
@@ -56,7 +56,7 @@ function user(url, settings) {
 }
 
 // Le site reste-t-il éveillé ? Un seul point d'entrée pour la veille (window.js, `trimLive`) :
-// la liste d'Orbe, puis celle de l'utilisateur quand les réglages sont fournis.
+// la liste d'Orbx, puis celle de l'utilisateur quand les réglages sont fournis.
 function matches(url, settings) {
   return builtin(url) || user(url, settings);
 }

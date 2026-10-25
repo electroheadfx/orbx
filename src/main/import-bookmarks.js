@@ -150,7 +150,7 @@ function read(file) {
   return data;
 }
 
-// Nœuds d'Orbe (dossiers, onglets épinglés) pour des signets lus ; les onglets sont créés dans l'état.
+// Nœuds d'Orbx (dossiers, onglets épinglés) pour des signets lus ; les onglets sont créés dans l'état.
 function pinnedNodes(nodes, state = store.state) {
   const tab = (n) => {
     const t = { id: uid(), url: n.url, title: n.title, favicon: '', createdAt: Date.now(), lastActiveAt: Date.now(), homeUrl: n.url };
@@ -161,7 +161,7 @@ function pinnedNodes(nodes, state = store.state) {
   return build(nodes);
 }
 
-// Ajoute les signets à l'état d'Orbe : un nouvel Espace, dossiers et onglets épinglés.
+// Ajoute les signets à l'état d'Orbx : un nouvel Espace, dossiers et onglets épinglés.
 function merge(data, { name, profileId = 'default' } = {}, state = store.state) {
   if (!data || !data.bookmarks) return null;
   const space = store.makeSpace(String(name || store.t('bm.space')).slice(0, 60), '🔖', SPACE_COLORS[state.spaces.length % SPACE_COLORS.length]);

@@ -1,4 +1,4 @@
-// Point d'entrée d'Orbe.
+// Point d'entrée d'Orbx.
 const { app, ipcMain, BrowserWindow, nativeTheme, shell, webContents, dialog, net, session } = require('electron');
 const { pathToFileURL } = require('url');
 const path = require('path');
@@ -9,7 +9,7 @@ const { store } = require('./store');
 const sessions = require('./sessions');
 const suggest = require('./suggest');
 const win = require('./window');
-const { OrbeWindow, trusted, INTERNAL, UI_PRELOAD } = win;
+const { OrbxWindow, trusted, INTERNAL, UI_PRELOAD } = win;
 const little = require('./little');
 const commands = require('./commands');
 const menu = require('./menu');
@@ -33,43 +33,50 @@ const extUi = require('./ext-ui');
 
 platform.adaptLocales(locales);
 
-// Mode test (--selftest, ORBE_SCENARIO, trousseau factice) : réservé au
+// Mode test (--selftest, ORBX_SCENARIO, trousseau factice) : réservé au
 // lancement depuis les sources. L'application fabriquée ne l'accepte qu'avec
-// --orbe-test ET un dossier de données à part (essai de fumée de l'intégration
+// --orbx-test ET un dossier de données à part (essai de fumée de l'intégration
 // continue) : jamais sur le vrai profil.
 function testModeAllowed() {
   if (!app.isPackaged) return true;
-  if (!process.argv.includes('--orbe-test') || !process.env.ORBE_USER_DATA) return false;
+  if (!process.argv.includes('--orbx-test') || !process.env.ORBX_USER_DATA) return false;
   const real = path.resolve(app.getPath('userData'));
-  const asked = path.resolve(process.env.ORBE_USER_DATA);
+  const asked = path.resolve(process.env.ORBX_USER_DATA);
   return asked !== real && !asked.startsWith(real + path.sep);
 }
 const pendingUrls = [];
 
-app.setName('Orbe');
+app.setName('Orbx');
 const SELFTEST = process.argv.includes('--selftest') && testModeAllowed();
 if (process.argv.includes('--selftest') && !SELFTEST) {
-  console.error('[orbe] --selftest refusé : application fabriquée, sans --orbe-test ni ORBE_USER_DATA à part');
+  console.error('[orbx] --selftest refusé : application fabriquée, sans --orbx-test ni ORBX_USER_DATA à part');
   process.exit(2);
 }
 // Exception non rattrapée dans le processus principal. Sans écouteur, Electron
 // ouvre une boîte d'erreur native (« A JavaScript error occurred in the main
 // process ») qui fige toute l'application tant que personne n'y répond — et
 // personne n'y répond pendant un essai : c'était le blocage des tests après la
-// fermeture d'une fenêtre. Orbe consigne l'erreur et continue ; en test, elle
+// fermeture d'une fenêtre. Orbx consigne l'erreur et continue ; en test, elle
 // fait échouer le scénario à la fin (voir plus bas).
 const uncaught = [];
 process.on('uncaughtException', (err) => {
   const text = String((err && err.stack) || err);
   uncaught.push(text);
   if (uncaught.length > 20) uncaught.shift();
-  console.error(`[orbe] exception non rattrapée dans le processus principal :\n${text}`);
+  console.error(`[orbx] exception non rattrapée dans le processus principal :\n${text}`);
   try { fs.appendFileSync(path.join(app.getPath('userData'), 'erreurs.log'), `${new Date().toISOString()} ${text}\n\n`); } catch {}
 });
 
-// Profil de données isolé : pour les tests, ou via ORBE_USER_DATA.
-if (process.env.ORBE_USER_DATA) app.setPath('userData', path.resolve(process.env.ORBE_USER_DATA));
-else if (SELFTEST) app.setPath('userData', fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-test-')));
+// Profil de données isolé : pour les tests, ou via ORBX_USER_DATA.
+if (process.env.ORBX_USER_DATA) app.setPath('userData', path.resolve(process.env.ORBX_USER_DATA));
+else if (SELFTEST) app.setPath('userData', fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-test-')));
+// Reprise du profil de l'ancien nom, impérativement avant le verrou d'instance
+// et store.load : sinon le verrou ou la première sauvegarde créerait un profil
+// Orbx vide, et la migration ne se rejouerait jamais. Jamais pour un profil
+// d'essai ou imposé par ORBX_USER_DATA.
+if (!SELFTEST && !process.env.ORBX_USER_DATA) {
+  require('./migrate-profile').migrate({ appData: app.getPath('appData'), userData: app.getPath('userData'), platform: process.platform });
+}
 // En test, rien n'est écrit dans le vrai dossier Téléchargements.
 let testGuard = null;
 if (SELFTEST) {
@@ -77,11 +84,11 @@ if (SELFTEST) {
   // et un scénario qui n'avance plus s'arrête en disant ce qu'il attendait.
   testGuard = require('./test-guard');
   testGuard.state.errors = uncaught;
-  testGuard.install({ app, dialog, limit: Number(process.env.ORBE_TEST_LIMIT) || 480, stall: Number(process.env.ORBE_TEST_STALL) || 150 });
+  testGuard.install({ app, dialog, limit: Number(process.env.ORBX_TEST_LIMIT) || 480, stall: Number(process.env.ORBX_TEST_STALL) || 150 });
   // Les tests ne touchent jamais au vrai trousseau du système.
   app.commandLine.appendSwitch('use-mock-keychain');
-  // ORBE_NETLOG : journal du réseau de Chromium, pour une page qui ne se charge pas.
-  if (process.env.ORBE_NETLOG) app.commandLine.appendSwitch('log-net-log', process.env.ORBE_NETLOG);
+  // ORBX_NETLOG : journal du réseau de Chromium, pour une page qui ne se charge pas.
+  if (process.env.ORBX_NETLOG) app.commandLine.appendSwitch('log-net-log', process.env.ORBX_NETLOG);
   // Caméra et micro factices : aucun vrai appareil n'est ouvert pendant les tests.
   app.commandLine.appendSwitch('use-fake-device-for-media-stream');
   // Fenêtre d'essai recouverte par une autre (machine partagée) : Chromium ralentirait
@@ -92,10 +99,10 @@ if (SELFTEST) {
   app.setPath('downloads', dl);
 }
 sessions.registerScheme();
-// Hors macOS, un lien ouvert avec Orbe arrive en argument de la ligne de commande.
+// Hors macOS, un lien ouvert avec Orbx arrive en argument de la ligne de commande.
 if (!platform.isMac) for (const x of process.argv.slice(1)) if (/^https?:\/\//i.test(x)) pendingUrls.push(x);
 
-if (!SELFTEST && !process.env.ORBE_USER_DATA && !app.requestSingleInstanceLock()) app.quit();
+if (!SELFTEST && !process.env.ORBX_USER_DATA && !app.requestSingleInstanceLock()) app.quit();
 
 function openUrl(url) {
   if (!app.isReady()) return pendingUrls.push(url);
@@ -112,8 +119,8 @@ function openUrl(url) {
   if (target === 'little' && win.isMeetingUrl(url)) target = null;
   // Déjà affiché dans une petite fenêtre : elle revient au premier plan.
   if (target === 'little') return little.LittleWindow.openOrFocus(url);
-  let w = OrbeWindow.primary;
-  if (!w) w = new OrbeWindow();
+  let w = OrbxWindow.primary;
+  if (!w) w = new OrbxWindow();
   if (target && store.state.spaces.some((sp) => sp.id === target)) w.switchSpace(target);
   w.newTab(url);
   if (w.win.isMinimized()) w.win.restore();
@@ -130,7 +137,7 @@ function routeFor(url) {
 
 // `from` : la fenêtre d'où vient la demande (celle du menu). Sans elle, la fenêtre active.
 function newWindow(opts = {}, from) {
-  return OrbeWindow.open(opts, from || OrbeWindow.focused);
+  return OrbxWindow.open(opts, from || OrbxWindow.focused);
 }
 
 // Fenêtre des réglages, à volets (src/main/panes.js). `pane` : volet à afficher.
@@ -153,8 +160,8 @@ function broadcastSettings() {
     if (trusted.has(wc) && !wc.isDestroyed()) wc.send('settings', store.state.settings);
   }
   panes.settingsChanged();
-  for (const w of OrbeWindow.all) w.layout();
-  OrbeWindow.pushAll();
+  for (const w of OrbxWindow.all) w.layout();
+  OrbxWindow.pushAll();
   menu.refresh(true);
 }
 
@@ -246,11 +253,11 @@ async function globalAction(action, a, sender) {
       return extensionList();
     // Boutons des extensions pour l'onglet actif : [{ id, name, title, icon, badgeText, badgeColor, badgeTextColor, popup, enabled }].
     case 'ext:actions':
-      return extHost.actionsFor(OrbeWindow.ownerOf(sender) || OrbeWindow.primary);
+      return extHost.actionsFor(OrbxWindow.ownerOf(sender) || OrbxWindow.primary);
     // Clic sur un bouton : `a` est l'identifiant, ou { id, x, y } pour ancrer la fenêtre surgissante.
     case 'ext:popup': {
       const o = a && typeof a === 'object' ? a : { id: a };
-      return !!extHost.openPopup(OrbeWindow.ownerOf(sender) || OrbeWindow.primary, String(o.id), { x: Number(o.x), y: Number(o.y) });
+      return !!extHost.openPopup(OrbxWindow.ownerOf(sender) || OrbxWindow.primary, String(o.id), { x: Number(o.x), y: Number(o.y) });
     }
     case 'shortcuts:get':
       return shortcutGroups();
@@ -275,7 +282,7 @@ async function globalAction(action, a, sender) {
       return profileList();
     }
     case 'settings:deleteProfile':
-      if (OrbeWindow.deleteProfile(String(a))) { passwords.forgetProfile(String(a)); prefs.forgetProfile(String(a)); essentials.permissions.forgetProfile(String(a)); menu.refresh(true); }
+      if (OrbxWindow.deleteProfile(String(a))) { passwords.forgetProfile(String(a)); prefs.forgetProfile(String(a)); essentials.permissions.forgetProfile(String(a)); menu.refresh(true); }
       return profileList();
     case 'settings:makeDefault':
       commands.makeDefault();
@@ -319,8 +326,8 @@ function setupUpdates() {
   let ses = null;
   const updateSession = () => {
     if (!ses) {
-      ses = session.fromPartition('orbe-mises-a-jour', { cache: false });
-      ses.setUserAgent('Orbe', 'en');
+      ses = session.fromPartition('orbx-mises-a-jour', { cache: false });
+      ses.setUserAgent('Orbx', 'en');
       // Chaque requête de cette session, sauts de redirection compris, est contrôlée :
       // HTTPS et hôte exact de GitHub, sinon elle est annulée avant de partir.
       ses.webRequest.onBeforeRequest((details, done) => done({ cancel: !updates.hopAllowed(details.url) }));
@@ -333,16 +340,16 @@ function setupUpdates() {
     state: () => store.state.updates,
     save: () => store.save(),
     enabled: () => store.state.settings.updateCheck !== false,
-    auto: app.isPackaged && !SELFTEST && !process.argv.includes('--orbe-test') && !process.env.ORBE_NO_UPDATE_CHECK,
-    test: SELFTEST || (!app.isPackaged && process.env.ORBE_UI_TEST === '1'),
+    auto: app.isPackaged && !SELFTEST && !process.argv.includes('--orbx-test') && !process.env.ORBX_NO_UPDATE_CHECK,
+    test: SELFTEST || (!app.isPackaged && process.env.ORBX_UI_TEST === '1'),
     downloadsDir: () => prefs.downloadDirFor('default') || app.getPath('downloads'),
     reveal: (file) => shell.showItemInFolder(file),
     show: () => openSettings('advanced'),
-    open: (url) => { const w = OrbeWindow.primary || newWindow(); w.newTab(url); w.win.focus(); },
+    open: (url) => { const w = OrbxWindow.primary || newWindow(); w.newTab(url); w.win.focus(); },
     changed: () => {
       const st = updates.status();
       for (const wc of webContents.getAllWebContents()) if (trusted.has(wc) && !wc.isDestroyed()) wc.send('update', st);
-      OrbeWindow.pushAll();
+      OrbxWindow.pushAll();
     },
   });
   win.hooks.updateNote = () => updates.note();
@@ -352,7 +359,7 @@ function setupUpdates() {
 
 // Page d'accueil (welcome.html) : ce qu'elle affiche, et sa fermeture.
 function welcomeAction(action, sender) {
-  const w = OrbeWindow.ownerOf(sender) || OrbeWindow.primary;
+  const w = OrbxWindow.ownerOf(sender) || OrbxWindow.primary;
   if (action === 'welcome:info') {
     return { arc: require('./import-arc').available(), colors: require('./store').SPACE_COLORS, color: w ? w.space.color : '', isDefault: panes.isDefaultBrowser(), music: require('./sounds').music() };
   }
@@ -373,7 +380,7 @@ function setupIpc() {
   ipcMain.on('i18n', (e) => {
     e.returnValue = ok(e) ? { locales, lang: store.state.settings.lang, settings: store.state.settings, platform: platform.name, keys: shortcuts.keysMap(), defaultKeys: shortcuts.defaultKeysMap() } : null;
   });
-  ipcMain.handle('orbe', async (e, action, payload) => {
+  ipcMain.handle('orbx', async (e, action, payload) => {
     if (!ok(e) || typeof action !== 'string') return undefined;
     if (action.startsWith('boost:')) return boostEditor.action(action, payload, e.sender);
     if (action.startsWith('pw:')) return passwords.action(action, payload, e.sender);
@@ -385,7 +392,7 @@ function setupIpc() {
     if (action.startsWith('welcome:')) return welcomeAction(action, e.sender);
     if (action.startsWith('lib:')) return library.action(action, payload, e.sender);
     if (/^(settings|shortcuts|ext|notes|tasks):/.test(action)) return globalAction(action, payload, e.sender);
-    const owner = OrbeWindow.ownerOf(e.sender) || little.LittleWindow.ownerOf(e.sender) || OrbeWindow.primary;
+    const owner = OrbxWindow.ownerOf(e.sender) || little.LittleWindow.ownerOf(e.sender) || OrbxWindow.primary;
     return owner ? owner.handle(action, payload) : undefined;
   });
 }
@@ -393,7 +400,7 @@ function setupIpc() {
 app.on('open-url', (e, url) => { e.preventDefault(); openUrl(url); });
 app.on('open-file', (e, file) => { e.preventDefault(); openUrl(pathToFileURL(file).href); });
 // Handoff (macOS) : une page ouverte dans le navigateur d'un autre appareil de l'utilisateur
-// (iPhone, iPad, autre Mac) et reprise ici. Seule une adresse web est acceptée ; Orbe
+// (iPhone, iPad, autre Mac) et reprise ici. Seule une adresse web est acceptée ; Orbx
 // n'annonce lui-même aucune page aux autres appareils.
 function handoffUrl(type, details) {
   if (type !== 'NSUserActivityTypeBrowsingWeb') return '';
@@ -410,7 +417,7 @@ app.on('continue-activity', (e, type, userInfo, details) => {
 app.on('second-instance', (e, argv) => {
   const url = argv.find((x) => /^https?:\/\//i.test(x));
   if (url) openUrl(url);
-  else if (OrbeWindow.primary) OrbeWindow.primary.win.focus();
+  else if (OrbxWindow.primary) OrbxWindow.primary.win.focus();
 });
 
 app.whenReady().then(async () => {
@@ -422,10 +429,10 @@ app.whenReady().then(async () => {
   // (Sans lire l'historique : il n'est chargé qu'après l'affichage de la fenêtre.)
   // Accueil : une seule fois, au tout premier lancement (profil vide, jamais accueilli).
   const firstRun = !Object.keys(store.state.tabs).length && !store.hadHistory && !store.historyDirty && !store.state.window.welcomed;
-  // Moteur avec Widevine (ORBE_DRM) : prépare le module de lecture protégée, sans
+  // Moteur avec Widevine (ORBX_DRM) : prépare le module de lecture protégée, sans
   // retarder l'ouverture (premier lancement : téléchargement en arrière-plan).
   const { components } = require('electron');
-  if (components) components.whenReady().catch((err) => console.error('[orbe] widevine', err.message));
+  if (components) components.whenReady().catch((err) => console.error('[orbx] widevine', err.message));
   applyAppearance();
   extensions.configure({ dir: path.join(app.getPath('userData'), 'Extensions'), fetch: (u, o) => net.fetch(u, o), lang: store.state.settings.lang });
   extApi.configure({ dir: path.join(app.getPath('userData'), 'Extensions') });
@@ -441,7 +448,7 @@ app.whenReady().then(async () => {
       store.state.settings.adblockAllow = allowlist;
       store.save();
     },
-    onCount: () => OrbeWindow.pushAll(),
+    onCount: () => OrbxWindow.pushAll(),
   });
   // Liste chargée peu après le démarrage, pour ne pas le ralentir.
   setTimeout(() => adblock.load(), 1200);
@@ -454,63 +461,63 @@ app.whenReady().then(async () => {
   commands.hooks.openBoost = (w, mode) => boostEditor.open(w, mode);
   boostEditor.hooks.openSettings = () => openSettings('privacy');
   commands.hooks.openPasswords = () => passwords.openManager();
-  passwords.configure({ trusted, uiPreload: UI_PRELOAD, internal: INTERNAL, toast: (wc, text) => { const o = OrbeWindow.ownerOf(wc); if (o) o.toast(text); } });
+  passwords.configure({ trusted, uiPreload: UI_PRELOAD, internal: INTERNAL, toast: (wc, text) => { const o = OrbxWindow.ownerOf(wc); if (o) o.toast(text); } });
   commands.hooks.settingsChanged = broadcastSettings;
   commands.hooks.importBookmarks = (w) => panes.importBookmarks(w && w.win, { profileId: w && !w.incognito ? w.space.profileId : 'default' });
   panes.configure({ broadcast: broadcastSettings, profileList, refreshMenu: () => menu.refresh(true) });
   // Moteur de recherche et suggestions : ceux du profil de l'Espace affiché.
-  suggest.hooks.profileId = () => { const w = OrbeWindow.focused || OrbeWindow.primary; return w && !w.incognito ? w.space.profileId : 'default'; };
+  suggest.hooks.profileId = () => { const w = OrbxWindow.focused || OrbxWindow.primary; return w && !w.incognito ? w.space.profileId : 'default'; };
   win.hooks.openLittle = (url) => new little.LittleWindow(url);
   // Aiguillage : un lien qui s'ouvrirait en aperçu suit d'abord les règles.
   win.hooks.route = routeFor;
   win.hooks.openRouted = (url) => openUrl(url);
   win.hooks.changed = () => { menu.refresh(); extHost.sync(); passwords.sync(); };
   win.hooks.extensionMenu = (wc, params) => [...extApi.contextMenuItems(wc, params), ...passwords.contextMenuItems(wc, params)];
-  extApi.hooks.actionChanged = () => OrbeWindow.pushAll();
-  little.hooks.openInOrbe = (url, spaceId) => {
+  extApi.hooks.actionChanged = () => OrbxWindow.pushAll();
+  little.hooks.openInOrbx = (url, spaceId) => {
     openUrl.direct = true;
     try {
-      const w = OrbeWindow.primary;
+      const w = OrbxWindow.primary;
       if (w && spaceId) w.switchSpace(spaceId);
       openUrl(url);
     } finally { openUrl.direct = false; }
   };
-  little.hooks.profileId = () => { const w = OrbeWindow.primary; return w ? w.space.profileId : 'default'; };
+  little.hooks.profileId = () => { const w = OrbxWindow.primary; return w ? w.space.profileId : 'default'; };
   little.hooks.profiles = () => [...new Set(store.state.spaces.map((sp) => sp.profileId || 'default'))];
   little.hooks.profileOfSpace = (id) => { const sp = store.state.spaces.find((x) => x.id === id); return sp ? sp.profileId || 'default' : null; };
   little.hooks.spaces = () => store.state.spaces.map((sp) => ({ id: sp.id, name: sp.name, icon: sp.icon }));
   library.env.reviewBoost = (w, host) => boostEditor.review(w, host);
   win.hooks.quitAborted = () => require('./backups').disarm();
-  library.env.window = (sender) => (sender && OrbeWindow.ownerOf(sender)) || OrbeWindow.focused || OrbeWindow.primary;
-  sessions.hooks.ownerWindow = (wc) => { const o = wc && OrbeWindow.ownerOf(wc); return o ? o.win : null; };
+  library.env.window = (sender) => (sender && OrbxWindow.ownerOf(sender)) || OrbxWindow.focused || OrbxWindow.primary;
+  sessions.hooks.ownerWindow = (wc) => { const o = wc && OrbxWindow.ownerOf(wc); return o ? o.win : null; };
   sessions.hooks.onDownload = (phase, d, wc) => {
     win.noteDownload(phase, d, wc);
-    const owner = (wc && OrbeWindow.ownerOf(wc)) || OrbeWindow.primary;
+    const owner = (wc && OrbxWindow.ownerOf(wc)) || OrbxWindow.primary;
     if (owner && phase === 'start') owner.toast(store.t('toast.downloadStarted', null, { name: d.name }));
     if (owner && phase === 'done' && d.state === 'completed') owner.toast(store.t(d.danger ? 'toast.downloadDanger' : 'toast.downloadDone', null, { name: d.name }));
-    OrbeWindow.pushAll();
+    OrbxWindow.pushAll();
   };
-  nativeTheme.on('updated', () => OrbeWindow.pushAll());
+  nativeTheme.on('updated', () => OrbxWindow.pushAll());
   setupUpdates();
   // Import depuis un navigateur installé. En test, aucun vrai profil n'est lu :
   // les essais désignent eux-mêmes un dossier d'essai (import-browsers.configure).
-  if (SELFTEST || process.env.ORBE_UI_TEST === '1') require('./import-browsers').configure({ home: '', local: '', roaming: '' });
+  if (SELFTEST || process.env.ORBX_UI_TEST === '1') require('./import-browsers').configure({ home: '', local: '', roaming: '' });
   // De même pour les profils d'Arc (historique, mots de passe, cookies) : jamais lus pendant un
   // essai. `security: ''` en plus de `root: ''` : même un essai mal écrit ne touche pas le trousseau.
-  if (SELFTEST || process.env.ORBE_UI_TEST === '1') require('./import-arc-data').configure({ root: '', security: '' });
+  if (SELFTEST || process.env.ORBX_UI_TEST === '1') require('./import-arc-data').configure({ root: '', security: '' });
   else require('./import-arc-data').configure({ root: platform.arcUserDataDir() });
   // Les essais servent leurs pages depuis 127.0.0.1 : le mode développeur automatique des sites locaux
   // y afficherait partout la barre d'outils. Coupé au départ ; les essais qui le vérifient l'activent.
-  if (SELFTEST || process.env.ORBE_UI_TEST === '1') store.state.settings.devLocalhost = false;
+  if (SELFTEST || process.env.ORBX_UI_TEST === '1') store.state.settings.devLocalhost = false;
   imports.hooks.refreshMenu = () => menu.refresh(true);
   extUi.hooks.openSettings = openSettings;
   extUi.hooks.changed = () => { for (const wc of webContents.getAllWebContents()) if (trusted.has(wc) && !wc.isDestroyed()) wc.send('settings', store.state.settings); menu.refresh(true); };
 
-  app.setAboutPanelOptions({ applicationName: 'Orbe', applicationVersion: app.getVersion(), copyright: 'Logiciel libre — licence MIT', credits: `Chromium ${process.versions.chrome}` });
+  app.setAboutPanelOptions({ applicationName: 'Orbx', applicationVersion: app.getVersion(), copyright: 'Logiciel libre — licence MIT', credits: `Chromium ${process.versions.chrome}` });
   menu.build();
 
   const first = newWindow();
-  if (firstRun && !SELFTEST && !process.env.ORBE_NO_WELCOME) { store.state.window.welcomed = true; require('./starter').seed(first); first.openInternal('welcome.html'); }
+  if (firstRun && !SELFTEST && !process.env.ORBX_NO_WELCOME) { store.state.window.welcomed = true; require('./starter').seed(first); first.openInternal('welcome.html'); }
   for (const url of pendingUrls.splice(0)) openUrl(url);
 
   // L'historique se charge une fois la fenêtre affichée et la coque peinte.
@@ -519,14 +526,14 @@ app.whenReady().then(async () => {
   setInterval(win.archiveStale, 10 * 60e3);
   // Veille des onglets selon l'ancienneté et la mémoire, toutes les minutes.
   // (Pas pendant les tests : ils déclenchent ce passage eux-mêmes.)
-  if (!SELFTEST) setInterval(() => { OrbeWindow.sweep().catch((err) => console.error('[orbe] veille', err)); }, 60e3).unref();
+  if (!SELFTEST) setInterval(() => { OrbxWindow.sweep().catch((err) => console.error('[orbx] veille', err)); }, 60e3).unref();
   setInterval(() => little.LittleWindow.archiveStale(), 10 * 60e3).unref();
 
   if (SELFTEST) {
     // (Un scénario qui n'avance plus est arrêté par la garde : src/main/test-guard.js.)
     try {
-      // ORBE_SCENARIO : autre scénario de test (ex. tests/sites.js, sites réels).
-      await require(process.env.ORBE_SCENARIO ? path.resolve(process.env.ORBE_SCENARIO) : '../../tests/selftest')({ first, OrbeWindow, store, win, little, commands, menu, openSettings, openUrl, extensions, extApi, extHost, passwords, panes, prefs, shortcuts, globalAction, essentials, updates, imports, extUi });
+      // ORBX_SCENARIO : autre scénario de test (ex. tests/sites.js, sites réels).
+      await require(process.env.ORBX_SCENARIO ? path.resolve(process.env.ORBX_SCENARIO) : '../../tests/selftest')({ first, OrbxWindow, store, win, little, commands, menu, openSettings, openUrl, extensions, extApi, extHost, passwords, panes, prefs, shortcuts, globalAction, essentials, updates, imports, extUi });
       store.flush();
       if (uncaught.length) throw new Error(`${uncaught.length} exception(s) non rattrapée(s) dans le processus principal pendant le scénario :\n${uncaught.join('\n')}`);
       const asked = testGuard.state.dialogs;
@@ -542,7 +549,7 @@ app.whenReady().then(async () => {
 });
 
 app.on('activate', () => {
-  if (!OrbeWindow.all.length) newWindow();
+  if (!OrbxWindow.all.length) newWindow();
 });
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();

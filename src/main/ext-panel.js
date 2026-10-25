@@ -1,8 +1,8 @@
 // Extensions Chrome : panneau latéral (`chrome.sidePanel`).
 //
 // Le panneau est une vue web posée à droite de la zone des pages, dans la
-// fenêtre d'Orbe : la page de l'extension (dans la session du profil de
-// l'onglet), sous un habillage d'Orbe (titre, bouton de fermeture, bord gauche
+// fenêtre d'Orbx : la page de l'extension (dans la session du profil de
+// l'onglet), sous un habillage d'Orbx (titre, bouton de fermeture, bord gauche
 // à tirer pour régler la largeur). La zone des pages rétrécit d'autant :
 // window.js demande la place à réserver (`hooks.rightInset`) et prévient à
 // chaque mise en page (`hooks.layout`).
@@ -12,7 +12,7 @@
 // (`setOptions({ tabId, path })`, `open({ tabId })`) : celui-ci ne se montre que
 // sur son onglet, et y remplace le panneau global.
 //
-// Écrit pour Orbe à partir de la documentation publique de chrome.sidePanel.
+// Écrit pour Orbx à partir de la documentation publique de chrome.sidePanel.
 const { WebContentsView, ipcMain } = require('electron');
 const path = require('path');
 const api = require('./ext-api');
@@ -24,15 +24,15 @@ const RADIUS = 10;
 const HEADER = 34;
 const MIN = 260;
 const DEFAULT = 380;
-const PAGE = 'orbe://app/panel.html';
+const PAGE = 'orbx://app/panel.html';
 const PRELOAD = path.join(__dirname, '../preload/panel.js');
-const CHANNEL = 'orbe-panel';
+const CHANNEL = 'orbx-panel';
 
 let windowModule = null;
 const W = () => windowModule || (windowModule = require('./window'));
 
-const records = new Map(); // OrbeWindow -> { global, tabs: Map(id d'onglet -> panneau), shown, chrome, ready }
-const owners = new Map(); // id webContents d'un panneau -> OrbeWindow
+const records = new Map(); // OrbxWindow -> { global, tabs: Map(id d'onglet -> panneau), shown, chrome, ready }
+const owners = new Map(); // id webContents d'un panneau -> OrbxWindow
 const chromes = new Map(); // id webContents d'un habillage -> { w, on(action, données) }
 let ipcReady = false;
 let dragging = false;
@@ -85,7 +85,7 @@ function recordOf(w) {
   return rec;
 }
 
-// Vue d'habillage d'Orbe (page orbe://app/panel.html) : en-tête du panneau, ou
+// Vue d'habillage d'Orbx (page orbx://app/panel.html) : en-tête du panneau, ou
 // bandeau du débogueur. `on(action, données)` reçoit ses messages.
 function makeChrome(w, mode, on) {
   if (!ipcReady) {
@@ -260,7 +260,7 @@ function refresh(w) {
     sendChrome(w, rec);
   } else if (rec.chrome) detach(w, rec.chrome);
   w.layout();
-  W().OrbeWindow.pushAll();
+  W().OrbxWindow.pushAll();
 }
 
 function refreshAll() {
@@ -285,7 +285,7 @@ function setWidth(w, width) {
   X.ui().panelWidth = clamp(Math.round(Number(width) || DEFAULT), MIN, Math.max(MIN, total - 2 * PAD - GAP - 280));
   if (!dragging) X.persist();
   for (const other of records.keys()) if (!other.win.isDestroyed()) other.layout();
-  W().OrbeWindow.pushAll();
+  W().OrbxWindow.pushAll();
 }
 
 // Fermeture par l'utilisateur : le panneau affiché, et le panneau global dont
@@ -348,7 +348,7 @@ function reconcile(ctx) {
   }
 }
 
-const windowOf = (id) => W().OrbeWindow.all.find((x) => x.win.id === id && !x.win.isDestroyed()) || null;
+const windowOf = (id) => W().OrbxWindow.all.find((x) => x.win.id === id && !x.win.isDestroyed()) || null;
 
 // Clic sur le bouton de l'extension : ouvre ou referme son panneau, si elle l'a
 // demandé (`setPanelBehavior({ openPanelOnActionClick: true })`).
@@ -372,7 +372,7 @@ function target(ctx, d) {
   if (typeof o.tabId === 'number') tab = X.findTab(ctx, o.tabId);
   // Fenêtre désignée, sinon la fenêtre courante. Chrome refuserait un
   // identifiant inconnu ; mais l'onglet qu'Electron donne aux extensions
-  // (`sender.tab`) porte un `windowId` qui n'est pas celui d'une fenêtre d'Orbe
+  // (`sender.tab`) porte un `windowId` qui n'est pas celui d'une fenêtre d'Orbx
   // (0), et elles le repassent tel quel à `sidePanel.open`.
   const w = (tab ? windowOf(tab.windowId) : windowOf(o.windowId)) || windowOf(api.host.currentWindowId(ctx.wc));
   if (!w || w.incognito) throw X.fail('No window to open the side panel in.');
@@ -431,14 +431,14 @@ api.extend({
     for (const [w, rec] of records) {
       for (const p of [rec.global, ...rec.tabs.values()]) {
         if (!p || p.extId !== ctx.id || p.ses !== ctx.ses || p.wc.isDestroyed()) continue;
-        out.push({ contextType: 'SIDE_PANEL', contextId: `orbe-panel-${p.wc.id}`, documentUrl: p.wc.getURL() || p.url, documentOrigin: `chrome-extension://${ctx.id}`, frameId: 0, incognito: false, tabId: -1, windowId: w.win.id });
+        out.push({ contextType: 'SIDE_PANEL', contextId: `orbx-panel-${p.wc.id}`, documentUrl: p.wc.getURL() || p.url, documentOrigin: `chrome-extension://${ctx.id}`, frameId: 0, incognito: false, tabId: -1, windowId: w.win.id });
       }
     }
     return out;
   },
 });
 
-// Fenêtre d'Orbe à laquelle appartient la page d'un panneau (ou d'un habillage).
+// Fenêtre d'Orbx à laquelle appartient la page d'un panneau (ou d'un habillage).
 const ownerOf = (wc) => (wc && owners.get(wc.id)) || null;
 // Panneau affiché dans une fenêtre : { extId, tabId, url, wc, view } ou null.
 const shownIn = (w) => { const rec = records.get(w); return (rec && rec.shown && !rec.shown.gone && rec.shown) || null; };

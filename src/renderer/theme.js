@@ -10,7 +10,7 @@
 (function (root, factory) {
   const api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
-  else root.OrbeTheme = api;
+  else root.OrbxTheme = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, () => {
   const HEX = /^#[0-9a-f]{6}$/i;
   const DEFAULT_COLOR = '#7c6cf0';
@@ -21,7 +21,7 @@
   const TARGET = 4.56; // visé par le calcul : une marge sur le minimum, pour les arrondis du moteur
 
   // Nuanciers prêts, comme dans Arc : neuf pastels, neuf teintes ternes, neuf gris
-  // (teintes propres à Orbe).
+  // (teintes propres à Orbx).
   const PALETTES = {
     pastel: ['#f6a5a0', '#f8bd92', '#f5d98b', '#bfe3a1', '#9fdcc4', '#9fd3ec', '#aab9f5', '#c9aef2', '#f1acd3'],
     drab: ['#a8665f', '#a97c56', '#9c8a4f', '#6f8a5b', '#56897b', '#557f98', '#6470a3', '#84659f', '#a0607f'],
@@ -123,7 +123,7 @@
   }
 
   // Part de la couleur dans le fond (le reste est la base, claire ou sombre).
-  // À mi-course on retrouve le réglage d'origine d'Orbe : 18 % en clair, 24 % en
+  // À mi-course on retrouve le réglage d'origine d'Orbx : 18 % en clair, 24 % en
   // sombre (8 points de plus pour un dégradé).
   function tintOf(theme, dark) {
     const mid = (dark ? 0.24 : 0.18) + (theme.colors.length > 1 ? 0.08 : 0);

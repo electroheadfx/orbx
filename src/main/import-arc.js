@@ -107,7 +107,7 @@ function count(data) {
   };
 }
 
-// Ajoute les données lues à l'état d'Orbe. Un Espace déjà importé est ignoré.
+// Ajoute les données lues à l'état d'Orbx. Un Espace déjà importé est ignoré.
 function merge(data, state = store.state) {
   const makeTab = (src, pinned) => {
     const tab = { id: uid(), url: src.url, title: src.title, favicon: '', createdAt: Date.now(), lastActiveAt: Date.now() };
@@ -120,7 +120,7 @@ function merge(data, state = store.state) {
     ? { type: 'folder', id: uid(), name: n.name, open: false, children: makeNodes(n.children) }
     : { type: 'tab', id: makeTab(n, true) }));
 
-  // Chaque profil Arc devient un profil Orbe (les connexions sont à refaire).
+  // Chaque profil Arc devient un profil Orbx (les connexions sont à refaire).
   const profileFor = (key) => {
     if (key === 'default') return 'default';
     let p = state.profiles.find((x) => x.arcKey === key);
@@ -161,10 +161,10 @@ function merge(data, state = store.state) {
   return added;
 }
 
-// Met Orbe à jour d'après Arc (second import et suivants). Les Espaces déjà importés prennent
+// Met Orbx à jour d'après Arc (second import et suivants). Les Espaces déjà importés prennent
 // l'ordre, le nom, l'icône, les dossiers et l'ordre des épinglés d'Arc ; ce qui manque est
 // ajouté. RIEN n'est supprimé : un onglet épinglé, un dossier non vide, un favori ou un Espace
-// qui n'existent que dans Orbe sont gardés, à la suite de ceux d'Arc. Un onglet déjà là (même
+// qui n'existent que dans Orbx sont gardés, à la suite de ceux d'Arc. Un onglet déjà là (même
 // adresse, même Espace) est réutilisé tel quel, avec son identifiant : il ne se recharge pas.
 // Rend le compte de ce qui a changé ; sur une copie de l'état, c'est un essai à blanc.
 function sync(data, state = store.state) {
@@ -173,7 +173,7 @@ function sync(data, state = store.state) {
   const shape = (nodes) => JSON.stringify(nodes, (k, v) => (k === 'open' ? undefined : v));
   const walk = (nodes, fn) => { for (const n of nodes) { fn(n); if (n.type === 'folder') walk(n.children, fn); } };
 
-  // Les Espaces d'Arc absents d'Orbe : même chemin que le premier import.
+  // Les Espaces d'Arc absents d'Orbx : même chemin que le premier import.
   const before = { tabs: Object.keys(state.tabs).length, favs: Object.values(state.favs).reduce((n, l) => n + l.length, 0) };
   const known = new Set(state.spaces.map((s) => s.arcId).filter(Boolean));
   done.spaces = merge(data, state);
@@ -184,7 +184,7 @@ function sync(data, state = store.state) {
     if (!space || !known.has(sp.arcId)) continue; // tout juste créé par merge : déjà à l'image d'Arc
     if (sp.name && space.name !== sp.name) { space.name = sp.name; done.renamed += 1; }
     if (sp.icon && space.icon !== sp.icon) { space.icon = sp.icon; done.renamed += 1; }
-    // Ce qu'Orbe a déjà : onglets épinglés par adresse, dossiers par nom (chacun sert une fois).
+    // Ce qu'Orbx a déjà : onglets épinglés par adresse, dossiers par nom (chacun sert une fois).
     const tabs = new Map();
     const folders = new Map();
     walk(space.pinned, (n) => {
@@ -210,11 +210,11 @@ function sync(data, state = store.state) {
       return { type: 'tab', id: tab.id };
     });
     const next = build(sp.pinned);
-    // Ce qui n'existe que dans Orbe reste, à la suite : les onglets, hors de tout dossier.
+    // Ce qui n'existe que dans Orbx reste, à la suite : les onglets, hors de tout dossier.
     for (const l of tabs.values()) for (const n of l) next.push({ type: 'tab', id: n.id });
     space.pinned = next;
     if (shape(next) !== was) done.moved += 1;
-    // Onglets du jour d'Arc absents d'Orbe : ajoutés.
+    // Onglets du jour d'Arc absents d'Orbx : ajoutés.
     const here = new Set(space.today.map((id) => (state.tabs[id] || {}).url));
     for (const t of sp.today) {
       if (here.has(t.url)) continue;
@@ -226,7 +226,7 @@ function sync(data, state = store.state) {
     }
   }
 
-  // Favoris : ceux d'Arc d'abord, dans son ordre ; ceux d'Orbe seul ensuite.
+  // Favoris : ceux d'Arc d'abord, dans son ordre ; ceux d'Orbx seul ensuite.
   for (const [key, list] of Object.entries(data.favorites)) {
     const profile = key === 'default' ? { id: 'default' } : state.profiles.find((x) => x.arcKey === key);
     if (!profile || !state.favs[profile.id]) continue;

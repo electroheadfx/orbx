@@ -1,10 +1,10 @@
-// Feuilles d'onglet : des vues d'Orbe posées par-dessus UNE page, pour tout ce
+// Feuilles d'onglet : des vues d'Orbx posées par-dessus UNE page, pour tout ce
 // qu'un navigateur doit demander ou annoncer à propos de cette page (demande
 // d'autorisation, choix de l'écran à partager, identifiants HTTP, avertissement
 // de certificat, page plantée…).
 //
 // Règles de sécurité, communes à toutes les feuilles :
-//  - la feuille est une vue à part (orbe://app/sheet.html), jamais un morceau de
+//  - la feuille est une vue à part (orbx://app/sheet.html), jamais un morceau de
 //    la page : la page ne peut ni la lire, ni l'habiller, ni la fermer, ni y cliquer ;
 //  - elle couvre toute la page concernée et ne suit que son onglet : un autre
 //    onglet ne peut pas se faire passer pour le demandeur ;
@@ -28,7 +28,7 @@ const env = {
   trusted: null, // WeakSet des vues autorisées à parler au processus principal
   uiPreload: '',
   internal: '',
-  locate: () => null, // webContents d'onglet -> { owner, rt } (fenêtre Orbe et onglet)
+  locate: () => null, // webContents d'onglet -> { owner, rt } (fenêtre Orbx et onglet)
 };
 const RADIUS = 10;
 const GUARD = 500; // délai avant qu'une réponse qui engage soit acceptée

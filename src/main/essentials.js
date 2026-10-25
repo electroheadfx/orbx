@@ -1,4 +1,4 @@
-// Branche sur les fenêtres d'Orbe ce qu'un navigateur de tous les jours doit
+// Branche sur les fenêtres d'Orbx ce qu'un navigateur de tous les jours doit
 // savoir faire : feuilles d'onglet, autorisations, partage d'écran, certificats,
 // authentification HTTP, « quitter la page ? », fenêtres surgissantes, pages
 // plantées. Chaque fonction vit dans son module ; ici, seulement les raccords
@@ -54,7 +54,7 @@ function siteInfo(w) {
 // --- Centre de contrôle du site -------------------------------------------------
 // Le panneau qu'ouvre le bouclier : bloqueur, autorisations, cookies et données,
 // Boost, mode développeur, extensions, lien. C'est une feuille d'onglet (sheets.js) :
-// une vue d'Orbe que la page ne peut ni lire, ni recouvrir, ni actionner.
+// une vue d'Orbx que la page ne peut ni lire, ni recouvrir, ni actionner.
 //
 // Ce qu'il affiche vient du processus principal (origine de l'adresse engagée par
 // l'onglet, compteurs, réglages) ; les textes choisis par d'autres (nom du site, nom
@@ -174,9 +174,9 @@ function captureMenu(w, rt) {
 }
 
 function setup({ win, sessions, test = false }) {
-  const { OrbeWindow, live, trusted, hooks, UI_PRELOAD, INTERNAL } = win;
+  const { OrbxWindow, live, trusted, hooks, UI_PRELOAD, INTERNAL } = win;
   const locate = (wc) => { for (const rt of live.values()) if (rt.wc === wc) return { owner: rt.owner, rt }; return null; };
-  const ownerOf = (wc) => { try { return wc ? OrbeWindow.ownerOf(wc) : null; } catch { return null; } };
+  const ownerOf = (wc) => { try { return wc ? OrbxWindow.ownerOf(wc) : null; } catch { return null; } };
   const ownerWindow = (wc) => { const o = ownerOf(wc); return o ? o.win : null; };
   const toast = (wc, text) => { const o = ownerOf(wc); if (o) o.toast(text); };
 
@@ -189,12 +189,12 @@ function setup({ win, sessions, test = false }) {
   certs.setup();
   auth.setup();
   unload.setup();
-  capture.hooks.changed = () => OrbeWindow.pushAll();
+  capture.hooks.changed = () => OrbxWindow.pushAll();
   Object.assign(downloads.env, {
     ownerWindow,
     profileSession: (id) => sessions.profileSession(id),
     gate: (ses, wc, item) => permissions.downloadGate(ses, wc, { gesture: item.hasUserGesture(), url: item.getURL() }),
-    openInTab: (url, wc) => { const o = ownerOf(wc) || OrbeWindow.primary; if (!o) return false; o.newTab(url); return true; },
+    openInTab: (url, wc) => { const o = ownerOf(wc) || OrbxWindow.primary; if (!o) return false; o.newTab(url); return true; },
   });
 
   // Les feuilles suivent la mise en page de leur fenêtre et y gardent le clavier.
@@ -219,7 +219,7 @@ function setup({ win, sessions, test = false }) {
     popups: popups.count(rt),
     capture: rt ? capture.of(rt.wc) : [],
   });
-  // Certificat refusé : avertissement d'Orbe à la place de la page d'erreur.
+  // Certificat refusé : avertissement d'Orbx à la place de la page d'erreur.
   hooks.failed = (rt, info) => certs.failed(rt.wc, info, {
     load: (url) => { if (!rt.wc.isDestroyed()) rt.wc.loadURL(url).catch(() => {}); },
     back: () => {

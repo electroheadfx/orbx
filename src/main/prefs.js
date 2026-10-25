@@ -43,7 +43,7 @@ const externalLinks = (v) => v === 'window' || v === 'little'
 // Une règle nomme un site : « github.com » vaut pour github.com et ses sous-domaines
 // (gist.github.com), jamais pour une adresse qui contient seulement ce texte
 // (« https://evil.tld/?github.com »). Elle peut préciser un début de chemin
-// (« github.com/orbe ») et un port (« localhost:3000 »). Rien d'autre n'est lu de
+// (« github.com/orbx ») et un port (« localhost:3000 »). Rien d'autre n'est lu de
 // l'adresse : ni ses paramètres, ni son fragment, ni son identifiant.
 // `routeRule(texte)` : { host, port, path }, ou null si le texte ne nomme pas un site.
 function routeRule(text) {
@@ -61,7 +61,7 @@ function routeRule(text) {
   return { host: m[1], port: m[2] || '', path: dir };
 }
 
-// Écriture normale d'une règle (« https://www.GitHub.com/Orbe/ » -> « github.com/orbe ») ; '' si elle ne nomme pas un site.
+// Écriture normale d'une règle (« https://www.GitHub.com/Orbx/ » -> « github.com/orbx ») ; '' si elle ne nomme pas un site.
 function routeText(text) {
   const r = routeRule(text);
   return r ? r.host + (r.port ? ':' + r.port : '') + r.path : '';

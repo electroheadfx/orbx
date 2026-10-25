@@ -1,9 +1,9 @@
-// Partage d'écran (navigator.mediaDevices.getDisplayMedia) : le sélecteur d'Orbe
+// Partage d'écran (navigator.mediaDevices.getDisplayMedia) : le sélecteur d'Orbx
 // propose cet onglet, les écrans et les fenêtres, avec leur vignette.
 //
 // Sécurité :
 //  - rien n'est jamais partagé sans un choix explicite dans le sélecteur, qui
-//    est une feuille d'Orbe posée sur l'onglet demandeur (voir sheets.js) ;
+//    est une feuille d'Orbx posée sur l'onglet demandeur (voir sheets.js) ;
 //  - la demande doit venir d'un geste de l'utilisateur (rapporté par Electron) ;
 //  - la source renvoyée est relue dans la liste dressée par le processus
 //    principal : la feuille ne renvoie qu'un identifiant de cette liste ;
@@ -34,16 +34,16 @@ async function tabThumb(wc) {
 }
 
 // Écrans et fenêtres. Sans l'accord du système (macOS), la liste est vide ou
-// trompeuse ; la demander fait apparaître Orbe dans les réglages de confidentialité.
+// trompeuse ; la demander fait apparaître Orbx dans les réglages de confidentialité.
 async function desktopSources() {
-  try { return await env.sources(); } catch (err) { console.error('[orbe] partage d’écran', err.message); return []; }
+  try { return await env.sources(); } catch (err) { console.error('[orbx] partage d’écran', err.message); return []; }
 }
 
 const forSheet = (list) => list.map(({ id, name, kind, thumb }) => ({ id, name: String(name || '').slice(0, 120), kind, thumb }));
 
 async function handle(request, callback) {
   let answered = false;
-  const reply = (streams) => { if (answered) return; answered = true; try { callback(streams); } catch (err) { console.error('[orbe] partage d’écran', err.message); } };
+  const reply = (streams) => { if (answered) return; answered = true; try { callback(streams); } catch (err) { console.error('[orbx] partage d’écran', err.message); } };
   const deny = () => reply(null);
   const frame = request.frame;
   let wc = null;
@@ -96,7 +96,7 @@ function attach(ses) {
     // Dit tout de suite (appel synchrone) à permissions.js que cette demande
     // « media » était bien un partage d'écran, et non l'ancienne capture directe.
     permissions.noteDisplay();
-    handle(request, callback).catch((err) => { console.error('[orbe] partage d’écran', err); try { callback(null); } catch {} });
+    handle(request, callback).catch((err) => { console.error('[orbx] partage d’écran', err); try { callback(null); } catch {} });
   }, { useSystemPicker: false });
 }
 

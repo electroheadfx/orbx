@@ -11,7 +11,7 @@ const q = document.getElementById('q');
 const fHow = document.getElementById('f-how');
 const fSpace = document.getElementById('f-space');
 const fFrom = document.getElementById('f-from');
-const FROM = ['orbe', 'downloads', 'desktop', 'documents'];
+const FROM = ['orbx', 'downloads', 'desktop', 'documents'];
 let kind = KINDS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'history';
 let rows = [];
 let data = null;
@@ -82,7 +82,7 @@ function drawFilters() {
     const from = fFrom.value;
     fFrom.textContent = '';
     for (const f of FROM) fFrom.appendChild(option(f, t('lib.from.' + f)));
-    fFrom.value = FROM.includes(from) ? from : 'orbe';
+    fFrom.value = FROM.includes(from) ? from : 'orbx';
     return;
   }
   if (kind !== 'archive') return;
@@ -112,8 +112,8 @@ function draw() {
   document.title = t('lib.title') + ' — ' + t('lib.' + kind);
   for (const b of document.querySelectorAll('[data-tab]')) b.classList.toggle('on', b.dataset.tab === kind);
   const clear = document.getElementById('clear');
-  // (Médias d'un dossier de l'utilisateur : rien à vider, la liste n'est pas celle d'Orbe.)
-  clear.hidden = !CLEAR[kind] || (kind === 'media' && FROM.includes(fFrom.value) && fFrom.value !== 'orbe');
+  // (Médias d'un dossier de l'utilisateur : rien à vider, la liste n'est pas celle d'Orbx.)
+  clear.hidden = !CLEAR[kind] || (kind === 'media' && FROM.includes(fFrom.value) && fFrom.value !== 'orbx');
   clear.textContent = CLEAR[kind] ? t(CLEAR[kind]) : '';
   drawFilters();
   list.textContent = '';
@@ -155,7 +155,7 @@ function draw() {
   });
 }
 
-// Ligne d'un fichier : état, boutons, menu « … » ; un fichier présent se glisse hors d'Orbe.
+// Ligne d'un fichier : état, boutons, menu « … » ; un fichier présent se glisse hors d'Orbx.
 function drawFile(line, r, now) {
   const body = el('div', 'grow');
   const pct = r.total ? Math.round((r.received / r.total) * 100) : 0;
@@ -187,7 +187,7 @@ function drawFile(line, r, now) {
     line.append(button('open', t('lib.open')), button('reveal', t('lib.reveal')));
     line.draggable = true;
   }
-  // (Fichier d'un dossier de l'utilisateur : Orbe n'en tient pas de fiche, donc pas de menu.)
+  // (Fichier d'un dossier de l'utilisateur : Orbx n'en tient pas de fiche, donc pas de menu.)
   if (r.folder) return;
   const more = button('menu', '···', 'more');
   more.title = t('dl.more');
@@ -270,7 +270,7 @@ async function load() {
     draw();
     return;
   }
-  data = await O.send('lib:get', { q: q.value, how: fHow.value, space: fSpace.value, from: kind === 'media' && FROM.includes(fFrom.value) ? fFrom.value : 'orbe' });
+  data = await O.send('lib:get', { q: q.value, how: fHow.value, space: fSpace.value, from: kind === 'media' && FROM.includes(fFrom.value) ? fFrom.value : 'orbx' });
   rows = (data && data[kind]) || [];
   draw();
   clearTimeout(timer);

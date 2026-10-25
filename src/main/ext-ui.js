@@ -1,8 +1,8 @@
-// Extensions : ce que l'interface d'Orbe en montre et en fait (réglages, bouton
+// Extensions : ce que l'interface d'Orbx en montre et en fait (réglages, bouton
 // de la barre latérale, menu contextuel du bouton) : page d'options, bouton
 // épinglé ou non, mise à jour depuis le Chrome Web Store, désactivation,
 // désinstallation. Aucune de ces actions n'est offerte aux extensions
-// elles-mêmes : elles ne viennent que des pages de l'interface (orbe://).
+// elles-mêmes : elles ne viennent que des pages de l'interface (orbx://).
 const fs = require('fs');
 const path = require('path');
 const { dialog } = require('electron');
@@ -10,7 +10,7 @@ const { store } = require('./store');
 const extensions = require('./extensions');
 const extApi = require('./ext-api');
 const extHost = require('./ext-host');
-const { OrbeWindow } = require('./window');
+const { OrbxWindow } = require('./window');
 
 const t = (k, v) => store.t(k, null, v);
 const ID = /^[a-p]{32}$/;
@@ -19,7 +19,7 @@ const hooks = {
   changed: () => {},
   // Question posée quand une mise à jour demande de nouvelles autorisations (remplaçable par les essais).
   confirmUpdate: async (name, list) => {
-    const w = OrbeWindow.primary;
+    const w = OrbxWindow.primary;
     const opts = { type: 'warning', message: t('ext.updateAsk', { name }), detail: list.map((x) => '• ' + String(x).slice(0, 120)).slice(0, 20).join('\n'), buttons: [t('ext.update'), t('edit.undo')], defaultId: 1, cancelId: 1 };
     const r = await (w ? dialog.showMessageBox(w.win, opts) : dialog.showMessageBox(opts));
     return r.response === 0;
@@ -58,7 +58,7 @@ function setPinned(id, pinned) {
   if (!pinned) next.push(id);
   store.state.settings.extHidden = next.slice(-200);
   store.save();
-  OrbeWindow.pushAll();
+  OrbxWindow.pushAll();
   hooks.changed();
   return true;
 }
@@ -139,7 +139,7 @@ async function remove(id) {
   extApi.forget(id);
   extHost.more.forgetKeys(id);
   if (!isPinned(id)) setPinned(id, true);
-  OrbeWindow.pushAll();
+  OrbxWindow.pushAll();
   return list();
 }
 
@@ -156,7 +156,7 @@ function menuTemplate(w, id) {
     { label: t('ext.options'), enabled: !!optionsUrl(id), click: () => openOptions(w, id) },
     { label: t('ext.unpin'), click: () => setPinned(id, false) },
     ...(x ? [
-      { label: t('ext.disable'), click: () => { extensions.setEnabled(id, false); OrbeWindow.pushAll(); hooks.changed(); } },
+      { label: t('ext.disable'), click: () => { extensions.setEnabled(id, false); OrbxWindow.pushAll(); hooks.changed(); } },
       sep,
       { label: t('ext.removeFrom'), click: () => confirmRemove(w, id, name) },
     ] : []),
@@ -177,11 +177,11 @@ async function confirmRemove(w, id, name) {
 }
 
 async function action(name, a, sender) {
-  const w = OrbeWindow.ownerOf(sender) || OrbeWindow.primary;
+  const w = OrbxWindow.ownerOf(sender) || OrbxWindow.primary;
   const id = String((a && typeof a === 'object' ? a.id : a) || '');
   if (!ID.test(id)) return undefined;
   switch (name) {
-    case 'ext:options': return openOptions(OrbeWindow.primary || w, id);
+    case 'ext:options': return openOptions(OrbxWindow.primary || w, id);
     case 'ext:pin': setPinned(id, !!a.pinned); return list();
     case 'ext:update': return update(id);
     case 'ext:menu': { const tpl = w ? menuTemplate(w, id) : []; if (tpl.length) w.popup(tpl); return tpl.length > 0; }

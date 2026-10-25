@@ -1,4 +1,4 @@
-// Gestionnaire de tâches (EXT-22) : les processus d'Orbe, ce qu'ils portent, leur
+// Gestionnaire de tâches (EXT-22) : les processus d'Orbx, ce qu'ils portent, leur
 // mémoire et leur part de processeur ; arrêt d'un onglet qui s'emballe.
 //
 // Tout est relevé ici, dans le processus principal (`app.getAppMetrics()`, cadres
@@ -30,10 +30,10 @@ function tabsByPid() {
 }
 
 function list() {
-  const { OrbeWindow, processMb } = W();
+  const { OrbxWindow, processMb } = W();
   const tabs = tabsByPid();
   const ui = new Set();
-  for (const w of OrbeWindow.all) { try { ui.add(w.ui.webContents.getOSProcessId()); } catch {} }
+  for (const w of OrbxWindow.all) { try { ui.add(w.ui.webContents.getOSProcessId()); } catch {} }
   const ext = new Map(); // pid -> hôte d'extension
   for (const wc of webContents.getAllWebContents()) {
     try { const u = new URL(wc.getURL()); if (u.protocol === 'chrome-extension:') ext.set(wc.getOSProcessId(), u.hostname); } catch {}
@@ -41,7 +41,7 @@ function list() {
   const t = (k, v) => store.t(k, null, v);
   const rows = app.getAppMetrics().map((m) => {
     const row = { pid: m.pid, mb: Math.round(processMb(m)), cpu: Math.round((m.cpu && m.cpu.percentCPUUsage) * 10) / 10 || 0, kind: 'other', titles: [], canEnd: false };
-    if (m.type === 'Browser') { row.kind = 'app'; row.name = 'Orbe'; }
+    if (m.type === 'Browser') { row.kind = 'app'; row.name = 'Orbx'; }
     else if (m.type === 'GPU') { row.kind = 'gpu'; row.name = t('tasks.gpu'); }
     else if (m.type === 'Tab') {
       const mine = tabs.get(m.pid);

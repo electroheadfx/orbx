@@ -8,7 +8,7 @@
 //    executeJavaScript sans réponse) ;
 //  - arrête le scénario s'il ne produit plus rien, en décrivant l'état du
 //    processus principal : dernière vérification, attentes, fenêtres, pages ;
-//  - écrit un battement dans un fichier (ORBE_HEARTBEAT) : le lanceur
+//  - écrit un battement dans un fichier (ORBX_HEARTBEAT) : le lanceur
 //    (scripts/dev.js) y voit si le fil principal lui-même est figé, ce
 //    qu'aucun minuteur de ce processus ne peut signaler.
 const fs = require('fs');
@@ -69,11 +69,11 @@ function guardDialogs(dialog) {
       const what = name === 'showErrorBox' ? `${args[0]} — ${String(args[1]).split('\n').slice(0, 14).join(' | ')}` : String(opts.message || opts.title || '');
       const where = String(new Error().stack).split('\n').slice(2, 6).map((l) => l.trim()).join(' < ');
       state.dialogs.push({ name, what, where });
-      console.error(`\n[orbe-test] boîte de dialogue native demandée sans réponse préparée : ${name} « ${what} »\n    ${where}`);
+      console.error(`\n[orbx-test] boîte de dialogue native demandée sans réponse préparée : ${name} « ${what} »\n    ${where}`);
       const answer = refuse(opts);
       return sync ? answer : Promise.resolve(answer);
     };
-    guarded.orbeGuard = true;
+    guarded.orbxGuard = true;
     dialog[name] = guarded;
   }
 }
@@ -189,7 +189,7 @@ function install({ app, dialog, limit, stall }) {
       let id = '?';
       try { id = this.id; } catch {}
       note(`fenêtre n° ${id} : ${m}() demandé par ${caller()}`);
-      if (m === 'close' && !this.orbeNoted) { this.orbeNoted = true; try { this.once('closed', () => note(`fenêtre n° ${id} : fermée (closed)`)); } catch {} }
+      if (m === 'close' && !this.orbxNoted) { this.orbxNoted = true; try { this.once('closed', () => note(`fenêtre n° ${id} : fermée (closed)`)); } catch {} }
       return real.apply(this, args);
     };
   }
@@ -212,14 +212,14 @@ function install({ app, dialog, limit, stall }) {
     console.error(`\nÉCHEC : ${why}\n\nÉtat du processus principal :\n${describe()}\n`);
     app.exit(3);
   };
-  // Durée totale, et silence trop long (ORBE_TEST_STALL, en secondes).
+  // Durée totale, et silence trop long (ORBX_TEST_STALL, en secondes).
   setTimeout(() => stop(`scénario bloqué depuis ${limit} s`), limit * 1000).unref();
   setInterval(() => {
     if (Date.now() - state.lastAt > stall * 1000) stop(`plus aucune vérification depuis ${stall} s`);
   }, 1000).unref();
 
   // Battement pour le lanceur : tant que ce fichier est récrit, le fil principal vit.
-  const beat = process.env.ORBE_HEARTBEAT;
+  const beat = process.env.ORBX_HEARTBEAT;
   if (beat) {
     // Écrit à côté puis renommé : le lanceur ne lit jamais un fichier à moitié écrit.
     const write = () => { try { fs.writeFileSync(beat + '.tmp', `${Date.now()}\n${state.last}\n`); fs.renameSync(beat + '.tmp', beat); } catch {} };

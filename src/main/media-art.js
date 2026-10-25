@@ -3,7 +3,7 @@
 // serveur qui répond, les octets.
 //
 // Deux portes, dans cet ordre :
-//  1. le réseau (`loadArtwork`) : Orbe va chercher l'image depuis le processus
+//  1. le réseau (`loadArtwork`) : Orbx va chercher l'image depuis le processus
 //     principal, hors des règles que le moteur applique à la page. Elles sont donc
 //     refaites ici : pas d'image en http pour une page en https, pas d'adresse de la
 //     machine ou du réseau local demandée par une page qui n'en vient pas, chaque
@@ -90,7 +90,7 @@ function shrink(img) {
   } catch { return ''; }
 }
 
-// Octets reçus → data:image/png d'Orbe, ou ''. Rien n'est décodé avant l'examen de l'en-tête.
+// Octets reçus → data:image/png d'Orbx, ou ''. Rien n'est décodé avant l'examen de l'en-tête.
 function decode(buf) {
   if (!acceptable(buf)) return '';
   try { return shrink(hooks.decode(buf)); } catch { return ''; }

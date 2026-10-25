@@ -69,7 +69,7 @@ const KINDS = {
     buttons.append(button(t('perm.deny'), () => answer('deny'), { id: 'deny' }), button(t('perm.allow'), () => answer('allow'), { cls: 'primary', risky: true, id: 'allow' }));
     return 'deny';
   },
-  // Le système refuse l'accès à Orbe : on dit lequel, et où le changer.
+  // Le système refuse l'accès à Orbx : on dit lequel, et où le changer.
   os(p, body, buttons) {
     head(p.icon || 'warn', p.title, '', true);
     body.append(el('p', '', p.text));

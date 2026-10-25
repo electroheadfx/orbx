@@ -1,4 +1,4 @@
-// Gestionnaire de tâches : processus d'Orbe, mémoire, processeur (src/main/tasks.js).
+// Gestionnaire de tâches : processus d'Orbx, mémoire, processeur (src/main/tasks.js).
 // Les titres viennent des pages : affichés comme du texte, jamais comme du HTML.
 const make = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
 const mo = (n) => t('tasks.mb', { n: Number(n).toLocaleString(lang) });

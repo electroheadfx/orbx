@@ -3,7 +3,7 @@
 //
 // Deux familles : le son de capture, que joue aussi Arc (réglage « Sons ») ; et
 // les sons des gestes — nouvel onglet, onglet fermé, changement d'Espace,
-// épingle, refus —, propres à Orbe et coupés par défaut (réglage « Sons des
+// épingle, refus —, propres à Orbx et coupés par défaut (réglage « Sons des
 // gestes »). Les sons des gestes ne sont pas demandés à chaque endroit du code
 // qui ouvre ou ferme un onglet : ils se déduisent de ce qui a changé entre deux
 // états de la fenêtre (`observe`), et seulement juste après un geste de
@@ -14,9 +14,9 @@ const { store } = require('./store');
 const GESTURES = new Set(['tab', 'close', 'space', 'pin', 'unpin', 'error']);
 const NAMES = new Set(['capture', ...GESTURES]);
 const ARMED_MS = 600; // un changement d'état compte comme un geste pendant ce délai
-// Pendant les essais, rien n'est joué (ORBE_TEST_SOUNDS=1 pour entendre) : la
+// Pendant les essais, rien n'est joué (ORBX_TEST_SOUNDS=1 pour entendre) : la
 // demande part quand même vers la coque, marquée « muette ».
-const QUIET = (process.argv.includes('--selftest') || process.env.ORBE_UI_TEST === '1') && process.env.ORBE_TEST_SOUNDS !== '1';
+const QUIET = (process.argv.includes('--selftest') || process.env.ORBX_UI_TEST === '1') && process.env.ORBX_TEST_SOUNDS !== '1';
 const requested = []; // derniers sons demandés (pour les essais)
 
 const volume = () => { const v = store.state.settings.soundVolume; return typeof v === 'number' && v >= 0 && v <= 100 ? v / 100 : 0.5; };

@@ -70,14 +70,14 @@ const denied = (err) => !!err && (err.code === 'EPERM' || err.code === 'EACCES')
 
 function readCapped(file, max) {
   const st = fs.statSync(file);
-  if (!st.isFile()) throw Object.assign(new Error('unreadable'), { code: 'ORBE_UNREADABLE' });
-  if (st.size > max) throw Object.assign(new Error('tooBig'), { code: 'ORBE_TOO_BIG' });
+  if (!st.isFile()) throw Object.assign(new Error('unreadable'), { code: 'ORBX_UNREADABLE' });
+  if (st.size > max) throw Object.assign(new Error('tooBig'), { code: 'ORBX_TOO_BIG' });
   return fs.readFileSync(file);
 }
 
 // --- Arbre commun -----------------------------------------------------------------
 // Chaque lecteur rend des nœuds bruts : { title, url } ou { title, children }.
-// `build` en fait les nœuds d'Orbe ({ type: 'tab' | 'folder' }), bornés et nettoyés.
+// `build` en fait les nœuds d'Orbx ({ type: 'tab' | 'folder' }), bornés et nettoyés.
 function build(top) {
   const st = { bookmarks: 0, folders: 0, dropped: 0, truncated: false, seen: 0 };
   const walk = (raw, depth, nest) => {
@@ -299,7 +299,7 @@ async function readFirefoxSqlite(dir) {
   const db = path.join(dir, 'places.sqlite');
   if (!bin || !isFile(db)) throw new Error('nosqlite');
   if (fs.statSync(db).size > MAX_SQLITE) throw new Error('tooBig');
-  const tmp = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'orbe-import-'));
+  const tmp = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'orbx-import-'));
   try {
     const copy = path.join(tmp, 'places.sqlite');
     await fs.promises.copyFile(db, copy);
@@ -465,7 +465,7 @@ async function read(browserId, profileId, { platform = conf.platform } = {}) {
     return { ...data, browser: b.id, name: b.name };
   } catch (err) {
     if (denied(err)) return { error: b.kind === 'safari' ? 'fullDiskAccess' : 'unreadable' };
-    return { error: err && (err.code === 'ORBE_TOO_BIG' || err.message === 'tooBig') ? 'tooBig' : 'unreadable' };
+    return { error: err && (err.code === 'ORBX_TOO_BIG' || err.message === 'tooBig') ? 'tooBig' : 'unreadable' };
   }
 }
 

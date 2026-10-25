@@ -1,19 +1,19 @@
-// Windows : inscription d'Orbe comme navigateur, sans installateur.
+// Windows : inscription d'Orbx comme navigateur, sans installateur.
 // Windows 10 et 11 ne laissent aucune application se déclarer navigateur par
 // défaut : il faut s'inscrire dans le registre de l'utilisateur, puis laisser
 // la personne choisir dans Paramètres → Applications par défaut.
 // Trois endroits, tous sous HKEY_CURRENT_USER (aucun droit d'administrateur) :
-//   Software\Classes\OrbeHTML               ce qu'Orbe sait ouvrir, et comment
-//   Software\Clients\StartMenuInternet\Orbe le navigateur et ses capacités
+//   Software\Classes\OrbxHTML               ce qu'Orbx sait ouvrir, et comment
+//   Software\Clients\StartMenuInternet\Orbx le navigateur et ses capacités
 //   Software\RegisteredApplications         l'annuaire que lisent les Paramètres
-// Rien n'est écrit sans un clic sur « Définir Orbe par défaut ». L'écriture
+// Rien n'est écrit sans un clic sur « Définir Orbx par défaut ». L'écriture
 // passe par « reg.exe import » (un seul appel, sans dépendance).
 const { execFile } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const ID = 'Orbe';
+const ID = 'Orbx';
 const ROOT = 'HKEY_CURRENT_USER';
 const FILE_TYPES = ['.htm', '.html', '.shtml', '.xht', '.xhtml'];
 const URL_TYPES = ['http', 'https'];
@@ -21,7 +21,7 @@ const URL_TYPES = ['http', 'https'];
 const regExe = () => path.join(process.env.SystemRoot || process.env.windir || 'C:\\Windows', 'System32', 'reg.exe');
 const quote = (s) => `"${s}"`;
 
-// Ligne de commande qui lance Orbe : l'exécutable seul une fois fabriqué ;
+// Ligne de commande qui lance Orbx : l'exécutable seul une fois fabriqué ;
 // en développement, le moteur suivi du dossier du projet.
 function launcher() {
   const { app } = require('electron');
@@ -29,20 +29,20 @@ function launcher() {
 }
 
 // Description de l'inscription : clés à créer et valeurs à poser.
-//   keys   : clés créées par Orbe, retirées en entier à l'annulation ;
+//   keys   : clés créées par Orbx, retirées en entier à l'annulation ;
 //   values : valeurs posées dans des clés partagées, retirées une à une.
-// id : nom d'inscription (« Orbe » ; les tests en prennent un autre).
-function plan({ exe, args = [], id = ID, name = 'Orbe' } = {}) {
+// id : nom d'inscription (« Orbx » ; les tests en prennent un autre).
+function plan({ exe, args = [], id = ID, name = 'Orbx' } = {}) {
   const progId = id + 'HTML';
   const base = [quote(exe), ...args.map(quote)].join(' ');
   const icon = exe + ',0';
   const classes = `${ROOT}\\Software\\Classes\\${progId}`;
   const client = `${ROOT}\\Software\\Clients\\StartMenuInternet\\${id}`;
   const caps = `${client}\\Capabilities`;
-  const description = 'Orbe — un navigateur à barre latérale, libre et en français.';
+  const description = 'Orbx — un navigateur à barre latérale, libre et en français.';
   const keys = [
     { key: classes, values: { '': `Document HTML ${name}`, FriendlyTypeName: `Document HTML ${name}` } },
-    { key: `${classes}\\Application`, values: { ApplicationName: name, ApplicationIcon: icon, ApplicationDescription: description, ApplicationCompany: 'PIXEWORK' } },
+    { key: `${classes}\\Application`, values: { ApplicationName: name, ApplicationIcon: icon, ApplicationDescription: description, ApplicationCompany: 'Laurent Marques' } },
     { key: `${classes}\\DefaultIcon`, values: { '': icon } },
     { key: `${classes}\\shell\\open\\command`, values: { '': `${base} "%1"` } },
     { key: client, values: { '': name } },
@@ -87,8 +87,8 @@ function reg(args) {
 }
 
 async function apply(text) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'orbe-reg-'));
-  const file = path.join(dir, 'orbe.reg');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'orbx-reg-'));
+  const file = path.join(dir, 'orbx.reg');
   try {
     // UTF-16 avec marque d'ordre : le format attendu, accents compris.
     fs.writeFileSync(file, Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(text, 'utf16le')]));
@@ -98,7 +98,7 @@ async function apply(text) {
   }
 }
 
-// Inscrit Orbe (rien d'autre : le choix reste à faire dans les Paramètres).
+// Inscrit Orbx (rien d'autre : le choix reste à faire dans les Paramètres).
 async function register(opts = {}) {
   const p = plan({ ...launcher(), ...opts });
   await apply(regFile(p));

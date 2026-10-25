@@ -11,7 +11,7 @@ const boosts = require('./boosts');
 const adblock = require('./adblock');
 const sessions = require('./sessions');
 const win = require('./window');
-const { OrbeWindow, trusted, INTERNAL, UI_PRELOAD } = win;
+const { OrbxWindow, trusted, INTERNAL, UI_PRELOAD } = win;
 
 const PANES = ['general', 'profiles', 'tabs', 'links', 'shortcuts', 'appearance', 'privacy', 'extensions', 'import', 'advanced'];
 const WIDTH = 720;
@@ -137,7 +137,7 @@ function extensionShortcuts() {
     const more = require('./ext-more');
     const extensions = require('./extensions');
     const ses = sessions.mainSession();
-    // Nom affiché : celui de la fiche d'Orbe (traduit), sinon celui que donne Chromium.
+    // Nom affiché : celui de la fiche d'Orbx (traduit), sinon celui que donne Chromium.
     const names = new Map([...ses.extensions.getAllExtensions().map((x) => [x.id, x.name]), ...extensions.list().map((x) => [x.id, x.name])]);
     // Chaque commande déclarée, avec ou sans raccourci : toutes se règlent ici.
     return more.commandList(ses, names).map((c) => ({ ...c, label: `${c.extension} — ${c.action ? t('keys.extAction') : c.what}` }));
@@ -184,7 +184,7 @@ function extraCss(wc) {
     }
     if (space && COLOR.test(space.color || '')) {
       const second = COLOR.test(space.color2 || '') ? space.color2 : space.color;
-      css += `:root { --orbe-theme-color: ${space.color}; --orbe-theme-color-2: ${second}; --orbe-theme-dark: ${nativeTheme.shouldUseDarkColors ? 1 : 0}; }\n`;
+      css += `:root { --orbx-theme-color: ${space.color}; --orbx-theme-color-2: ${second}; --orbx-theme-dark: ${nativeTheme.shouldUseDarkColors ? 1 : 0}; }\n`;
     }
   }
   return css;
@@ -208,7 +208,7 @@ const quit = {
   confirmed: false,
   // Remplaçable par les essais.
   ask: async () => {
-    const parent = BrowserWindow.getFocusedWindow() || (OrbeWindow.primary && OrbeWindow.primary.win) || undefined;
+    const parent = BrowserWindow.getFocusedWindow() || (OrbxWindow.primary && OrbxWindow.primary.win) || undefined;
     const opts = { type: 'question', message: t('quit.title'), detail: t('quit.detail'), buttons: [t('app.quit'), t('edit.undo')], defaultId: 0, cancelId: 1 };
     const r = await (parent ? dialog.showMessageBox(parent, opts) : dialog.showMessageBox(opts));
     return r.response === 0;
@@ -244,10 +244,10 @@ async function importBookmarks(parent, { profileId = 'default' } = {}) {
   const space = bm.merge(data, { profileId });
   if (!space) return { error: 'notBookmarks' };
   store.save();
-  const w = OrbeWindow.primary;
+  const w = OrbxWindow.primary;
   if (w && !w.incognito) { w.switchSpace(space.id); w.toast(t('bm.done', { n: data.bookmarks })); }
-  for (const x of OrbeWindow.all) x.layout();
-  OrbeWindow.pushAll();
+  for (const x of OrbxWindow.all) x.layout();
+  OrbxWindow.pushAll();
   deps.refreshMenu();
   return { ok: true, bookmarks: data.bookmarks, folders: data.folders, dropped: data.dropped, space: space.id };
 }
@@ -305,10 +305,10 @@ async function handle(action, a, sender) {
     }
     case 'settings:allowRemove':
       adblock.allowSite(String(a || ''), false);
-      OrbeWindow.pushAll();
+      OrbxWindow.pushAll();
       return (s.adblockAllow || []).slice();
     case 'settings:importArc': {
-      const w = OrbeWindow.primary || OrbeWindow.all[0];
+      const w = OrbxWindow.primary || OrbxWindow.all[0];
       if (!w) return false;
       w.win.focus();
       await commands.run(w, 'importArc');
@@ -317,7 +317,7 @@ async function handle(action, a, sender) {
     case 'settings:importBookmarks':
       return importBookmarks(BrowserWindow.fromWebContents(sender), { profileId: String((a && a.profileId) || 'default') });
     case 'settings:showShortcuts': {
-      const w = OrbeWindow.primary || OrbeWindow.all[0];
+      const w = OrbxWindow.primary || OrbxWindow.all[0];
       if (w) { w.win.focus(); commands.run(w, 'shortcuts'); }
       return true;
     }

@@ -24,13 +24,13 @@ const LIMIT = { ms: 2 * 60 * 1000 }; // durée au bout de laquelle la trace s'ar
 const CATEGORIES = ['toplevel', 'toplevel.flow', 'base', 'benchmark', 'blink', 'blink.user_timing', 'cc', 'gpu', 'viz', 'v8', 'renderer.scheduler', 'input', 'latency', 'latencyInfo', 'loading', 'rail', 'devtools.timeline', 'electron'];
 
 const state = { on: false, timer: null, busy: false };
-const hooks = { changed: () => {}, privateOpen: () => require('./window').OrbeWindow.all.some((w) => w.incognito) };
+const hooks = { changed: () => {}, privateOpen: () => require('./window').OrbxWindow.all.some((w) => w.incognito) };
 
 const t = (key, vars) => store.t(key, null, vars);
 const say = (w, key, sound) => { try { if (w && !w.gone) w.toast(t(key), sound); } catch {} };
 function changed() {
   try { hooks.changed(); } catch {}
-  try { require('./window').OrbeWindow.pushAll(); } catch {}
+  try { require('./window').OrbxWindow.pushAll(); } catch {}
 }
 function clear() {
   clearTimeout(state.timer);
@@ -59,7 +59,7 @@ async function start(w) {
     state.timer = setTimeout(() => { stop(w, { auto: true }); }, LIMIT.ms);
     if (state.timer.unref) state.timer.unref();
     say(w, 'toast.traceOn');
-  } catch (err) { clear(); console.error('[orbe] trace', err.message); } finally { state.busy = false; }
+  } catch (err) { clear(); console.error('[orbx] trace', err.message); } finally { state.busy = false; }
   changed();
   return state.on;
 }
@@ -70,11 +70,11 @@ async function stop(w, { auto = false } = {}) {
   clear();
   try {
     const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-    const file = await contentTracing.stopRecording(path.join(app.getPath('downloads'), `orbe-trace-${stamp}.json`));
-    const target = w && !w.gone ? w : require('./window').OrbeWindow.focused || require('./window').OrbeWindow.primary;
+    const file = await contentTracing.stopRecording(path.join(app.getPath('downloads'), `orbx-trace-${stamp}.json`));
+    const target = w && !w.gone ? w : require('./window').OrbxWindow.focused || require('./window').OrbxWindow.primary;
     say(target, auto ? 'toast.traceAuto' : 'toast.traceSaved');
     shell.showItemInFolder(file);
-  } catch (err) { console.error('[orbe] trace', err.message); }
+  } catch (err) { console.error('[orbx] trace', err.message); }
   changed();
   return true;
 }
@@ -84,10 +84,10 @@ async function discard(w) {
   if (!state.on) return false;
   clear();
   try {
-    const file = await contentTracing.stopRecording(path.join(os.tmpdir(), `orbe-trace-jetee-${process.pid}-${Date.now()}.json`));
+    const file = await contentTracing.stopRecording(path.join(os.tmpdir(), `orbx-trace-jetee-${process.pid}-${Date.now()}.json`));
     try { fs.rmSync(file, { force: true }); } catch {}
-    say(w && !w.gone ? w : require('./window').OrbeWindow.primary, 'trace.discarded');
-  } catch (err) { console.error('[orbe] trace', err.message); }
+    say(w && !w.gone ? w : require('./window').OrbxWindow.primary, 'trace.discarded');
+  } catch (err) { console.error('[orbx] trace', err.message); }
   changed();
   return true;
 }

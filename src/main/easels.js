@@ -2,7 +2,7 @@
 // images, textes, formes et dessins.
 // Chaque tableau est un fichier userData/easels/<id>.json, écrit de façon
 // atomique ; ses images sont des fichiers à part dans userData/easels/<id>/.
-// Rien ne passe par orbe.json, réécrit bien trop souvent pour porter des images.
+// Rien ne passe par orbx.json, réécrit bien trop souvent pour porter des images.
 // La page (src/renderer/easel.js) ne lit et n'écrit qu'à travers les actions
 // « easel:* » ci-dessous : identifiants et noms de fichiers sont validés ici, la
 // page ne fournit jamais de chemin.
@@ -13,7 +13,7 @@ const crypto = require('crypto');
 const { store } = require('./store');
 const { boundsOf } = require('./motion');
 
-const PAGE = 'orbe://app/easel.html';
+const PAGE = 'orbx://app/easel.html';
 const ID = /^[a-f0-9]{16}$/;
 const IMAGE = /^[a-f0-9]{16}\.(png|jpg|gif|webp)$/;
 const ITEM_ID = /^[A-Za-z0-9_-]{1,32}$/;
@@ -150,7 +150,7 @@ function queue(id, json) {
           }
         }
       } catch (err) {
-        console.error('[orbe] tableau : écriture impossible', err.message);
+        console.error('[orbx] tableau : écriture impossible', err.message);
       } finally {
         writing.delete(id);
         if (!index.has(id)) sweepDeleted(id); // supprimé pendant l'écriture : rien ne doit rester
@@ -170,7 +170,7 @@ function sweepDeleted(id, attempt = 0) {
     fs.rmSync(dirOf(id), { recursive: true, force: true, maxRetries: 4, retryDelay: 60 });
   } catch (err) {
     left = true;
-    if (attempt >= 5) console.error('[orbe] tableau : suppression incomplète', err.message);
+    if (attempt >= 5) console.error('[orbx] tableau : suppression incomplète', err.message);
   }
   if (attempt >= 5 || loadIndex().has(id)) return;
   const again = [150, 400, 1000, 2500, 6000][attempt];
@@ -249,13 +249,13 @@ async function save(a) {
 // dans la barre sans plus rien ouvrir). La page, si elle est ouverte, dit que le tableau n'existe plus.
 function unpin(id) {
   let all = [];
-  try { all = require('./window').OrbeWindow.all; } catch { return; }
+  try { all = require('./window').OrbxWindow.all; } catch { return; }
   for (const w of all) {
     for (const [tabId, tab] of Object.entries(w.data.tabs)) {
       if (!tab.internal || !String(tab.url).split('#')[0].endsWith('easel.html?id=' + id)) continue;
       const loc = w.locate(tabId);
       if (!loc || loc.list === 'today') continue;
-      try { w.move({ id: tabId, to: 'today', index: 0 }); } catch (err) { console.error('[orbe] tableau supprimé', err.message); }
+      try { w.move({ id: tabId, to: 'today', index: 0 }); } catch (err) { console.error('[orbx] tableau supprimé', err.message); }
     }
   }
 }
@@ -317,7 +317,7 @@ function sweep(doc) {
 function trustedSet() { return require('./window').trusted; }
 
 // Le tableau affiché par un webContents, s'il s'agit bien d'une page de tableau
-// d'Orbe (une page web ne peut ni porter cette adresse ni être « de confiance »).
+// d'Orbx (une page web ne peut ni porter cette adresse ni être « de confiance »).
 function boardOf(wc) {
   if (!wc || wc.isDestroyed() || !trustedSet().has(wc)) return '';
   const url = wc.getURL();
@@ -341,12 +341,12 @@ async function exportImage(a, sender) {
   if (!ID.test(id) || !loadIndex().has(id) || !data || data.length > EXPORT_MAX_BYTES || sniff(data) !== 'png') return null;
   const name = String((a && a.title) || '').normalize('NFC').replace(/[\u0000-\u001f\u007f<>:"/\\|?*]/g, ' ').replace(/\s+/g, ' ').replace(/^[. ]+/, '').replace(/[. ]+$/, '').slice(0, 80) || t('easel.untitled');
   const { BaseWindow } = require('electron');
-  const { OrbeWindow } = require('./window');
-  const owner = sender && OrbeWindow.ownerOf(sender);
+  const { OrbxWindow } = require('./window');
+  const owner = sender && OrbxWindow.ownerOf(sender);
   const file = await env.saveDialog(owner ? owner.win : BaseWindow.getFocusedWindow(), { title: t('easel.export'), defaultPath: path.join(app.getPath('downloads'), name + '.png'), filters: [{ name: 'PNG', extensions: ['png'] }] });
   if (!file || typeof file !== 'string' || !path.isAbsolute(file)) return null;
   const target = /\.png$/i.test(file) ? file : file + '.png';
-  try { await fs.promises.writeFile(target, data); } catch (err) { console.error('[orbe] export du tableau', err.message); return null; }
+  try { await fs.promises.writeFile(target, data); } catch (err) { console.error('[orbx] export du tableau', err.message); return null; }
   return target;
 }
 
@@ -415,7 +415,7 @@ function open(w, id) {
   // dans la barre d'une séance à l'autre. (Ni en navigation privée ni dans une fenêtre vierge : rien n'y est épinglé.
   // Un tableau rouvert depuis la Bibliothèque reste un onglet du jour.)
   if (!known && tab && w.shared) {
-    try { w.move({ id: tab.id, to: 'pinned', index: w.space.pinned.length }); } catch (err) { console.error('[orbe] tableau épinglé', err.message); }
+    try { w.move({ id: tab.id, to: 'pinned', index: w.space.pinned.length }); } catch (err) { console.error('[orbx] tableau épinglé', err.message); }
   }
   return board;
 }
@@ -542,8 +542,8 @@ async function action(name, a, sender) {
     case 'easel:export': return exportImage(a, sender);
     case 'easel:inbox': return ID.test(String(a || '')) ? takeInbox(String(a)) : [];
     case 'easel:open': {
-      const { OrbeWindow } = require('./window');
-      const w = OrbeWindow.ownerOf(sender) || OrbeWindow.primary;
+      const { OrbxWindow } = require('./window');
+      const w = OrbxWindow.ownerOf(sender) || OrbxWindow.primary;
       return open(w, a ? String(a) : '');
     }
     default: return undefined;
@@ -555,7 +555,7 @@ async function action(name, a, sender) {
 function flush() {
   quitting = true;
   for (const [id, json] of pending) {
-    try { atomicSync(fileOf(id), json); } catch (err) { console.error('[orbe] tableau : écriture impossible', err.message); }
+    try { atomicSync(fileOf(id), json); } catch (err) { console.error('[orbx] tableau : écriture impossible', err.message); }
   }
   pending.clear();
   for (const [id, added] of inbox) { try { appendToFile(id, added); } catch {} }

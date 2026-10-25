@@ -1,4 +1,4 @@
-// Toutes les actions d'Orbe, au même endroit : le menu, la barre de commande
+// Toutes les actions d'Orbx, au même endroit : le menu, la barre de commande
 // et la barre latérale appellent les mêmes fonctions.
 // `accel` reprend les raccourcis d'Arc ; `keys` est leur affichage.
 const { app, clipboard, dialog, shell } = require('electron');
@@ -6,10 +6,7 @@ const { store } = require('./store');
 const platform = require('./platform');
 const easels = require('./easels');
 
-// Page de soutien de l'auteur d'Orbe.
-const SUPPORT_URL = 'https://buymeacoffee.com/amadouba';
-
-const REPO_URL = 'https://github.com/amadoubaui/orbe';
+const REPO_URL = 'https://github.com/electroheadfx/orbx';
 
 const hooks = { newWindow: () => {}, newLittle: () => {}, openSettings: () => {}, settingsChanged: null, openBoost: () => {}, openPasswords: () => {}, importBookmarks: () => {}, menuChanged: () => {}, checkUpdates: () => {} };
 
@@ -167,7 +164,7 @@ const COMMANDS = [
   // ⌘E : ouvre l'extension suivante (sa fenêtre, ou son action) ; après la dernière, referme.
   { name: 'cycleExtensions', label: 'ext.cycle', accel: 'Cmd+E', keys: '⌘E', run: (w) => { if (require('./ext-host').cycle(w) === null) w.toast(store.t('ext.none')); } },
   { name: 'defaultBrowser', label: 'app.defaultBrowser', global: true, run: (w) => { makeDefault(); if (w) w.toast(store.t(platform.isWin ? 'toast.defaultBrowserWin' : 'toast.defaultBrowser')); } },
-  // Windows : retire l'inscription d'Orbe comme navigateur (registre de l'utilisateur).
+  // Windows : retire l'inscription d'Orbx comme navigateur (registre de l'utilisateur).
   ...(platform.isWin ? [{ name: 'undoDefaultBrowser', label: 'app.undoDefaultBrowser', global: true, run: async (w) => { const ok = await platform.undoDefault(); if (w && ok) w.toast(store.t('toast.undoDefaultBrowser')); } }] : []),
   { name: 'toggleSiteBlocking', label: 'adblock.toggleSite', run: (w) => w.toggleSiteBlocking() },
   { name: 'boost', label: 'boost.edit', run: (w) => hooks.openBoost(w) },
@@ -179,7 +176,6 @@ const COMMANDS = [
   { name: 'importArcData', label: 'app.importArcData', run: (w) => importArcData(w) },
   { name: 'importBookmarks', label: 'app.importBookmarks', run: (w) => hooks.importBookmarks(w) },
   { name: 'newProfile', label: 'spaces.newProfile', palette: false, run: (w) => w.newProfile() },
-  { name: 'support', label: 'support.menu', run: (w) => w.newTab(SUPPORT_URL) },
   { name: 'welcome', label: 'help.welcome', run: (w) => w.openInternal('welcome.html') },
   { name: 'shortcuts', label: 'help.shortcuts', run: (w) => w.openInternal('shortcuts.html') },
   // Comme Help → Troubleshooting → Task Manager d'Arc.
@@ -295,7 +291,7 @@ async function transformText(w, kind) {
   return true;
 }
 
-// « Minimize All » (⌥⌘M, macOS) : toutes les fenêtres d'Orbe vont au Dock.
+// « Minimize All » (⌥⌘M, macOS) : toutes les fenêtres d'Orbx vont au Dock.
 function minimizeAll() {
   let n = 0;
   for (const x of require('electron').BaseWindow.getAllWindows()) if (x.isVisible() && !x.isMinimized() && x.isMinimizable()) { x.minimize(); n += 1; }
@@ -348,9 +344,9 @@ async function clearArchive(w) {
   return true;
 }
 
-// « Copier les infos d'Orbe » : de quoi décrire son installation dans un rapport de bogue.
+// « Copier les infos d'Orbx » : de quoi décrire son installation dans un rapport de bogue.
 function appInfo() {
-  return [`Orbe ${app.getVersion()}`, `Electron ${process.versions.electron}`, `Chromium ${process.versions.chrome}`, `${process.platform} ${process.arch} ${require('os').release()}`].join('\n');
+  return [`Orbx ${app.getVersion()}`, `Electron ${process.versions.electron}`, `Chromium ${process.versions.chrome}`, `${process.platform} ${process.arch} ${require('os').release()}`].join('\n');
 }
 
 // La saisie en cours dans `target` a-t-elle quelque chose à annuler elle-même ? Un seul cas
@@ -383,7 +379,7 @@ async function importArcData(w) {
   if (!data.available()) return void dialog.showMessageBox(w.win, { type: 'info', message: t('import.none') });
   arcDataBusy = true;
   try {
-    // Chaque profil d'Arc va dans le profil d'Orbe né de lui au premier import.
+    // Chaque profil d'Arc va dans le profil d'Orbx né de lui au premier import.
     const sessions = require('./sessions');
     const targets = new Map([['default', { pid: 'default', session: sessions.profileSession('default') }]]);
     for (const p of store.state.profiles) if (p.arcKey) targets.set(p.arcKey, { pid: p.id, session: sessions.profileSession(p.id) });
@@ -437,9 +433,9 @@ async function syncArc(w, arc, data) {
   try { require('./backups').snapshot(undefined, new Date(), { fresh: true }); } catch {}
   arc.sync(data);
   store.save();
-  const { OrbeWindow } = require('./window');
-  for (const win of OrbeWindow.all) win.layout();
-  OrbeWindow.pushAll();
+  const { OrbxWindow } = require('./window');
+  for (const win of OrbxWindow.all) win.layout();
+  OrbxWindow.pushAll();
   w.toast(t('import.syncDone'));
   return undefined;
 }
@@ -454,7 +450,7 @@ async function importArc(w) {
     await dialog.showMessageBox(w.win, { type: 'info', message: t('import.none') });
     return;
   }
-  // Déjà importé une fois : on ne refait pas l'import, on met Orbe à jour d'après Arc.
+  // Déjà importé une fois : on ne refait pas l'import, on met Orbx à jour d'après Arc.
   if (store.state.spaces.some((s) => s.arcId)) return syncArc(w, arc, data);
   const n = arc.count(data);
   const r = await dialog.showMessageBox(w.win, {
@@ -469,8 +465,8 @@ async function importArc(w) {
   const before = store.state.spaces.length;
   const added = arc.merge(data);
   store.save();
-  const { OrbeWindow } = require('./window');
-  for (const win of OrbeWindow.all) { win.layout(); }
+  const { OrbxWindow } = require('./window');
+  for (const win of OrbxWindow.all) { win.layout(); }
   if (added) {
     const firstNew = store.state.spaces[Math.min(before, store.state.spaces.length - 1)];
     const target = store.state.spaces.find((s) => s.arcId) || firstNew;
@@ -478,21 +474,21 @@ async function importArc(w) {
     w.layout();
     w.remember();
   }
-  OrbeWindow.pushAll();
+  OrbxWindow.pushAll();
   w.toast(t(added ? 'import.done' : 'import.already', { n: added }));
 }
 
 function setSetting(key, value) {
-  const { OrbeWindow } = require('./window');
+  const { OrbxWindow } = require('./window');
   store.state.settings[key] = value;
   store.save();
   // Passe par la même porte que la fenêtre des réglages (thème, menu, pages).
   if (hooks.settingsChanged) return hooks.settingsChanged();
-  for (const w of OrbeWindow.all) w.layout();
-  OrbeWindow.pushAll();
+  for (const w of OrbxWindow.all) w.layout();
+  OrbxWindow.pushAll();
 }
 
-// Exécute une commande pour la fenêtre donnée. Sans fenêtre Orbe ouverte,
+// Exécute une commande pour la fenêtre donnée. Sans fenêtre Orbx ouverte,
 // seules les commandes globales s'exécutent directement ; les autres ouvrent
 // d'abord une fenêtre.
 function run(win, name, arg) {
@@ -503,7 +499,7 @@ function run(win, name, arg) {
     require('./sounds').arm(win); // une commande est un geste : le son du changement peut suivre
     return cmd.run(win, arg);
   } catch (err) {
-    console.error('[orbe] commande', name, err);
+    console.error('[orbx] commande', name, err);
     return undefined;
   }
 }

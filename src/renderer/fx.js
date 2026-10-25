@@ -6,7 +6,7 @@
 (() => {
   const still = matchMedia('(prefers-reduced-motion: reduce)');
   const FILE = '<svg class="i" viewBox="0 0 16 16"><path d="M4.4 2.4h4.8l2.4 2.6v8.6H4.4z"/><path d="M9 2.6v2.6h2.4"/></svg>'; // dessin fixe, écrit ici
-  let started = null; // téléchargements commencés depuis l'ouverture d'Orbe (compteur du processus principal)
+  let started = null; // téléchargements commencés depuis l'ouverture d'Orbx (compteur du processus principal)
 
   // Un fichier tombe dans l'icône ; l'icône le reçoit d'un petit rebond.
   function drop(delay) {

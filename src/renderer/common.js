@@ -1,5 +1,5 @@
 // Outils partagés par toutes les pages de l'interface.
-const O = window.orbe;
+const O = window.orbx;
 let lang = O.lang || 'fr';
 
 // Classe « mac » ou « win » sur <html> : les feuilles de style adaptent
@@ -49,7 +49,7 @@ function esc(s) {
 function host(url) {
   try {
     const u = new URL(url);
-    if (u.protocol === 'orbe:') return 'Orbe';
+    if (u.protocol === 'orbx:') return 'Orbx';
     return u.host.replace(/^www\./, '') || url;
   } catch {
     return url || '';

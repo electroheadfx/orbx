@@ -3,7 +3,7 @@
 //
 // La page signale le déplacement cumulé d'un balayage qu'elle n'a pas consommé
 // (src/preload/swipe.js). Ici : on vérifie que le message vient bien de l'onglet
-// affiché et qu'il y a une page où aller ; la pastille (une petite vue d'Orbe
+// affiché et qu'il y a une page où aller ; la pastille (une petite vue d'Orbx
 // posée sur le bord de la page) avance avec les doigts ; passé le seuil, ou sur
 // un geste vif, on navigue. Comme pour le changement d'Espace, la décision se
 // prend au franchissement du seuil : la molette ne dit pas quand les doigts se
@@ -12,7 +12,7 @@ const { ipcMain } = require('electron');
 const path = require('path');
 const { boundsOf } = require('./motion');
 
-const CHANNEL = 'orbe-swipe';
+const CHANNEL = 'orbx-swipe';
 const PRELOAD = path.join(__dirname, '../preload/swipe.js');
 const SWIPE = {
   commit: 130, // déplacement (px) au-delà duquel on navigue
@@ -28,7 +28,7 @@ let ipcReady = false;
 // Fenêtre de la page qui parle : celle de son onglet, ou celle dont elle est l'aperçu.
 const windowOf = (wc) => {
   const W = require('./window');
-  return W.OrbeWindow.ownerOf(wc) || [...W.windows.values()].find((w) => w.peekState && w.peekState.view.webContents === wc) || null;
+  return W.OrbxWindow.ownerOf(wc) || [...W.windows.values()].find((w) => w.peekState && w.peekState.view.webContents === wc) || null;
 };
 
 function hide(w) {
@@ -143,10 +143,10 @@ const stats = { navigations: 0, peekCloses: 0 };
 function attach(ses) {
   if (!ses || attached.has(ses)) return;
   attached.add(ses);
-  ses.registerPreloadScript({ type: 'frame', filePath: PRELOAD, id: 'orbe-swipe' });
+  ses.registerPreloadScript({ type: 'frame', filePath: PRELOAD, id: 'orbx-swipe' });
   if (ipcReady) return;
   ipcReady = true;
-  ipcMain.on(CHANNEL, (e, msg) => { try { onMessage(e, msg); } catch (err) { console.error('[orbe] balayage', err.message); } });
+  ipcMain.on(CHANNEL, (e, msg) => { try { onMessage(e, msg); } catch (err) { console.error('[orbx] balayage', err.message); } });
 }
 
 module.exports = { attach, SWIPE, stats };

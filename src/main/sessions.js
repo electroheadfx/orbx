@@ -1,4 +1,4 @@
-// Sessions Chromium : protocole interne orbe://, autorisations des sites et
+// Sessions Chromium : protocole interne orbx://, autorisations des sites et
 // téléchargements.
 const { app, session, protocol, net } = require('electron');
 const fs = require('fs');
@@ -23,7 +23,7 @@ const profileIds = new WeakMap(); // session -> identifiant du profil
 // À appeler avant app.ready.
 function registerScheme() {
   protocol.registerSchemesAsPrivileged([
-    { scheme: 'orbe', privileges: { standard: true, secure: true, supportFetchAPI: true } },
+    { scheme: 'orbx', privileges: { standard: true, secure: true, supportFetchAPI: true } },
     // Déjà « standard » dans Chromium ; le redire ici l'ajoute à la liste des
     // schémas auxquels Electron ouvre le système de fichiers des pages web
     // (webkitRequestFileSystem, navigator.storage.getDirectory), que des
@@ -68,7 +68,7 @@ function serveInternal(request) {
 }
 
 // L'agent utilisateur n'est volontairement pas nettoyé. Retirer `Electron/x` et
-// `Orbe/x` donnait un UA identique à Chrome alors que les en-têtes `sec-ch-ua*`
+// `Orbx/x` donnait un UA identique à Chrome alors que les en-têtes `sec-ch-ua*`
 // restaient ceux d'Electron : Google refusait la connexion (« Try using a
 // different browser… ») et Cloudflare bloquait secure.backblaze.com sur cette
 // incohérence UA / Client Hints. L'UA Electron intact passe, l'UA lavé est
@@ -82,7 +82,7 @@ function configure(ses, { persist }) {
   ready.set(ses, Promise.resolve());
   // Bloqueur de publicités : il occupe l'unique écouteur onBeforeRequest.
   adblock.attach(ses);
-  if (ses !== session.defaultSession) ses.protocol.handle('orbe', serveInternal);
+  if (ses !== session.defaultSession) ses.protocol.handle('orbx', serveInternal);
 
   // Autorisations des sites, partage d'écran, certificats, téléchargements :
   // chacun dans son module, par session (profils et navigation privée).
@@ -96,10 +96,10 @@ function configure(ses, { persist }) {
   if (persist) {
     extApi.attach(ses); // API chrome.* manquantes, avant le premier chargement
     // La promesse est retenue : une navigation lancée pendant ce chargement est
-    // annulée par Chromium (ERR_FAILED, voir OrbeWindow.ensureView).
+    // annulée par Chromium (ERR_FAILED, voir OrbxWindow.ensureView).
     ready.set(ses, extensions.loadInto(ses).then((r) => {
-      for (const f of (r && r.failed) || []) console.error('[orbe] extension', f.id, f.error);
-    }).catch((err) => console.error('[orbe] extensions', err)));
+      for (const f of (r && r.failed) || []) console.error('[orbx] extension', f.id, f.error);
+    }).catch((err) => console.error('[orbx] extensions', err)));
   }
   return ses;
 }
@@ -110,7 +110,7 @@ const whenReady = (ses) => (ses && ready.get(ses)) || Promise.resolve();
 
 // Une session Chromium par profil : cookies et connexions séparés.
 function profileSession(id) {
-  const partition = !id || id === 'default' ? 'persist:orbe' : 'persist:orbe-' + id;
+  const partition = !id || id === 'default' ? 'persist:orbx' : 'persist:orbx-' + id;
   const ses = configure(session.fromPartition(partition), { persist: true });
   // Mots de passe : rattachés au profil ; jamais en navigation privée.
   passwords.attach(ses, id || 'default');
@@ -127,7 +127,7 @@ function incognitoSession() {
 }
 
 function setupDefaultSession() {
-  protocol.handle('orbe', serveInternal);
+  protocol.handle('orbx', serveInternal);
   // La session par défaut ne sert qu'à l'interface : aucune autorisation web.
   session.defaultSession.setPermissionRequestHandler((wc, p, cb) => cb(false));
 }

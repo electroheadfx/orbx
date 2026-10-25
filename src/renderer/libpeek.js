@@ -1,5 +1,5 @@
 // Survol de l'icône de la Bibliothèque : les derniers fichiers (captures,
-// téléchargements, médias), à ouvrir d'un clic ou à glisser hors d'Orbe.
+// téléchargements, médias), à ouvrir d'un clic ou à glisser hors d'Orbx.
 // Clic droit sur l'icône : le choix des sortes montrées (menu natif).
 // Chargé après shell.js (`send`, `S`, `t`). Les noms de fichiers viennent des
 // sites : ils ne sont posés que par textContent. Aucun fichier n'est lu ni
@@ -119,7 +119,7 @@
     else return;
     close();
   });
-  // Glisser un fichier hors d'Orbe : le système prend le relais avec le vrai fichier.
+  // Glisser un fichier hors d'Orbx : le système prend le relais avec le vrai fichier.
   // (Écoute en phase de capture : le glisser des lignes de la barre ne s'en mêle pas.)
   side.addEventListener('dragstart', (e) => {
     const row = e.target.closest && e.target.closest('#lib-peek .lp-row');

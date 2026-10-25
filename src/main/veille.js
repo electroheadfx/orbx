@@ -8,7 +8,7 @@
 //   3. la mémoire : tant que les processus des onglets dépassent `budgetMb`,
 //      les plus anciens s'endorment, sans descendre sous `MIN_LIVE` vivants.
 //
-// Les sites qui restent éveillés (keepalive.js : liste d'Orbe et liste de l'utilisateur) comptent
+// Les sites qui restent éveillés (keepalive.js : liste d'Orbx et liste de l'utilisateur) comptent
 // comme des onglets où l'on a agi : les règles 2 et 3 les épargnent, la règle 1 ne les prend qu'en dernier.
 //
 // Jamais touchés, par aucune règle (`kept`, calculé dans window.js) : les onglets

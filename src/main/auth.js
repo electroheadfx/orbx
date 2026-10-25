@@ -1,12 +1,12 @@
 // Authentification HTTP (Basic, Digest, NTLM) et proxys : quand un serveur
-// répond 401 ou 407, Orbe demande l'identifiant et le mot de passe dans une
+// répond 401 ou 407, Orbx demande l'identifiant et le mot de passe dans une
 // feuille posée sur l'onglet concerné (sheets.js). Annulable ; sans réponse, la
 // demande est annulée et la page du serveur s'affiche.
 //
 // Sécurité :
 //  - la feuille nomme l'hôte qui demande, tel que rapporté par Electron
 //    (`authInfo`) ; le « domaine » (realm) est un texte choisi par le serveur :
-//    il est affiché comme une citation, jamais comme un message d'Orbe ;
+//    il est affiché comme une citation, jamais comme un message d'Orbx ;
 //  - quand c'est la page en cours de chargement qui demande, la feuille couvre
 //    entièrement l'ancienne page et affiche l'adresse demandée : la question ne
 //    peut pas passer pour celle du site encore affiché dessous ;
@@ -14,7 +14,7 @@
 //    script, requête) ne peut pas faire apparaître la question : la demande est annulée (hameçonnage
 //    classique : faire croire que le site visité demande un mot de passe) ;
 //  - en HTTP simple, la feuille prévient que le mot de passe partira en clair ;
-//  - rien n'est retenu par Orbe : Chromium garde l'identification pour la session.
+//  - rien n'est retenu par Orbx : Chromium garde l'identification pour la session.
 // À FAIRE : proposer les comptes du gestionnaire de mots de passe (il faudrait
 // une clé par hôte + domaine et passer par le déverrouillage du coffre ; pas
 // trivial, donc laissé de côté — voir docs/securite-navigation.md).
@@ -93,7 +93,7 @@ function onLogin(event, wc, details, authInfo, callback) {
 }
 
 // Certificat client demandé par un site. Sans réponse, Electron enverrait le
-// premier certificat du trousseau : Orbe n'en envoie jamais sans un choix
+// premier certificat du trousseau : Orbx n'en envoie jamais sans un choix
 // explicite, fait dans une feuille posée sur l'onglet.
 function onClientCert(event, wc, url, list, callback) {
   event.preventDefault();

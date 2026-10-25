@@ -123,7 +123,7 @@ async function exportNotes(w) {
   for (let i = 2; fs.existsSync(dir); i++) dir = path.join(parent, `${t('notes.exportFolder')} ${day} (${i})`);
   let files;
   try { files = writeAll(dir); } catch (err) {
-    console.error('[orbe] export des notes', err.message);
+    console.error('[orbx] export des notes', err.message);
     if (w) w.toast(t('notes.exportFailed'), 'error');
     return null;
   }

@@ -1,4 +1,4 @@
-// Barre latérale d'Orbe. Reçoit l'état complet de la fenêtre et ne modifie que
+// Barre latérale d'Orbx. Reçoit l'état complet de la fenêtre et ne modifie que
 // les éléments qui ont changé, pour rester fluide avec beaucoup d'onglets.
 const $ = (id) => document.getElementById(id);
 const send = O.send;
@@ -290,8 +290,8 @@ function themeVars(space, s) {
   // Barre translucide : le fond laisse passer un peu du bureau ; le texte est
   // calculé pour rester lisible sur ce fond-là (theme.js, `show`).
   const alpha = FLOATING ? 0.96 : (s.translucent ? 0.8 : 1);
-  const p = OrbeTheme.palette(space, s.dark, FLOATING ? 0 : 1 - alpha);
-  return { p, vars: OrbeTheme.cssVars(p, alpha) };
+  const p = OrbxTheme.palette(space, s.dark, FLOATING ? 0 : 1 - alpha);
+  return { p, vars: OrbxTheme.cssVars(p, alpha) };
 }
 function paintTheme(el, space, s, only) {
   const sig = JSON.stringify([space.color, space.color2, space.color3, space.plain, space.intensity, space.grain, space.texture, space.mode, s.dark, s.translucent, only ? 1 : 0]);
@@ -358,7 +358,7 @@ function render(s) {
   $('fav').dataset.hint = t('side.favHint');
   $('url-copy').hidden = !s.activeId || s.nav.internal || !s.nav.url;
 
-  const label = s.nav.internal ? (s.nav.title || 'Orbe') : host(s.nav.url);
+  const label = s.nav.internal ? (s.nav.title || 'Orbx') : host(s.nav.url);
   $('url-text').textContent = label || t('side.search');
   $('url-text').classList.toggle('placeholder', !label);
   $('url').classList.toggle('loading', s.nav.loading);
@@ -1036,7 +1036,7 @@ function slideGhost(vm, dir) {
   pagerEl.appendChild(slide.ghost);
   // La teinte porte le fond de l'autre Espace ; sa liste, ses couleurs de texte.
   paintTheme(tintEl, vm.space, S);
-  paintTheme(slide.ghost, vm.space, S, OrbeTheme.TEXT_VARS);
+  paintTheme(slide.ghost, vm.space, S, OrbxTheme.TEXT_VARS);
 }
 
 function slideBegin() {
@@ -1082,7 +1082,7 @@ function slideFly(to, done) {
   clearTimeout(slide.swap);
   if (to !== 0 && slide.commit && slide.targetSpace) {
     const space = slide.targetSpace;
-    slide.swap = setTimeout(() => { if (slide && S) paintTheme(document.body, space, S, OrbeTheme.TEXT_VARS); }, timing.duration * 0.4);
+    slide.swap = setTimeout(() => { if (slide && S) paintTheme(document.body, space, S, OrbxTheme.TEXT_VARS); }, timing.duration * 0.4);
   }
   // La fin est donnée par une minuterie plutôt que par l'animation : celle-ci ne
   // « finit » pas dans une vue qui n'est pas affichée.
@@ -1620,7 +1620,7 @@ sidebar.addEventListener('dragstart', (e) => {
     if (editing || drag || !S || S.incognito) return e.preventDefault();
     drag = { space: dot.dataset.space };
     e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('application/x-orbe-space', dot.dataset.space);
+    e.dataTransfer.setData('application/x-orbx-space', dot.dataset.space);
     requestAnimationFrame(() => { if (drag && drag.space) dot.classList.add('dragging-self'); });
     return undefined;
   }
@@ -1636,7 +1636,7 @@ sidebar.addEventListener('dragstart', (e) => {
   // « copyMove » : ⌥ pendant le glisser dépose une copie (voir `drop`).
   e.dataTransfer.effectAllowed = 'copyMove';
   e.dataTransfer.setData('text/plain', row.dataset.id);
-  e.dataTransfer.setData('application/x-orbe-item', row.dataset.id);
+  e.dataTransfer.setData('application/x-orbx-item', row.dataset.id);
   // Les zones de dépôt ne s'agrandissent qu'après le départ du glisser :
   // déplacer la ligne saisie pendant « dragstart » annule le geste.
   requestAnimationFrame(() => {
@@ -1650,7 +1650,7 @@ sidebar.addEventListener('dragstart', (e) => {
   return undefined;
 });
 // Fin d'un glisser que personne n'a accepté. Onglet lâché hors de la fenêtre : il part
-// dans une nouvelle fenêtre (ou dans l'autre fenêtre d'Orbe qui se trouve dessous) ; le
+// dans une nouvelle fenêtre (ou dans l'autre fenêtre d'Orbx qui se trouve dessous) ; le
 // processus principal le vérifie avec la position réelle du pointeur.
 sidebar.addEventListener('dragend', (e) => {
   if (!drag || drag.settling) return;
@@ -1819,8 +1819,8 @@ function overSidebar(e) {
   if (overPage(e) || (drag && drag.settling)) return;
   if (!drag) {
     const types = [...e.dataTransfer.types];
-    // Ligne venue d'une autre fenêtre d'Orbe : cette fenêtre va l'afficher.
-    if (types.includes('application/x-orbe-item')) {
+    // Ligne venue d'une autre fenêtre d'Orbx : cette fenêtre va l'afficher.
+    if (types.includes('application/x-orbx-item')) {
       if (!S || S.incognito || S.blank) return;
       e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
@@ -1847,10 +1847,10 @@ sidebar.addEventListener('drop', (e) => {
   if (overPage(e)) return undefined;
   e.preventDefault();
   if (!drag) {
-    // Ligne venue d'une autre fenêtre Orbe : ce n'est pas une adresse ; l'onglet s'affiche ici
+    // Ligne venue d'une autre fenêtre Orbx : ce n'est pas une adresse ; l'onglet s'affiche ici
     // (le processus principal vérifie l'identifiant et la fenêtre d'où il vient).
-    if ([...e.dataTransfer.types].includes('application/x-orbe-item')) {
-      const id = e.dataTransfer.getData('application/x-orbe-item');
+    if ([...e.dataTransfer.types].includes('application/x-orbx-item')) {
+      const id = e.dataTransfer.getData('application/x-orbx-item');
       if (id && S && !S.incognito && !S.blank) send('adoptTab', String(id).slice(0, 80));
       return undefined;
     }

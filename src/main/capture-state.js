@@ -4,12 +4,12 @@
 // Electron ne dit pas si un flux caméra, micro ou écran est encore ouvert. Le
 // témoin repose donc sur ce que le processus principal sait avec certitude, sans
 // rien croire de la page :
-//  - il s'allume quand Orbe accorde l'accès à la page ;
+//  - il s'allume quand Orbx accorde l'accès à la page ;
 //  - il s'éteint quand la page est remplacée (navigation, rechargement),
 //    détruite, ou arrêtée par l'utilisateur ;
 //  - pour le partage de l'onglet lui-même, `webContents.isBeingCaptured()` permet
 //    d'observer la fin : le témoin s'éteint quand plus rien ne capte la page.
-//    Ce compteur inclut les captures d'Orbe (vignettes, `capturePage`) : il peut
+//    Ce compteur inclut les captures d'Orbx (vignettes, `capturePage`) : il peut
 //    donc retarder l'extinction, jamais la provoquer à tort.
 // Il peut donc rester allumé après qu'une page a rendu la caméra d'elle-même
 // (jamais l'inverse) : un témoin qu'une page pourrait éteindre ne vaudrait rien.

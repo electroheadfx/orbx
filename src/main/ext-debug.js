@@ -3,7 +3,7 @@
 //
 // Garde-fous :
 //   - seule une extension qui déclare l'autorisation « debugger » y a accès, et
-//     seulement sur les onglets d'Orbe (jamais l'interface, ni une autre
+//     seulement sur les onglets d'Orbx (jamais l'interface, ni une autre
 //     extension) ;
 //   - tant qu'un onglet est piloté, un bandeau le dit dans la fenêtre, avec un
 //     bouton pour arrêter (comme la barre d'information de Chrome) ;
@@ -11,7 +11,7 @@
 //     extensions : les commandes qui sortent de l'onglet (autres cibles,
 //     navigateur entier) sont refusées.
 //
-// Écrit pour Orbe à partir de la documentation publique de chrome.debugger.
+// Écrit pour Orbx à partir de la documentation publique de chrome.debugger.
 const api = require('./ext-api');
 const panel = require('./ext-panel');
 const { store } = require('./store');
@@ -24,7 +24,7 @@ let windowModule = null;
 const W = () => windowModule || (windowModule = require('./window'));
 
 const sessions = new Map(); // id d'onglet (webContents) -> { ses, extId, name, wc, onMessage, onDetach }
-const banners = new Map(); // OrbeWindow -> { view, ready, tabId }
+const banners = new Map(); // OrbxWindow -> { view, ready, tabId }
 
 // Commandes refusées : elles donneraient accès à autre chose que l'onglet.
 const DENIED_DOMAINS = new Set(['Browser', 'Tethering', 'SystemInfo', 'Tracing', 'HeadlessExperimental', 'Extensions']);
@@ -45,7 +45,7 @@ function allowed(ctx, method, params) {
 function debuggee(ctx, target) {
   const d = target || {};
   let id = d.tabId;
-  if (typeof id !== 'number' && typeof d.targetId === 'string' && /^orbe-tab-\d+$/.test(d.targetId)) id = Number(d.targetId.slice(9));
+  if (typeof id !== 'number' && typeof d.targetId === 'string' && /^orbx-tab-\d+$/.test(d.targetId)) id = Number(d.targetId.slice(9));
   if (typeof id !== 'number') throw X.fail('Seul un onglet peut être débogué (« tabId »).');
   return X.findTab(ctx, id);
 }
@@ -83,7 +83,7 @@ api.extend({
     X.need(ctx, 'debugger');
     const t = debuggee(ctx, target);
     const dbg = t.wc.debugger;
-    unload.unshield(t.wc); // débogueur tenu un instant par Orbe (unload.js) : il le rend
+    unload.unshield(t.wc); // débogueur tenu un instant par Orbx (unload.js) : il le rend
     if (sessions.has(t.id) || dbg.isAttached()) throw X.fail(`Another debugger is already attached to the tab with id: ${t.id}.`);
     try {
       dbg.attach(typeof version === 'string' && /^\d+\.\d+$/.test(version) ? version : '1.3');
@@ -117,7 +117,7 @@ api.extend({
     const t = debuggee(ctx, target);
     owned(ctx, t);
     if (typeof method !== 'string' || !/^[A-Za-z]+\.[A-Za-z]+$/.test(method)) throw X.fail('Commande invalide.');
-    if (!allowed(ctx, method, params)) throw X.fail(`Commande refusée par Orbe : ${method}`);
+    if (!allowed(ctx, method, params)) throw X.fail(`Commande refusée par Orbx : ${method}`);
     const sessionId = target && typeof target.sessionId === 'string' ? target.sessionId : undefined;
     try {
       return await t.wc.debugger.sendCommand(method, params && typeof params === 'object' ? params : {}, sessionId);
@@ -128,7 +128,7 @@ api.extend({
   },
   'debugger.getTargets'(ctx) {
     X.need(ctx, 'debugger');
-    return X.visibleTabs(ctx).map((t) => ({ id: `orbe-tab-${t.id}`, type: 'page', tabId: t.id, title: t.title, url: t.url, attached: sessions.has(t.id) || t.wc.debugger.isAttached(), faviconUrl: t.favIconUrl || undefined }));
+    return X.visibleTabs(ctx).map((t) => ({ id: `orbx-tab-${t.id}`, type: 'page', tabId: t.id, title: t.title, url: t.url, attached: sessions.has(t.id) || t.wc.debugger.isAttached(), faviconUrl: t.favIconUrl || undefined }));
   },
 });
 
@@ -188,7 +188,7 @@ function refreshAll() {
     if (s.wc.isDestroyed()) finish(tabId, 'target_closed');
     else if (!X.context(s.ses, s.extId)) stop(tabId, null);
   }
-  for (const w of W().OrbeWindow.all) refresh(w);
+  for (const w of W().OrbxWindow.all) refresh(w);
 }
 
 module.exports = { place, refreshAll, stop, sessions, banners, allowed };

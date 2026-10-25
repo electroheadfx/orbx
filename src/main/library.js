@@ -15,7 +15,7 @@ const SECTIONS = ['history', 'archive', 'downloads', 'media', 'easels', 'spaces'
 const HOW = ['manual', 'auto', 'little']; // façon dont un onglet a rejoint l'archive
 const MEDIA = /\.(png|jpe?g|gif|webp|avif|svg|mp4|mov|webm|mp3|wav|m4a)$/i;
 
-// `window(sender)` : fenêtre Orbe de la page qui demande ; `startDrag` : remplacé pendant les tests.
+// `window(sender)` : fenêtre Orbx de la page qui demande ; `startDrag` : remplacé pendant les tests.
 const env = {
   window: () => null,
   startDrag: (wc, item) => wc.startDrag(item),
@@ -24,7 +24,7 @@ const env = {
   reviewBoost: () => {},
   // Menu natif (clic droit sur l'icône de la Bibliothèque) ; remplacé pendant les tests.
   popup: (w, tpl) => { if (w) w.popup(tpl); },
-  // Dossier où Orbe enregistre ses captures ; remplacé pendant les tests.
+  // Dossier où Orbx enregistre ses captures ; remplacé pendant les tests.
   captureDir: () => app.getPath('downloads'),
   // Dossier de l'utilisateur à parcourir pour ses médias ('downloads', 'desktop', 'documents') ;
   // remplacé pendant les tests, qui ne lisent jamais les vrais dossiers.
@@ -85,7 +85,7 @@ function removeArchived(id) {
 }
 
 // --- Téléchargements et médias ---------------------------------------------------
-const icons = new Map(); // chemin -> icône du fichier (pour le glisser hors d'Orbe)
+const icons = new Map(); // chemin -> icône du fichier (pour le glisser hors d'Orbx)
 let fallbackIcon = null;
 
 // L'icône d'un fichier se demande au système, sans attendre : elle doit être prête
@@ -145,13 +145,13 @@ function drag(sender, id) {
 // retenu. Seul le premier niveau est lu : fichiers ordinaires (ni liens, ni fichiers
 // cachés) dont l'extension est celle d'un média. Aucun fichier n'est ouvert ni décodé.
 // La page reçoit un identifiant et un nom (posé comme du texte), jamais un chemin.
-const FROM = ['orbe', 'downloads', 'desktop', 'documents'];
+const FROM = ['orbx', 'downloads', 'desktop', 'documents'];
 const FOLDER_MAX = 200;
 const folderFiles = new Map(); // identifiant -> { file, dir }
 const folderId = (file) => 'f:' + crypto.createHash('sha256').update(file).digest('hex').slice(0, 20);
 
 async function folderRows(from, q) {
-  if (!FROM.includes(from) || from === 'orbe') return [];
+  if (!FROM.includes(from) || from === 'orbx') return [];
   let dir = '';
   let entries = [];
   try {
@@ -159,7 +159,7 @@ async function folderRows(from, q) {
     entries = await fs.promises.readdir(dir, { withFileTypes: true });
   } catch { return []; }
   const found = [];
-  // Un fichier téléchargé par Orbe que le système n'a pas pu marquer garde sa confirmation :
+  // Un fichier téléchargé par Orbx que le système n'a pas pu marquer garde sa confirmation :
   // il ne reparaît pas ici, où il s'ouvrirait sans elle.
   const unmarked = new Set(store.state.downloads.filter((d) => d && d.marked === false && d.path).map((d) => d.path));
   for (const e of entries) {
@@ -197,7 +197,7 @@ function folderFile(id) {
 }
 
 // --- Fichiers récents (survol de l'icône de la Bibliothèque) -----------------------
-// Trois sortes, au choix de l'utilisateur (clic droit sur l'icône) : captures d'Orbe,
+// Trois sortes, au choix de l'utilisateur (clic droit sur l'icône) : captures d'Orbx,
 // médias téléchargés (images, vidéos, sons), autres téléchargements.
 const PEEK_KINDS = ['captures', 'downloads', 'media'];
 const PEEK_MAX = 5;
@@ -239,7 +239,7 @@ function peekMenuTemplate() {
   ];
 }
 
-// Une capture enregistrée par Orbe rejoint la Bibliothèque (pas en navigation privée).
+// Une capture enregistrée par Orbx rejoint la Bibliothèque (pas en navigation privée).
 // `done(fiche)` : appelé une fois le fichier écrit (essais).
 function keepCapture(name, png, { incognito = false, done = null } = {}) {
   const file = path.join(env.captureDir(), name);
@@ -280,7 +280,7 @@ function reapplyBoost(host) {
 // --- Messages ----------------------------------------------------------------------
 // Les dossiers de l'utilisateur (Bureau, Documents, Téléchargements) ne sont lus, et leurs
 // fichiers ouverts ou glissés, qu'à la demande de la page Bibliothèque elle-même.
-const fromLibrary = (sender) => { try { return !!sender && !sender.isDestroyed() && sender.getURL().startsWith('orbe://app/library.html'); } catch { return false; } };
+const fromLibrary = (sender) => { try { return !!sender && !sender.isDestroyed() && sender.getURL().startsWith('orbx://app/library.html'); } catch { return false; } };
 
 async function action(name, a, sender) {
   const s = store.state;
@@ -295,9 +295,9 @@ async function action(name, a, sender) {
           .map((h) => ({ url: h.url, title: h.title || h.url, favicon: h.favicon || '', at: h.last })),
         archive: archiveRows({ q, how: HOW.includes(o.how) ? o.how : '', space: typeof o.space === 'string' ? o.space : '' }),
         downloads: fileRows(s.downloads, q, false),
-        // Médias : images, vidéos et sons téléchargés, plus les captures d'Orbe.
+        // Médias : images, vidéos et sons téléchargés, plus les captures d'Orbx.
         // (`from` : un dossier de l'utilisateur, lu parce qu'il vient d'être choisi.)
-        media: FROM.includes(o.from) && o.from !== 'orbe' && fromLibrary(sender) ? await folderRows(o.from, q) : fileRows(s.downloads, q, true),
+        media: FROM.includes(o.from) && o.from !== 'orbx' && fromLibrary(sender) ? await folderRows(o.from, q) : fileRows(s.downloads, q, true),
         spaces: spaceRows(w, q),
         boosts: boostRows(q),
         // Pour les filtres de l'archive.

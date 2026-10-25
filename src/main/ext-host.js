@@ -1,6 +1,6 @@
-// Extensions Chrome : ce qu'Orbe fournit à la couche d'API (ext-api.js).
+// Extensions Chrome : ce qu'Orbx fournit à la couche d'API (ext-api.js).
 //   - ses onglets et ses fenêtres, vus comme ceux de Chrome (`chrome.tabs`,
-//     `chrome.windows`) : un onglet d'extension est un onglet vivant d'Orbe, et
+//     `chrome.windows`) : un onglet d'extension est un onglet vivant d'Orbx, et
 //     son identifiant est celui de son webContents — le même que celui
 //     qu'Electron donne déjà dans `sender.tab.id` et attend dans
 //     `tabs.sendMessage` ou `scripting.executeScript` ;
@@ -23,7 +23,7 @@ const known = new Map(); // id webContents -> { windowId, active, session }
 const knownWindows = new Set();
 const popups = new Map(); // id webContents de la fenêtre surgissante -> { owner, id, win }
 let focusedId = -1; // fenêtre au premier plan, telle qu'annoncée aux extensions
-let lastFocused = null; // dernière fenêtre Orbe utilisée
+let lastFocused = null; // dernière fenêtre Orbx utilisée
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -43,7 +43,7 @@ function describe(rt, index) {
     pinned: !!data.homeUrl,
     incognito: !!owner.incognito,
     title: data.title || rt.wc.getTitle() || '',
-    // Sur la page d'erreur d'Orbe, l'adresse utile est celle qui a échoué.
+    // Sur la page d'erreur d'Orbx, l'adresse utile est celle qui a échoué.
     url: (shown && !W().isInternal(shown) ? shown : data.url) || '',
     favIconUrl: data.favicon || '',
     status: rt.loading ? 'loading' : 'complete',
@@ -55,7 +55,7 @@ function describe(rt, index) {
   };
 }
 
-// Onglets vivants, hors pages internes d'Orbe. Les onglets en veille n'ont pas
+// Onglets vivants, hors pages internes d'Orbx. Les onglets en veille n'ont pas
 // de webContents : pour une extension, ils n'existent pas.
 function tabs() {
   const out = [];
@@ -73,7 +73,7 @@ const tabOf = (wc) => tabs().find((t) => t.wc === wc) || null;
 const rtOf = (id) => [...W().live.values()].find((rt) => !rt.wc.isDestroyed() && rt.wc.id === id) || null;
 
 function windows() {
-  return W().OrbeWindow.all.filter((w) => !w.win.isDestroyed()).map((w) => ({
+  return W().OrbxWindow.all.filter((w) => !w.win.isDestroyed()).map((w) => ({
     id: w.win.id,
     focused: w.win.id === focusedId,
     incognito: !!w.incognito,
@@ -83,9 +83,9 @@ function windows() {
 }
 
 function lastWindow() {
-  const { OrbeWindow } = W();
+  const { OrbxWindow } = W();
   if (lastFocused && !lastFocused.win.isDestroyed()) return lastFocused;
-  return OrbeWindow.primary || OrbeWindow.all[0] || null;
+  return OrbxWindow.primary || OrbxWindow.all[0] || null;
 }
 
 // Fenêtre « courante » d'un appelant : celle de son onglet, celle sur laquelle
@@ -96,7 +96,7 @@ function currentWindowId(wc) {
     if (pop && !pop.owner.win.isDestroyed()) return pop.owner.win.id;
     const side = panel.ownerOf(wc);
     if (side && !side.win.isDestroyed()) return side.win.id;
-    const owner = W().OrbeWindow.ownerOf(wc);
+    const owner = W().OrbxWindow.ownerOf(wc);
     if (owner) return owner.win.id;
   }
   const w = lastWindow();
@@ -133,9 +133,9 @@ function frameFrom(processId, routingId) {
   try { return require('electron').webFrameMain.fromId(processId, routingId) || null; } catch { return null; }
 }
 
-// Compare le modèle d'Orbe à ce que les extensions savent déjà, et envoie les
+// Compare le modèle d'Orbx à ce que les extensions savent déjà, et envoie les
 // événements correspondants. Appelé à chaque changement d'état des fenêtres :
-// une erreur ici ne doit jamais interrompre Orbe (fermeture d'une fenêtre…).
+// une erreur ici ne doit jamais interrompre Orbx (fermeture d'une fenêtre…).
 function sync() {
   try {
     compare();
@@ -143,12 +143,12 @@ function sync() {
     panel.refreshAll();
     debug.refreshAll();
   } catch (err) {
-    console.error('[orbe] extensions : synchronisation des onglets', err);
+    console.error('[orbx] extensions : synchronisation des onglets', err);
   }
 }
 
 function compare() {
-  const { OrbeWindow } = W();
+  const { OrbxWindow } = W();
   const now = tabs();
   const seen = new Set();
   for (const t of now) {
@@ -172,7 +172,7 @@ function compare() {
   const list = windows();
   for (const w of list) if (!knownWindows.has(w.id)) { knownWindows.add(w.id); api.notify.windowCreated(w); }
   for (const id of [...knownWindows]) if (!list.some((w) => w.id === id)) { knownWindows.delete(id); api.notify.windowRemoved(id); }
-  const f = OrbeWindow.focused;
+  const f = OrbxWindow.focused;
   if (f) lastFocused = f;
   if (lastFocused && lastFocused.win.isDestroyed()) lastFocused = null;
   // Une fenêtre surgissante au premier plan ne retire pas le « focus » à sa fenêtre.
@@ -184,9 +184,9 @@ function compare() {
 // --- Actions demandées par les extensions --------------------------------------
 
 function createTab({ url, active, windowId }) {
-  const { OrbeWindow, live } = W();
-  let w = OrbeWindow.all.find((x) => x.win.id === windowId && !x.win.isDestroyed()) || lastWindow();
-  if (w && w.incognito) w = OrbeWindow.primary;
+  const { OrbxWindow, live } = W();
+  let w = OrbxWindow.all.find((x) => x.win.id === windowId && !x.win.isDestroyed()) || lastWindow();
+  if (w && w.incognito) w = OrbxWindow.primary;
   if (!w) return null;
   // Pas de newTab() : celui-ci interprète sa saisie, et prendrait une adresse
   // chrome-extension:// pour une recherche.
@@ -194,7 +194,7 @@ function createTab({ url, active, windowId }) {
   if (active) w.activate(tab.id);
   else {
     w.ensureView(tab.id);
-    OrbeWindow.trimLive();
+    OrbxWindow.trimLive();
     w.changed();
   }
   sync();
@@ -213,7 +213,7 @@ function activateTab(id) {
 }
 
 function focusWindow(id) {
-  const w = W().OrbeWindow.all.find((x) => x.win.id === id);
+  const w = W().OrbxWindow.all.find((x) => x.win.id === id);
   if (w && !w.win.isDestroyed()) w.win.focus();
 }
 
@@ -251,7 +251,7 @@ function actionsFor(w) {
 }
 
 // Clic sur le bouton d'une extension : ouvre sa fenêtre surgissante, ancrée
-// dans la fenêtre d'Orbe (`anchor` : point { x, y } dans la fenêtre, coin
+// dans la fenêtre d'Orbx (`anchor` : point { x, y } dans la fenêtre, coin
 // supérieur gauche de la fenêtre surgissante), ou envoie `action.onClicked`.
 // Renvoie la fenêtre ouverte, true si l'extension a seulement été prévenue,
 // false sinon. `options.keepOpen` : ne pas refermer à la perte du focus (tests).
@@ -266,10 +266,10 @@ function openPopup(w, id, anchor, options = {}) {
     if (p.owner === w && p.id === id && !p.win.isDestroyed()) { p.win.close(); return true; }
   }
   closePopup(w);
-  // Extension qui compte sur « activeTab » : au premier clic, Orbe demande s'il
+  // Extension qui compte sur « activeTab » : au premier clic, Orbx demande s'il
   // peut lui ouvrir les pages (voir ext-access.js), puis reprend le clic.
   if (access.needed(ses, id)) {
-    access.offer(ses, id).then(() => { if (!w.win.isDestroyed()) openPopup(w, id, anchor, options); }).catch((err) => console.error('[orbe] extension', id, err));
+    access.offer(ses, id).then(() => { if (!w.win.isDestroyed()) openPopup(w, id, anchor, options); }).catch((err) => console.error('[orbx] extension', id, err));
     return true;
   }
   // L'extension a demandé que son bouton ouvre son panneau latéral.
@@ -372,7 +372,7 @@ function backgroundGone(wc, details, deps = {}) {
   if (!id || !details || !CRASHED.has(details.reason) || !ext.isEnabled(id)) return false;
   const rec = ext.list().find((x) => x.id === id);
   if (!ext.setEnabled(id, false)) return false;
-  console.error(`[orbe] extension ${id} : page d'arrière-plan perdue (${details.reason}), extension désactivée`);
+  console.error(`[orbx] extension ${id} : page d'arrière-plan perdue (${details.reason}), extension désactivée`);
   const w = lastWindow();
   if (w && !w.win.isDestroyed()) w.toast(store.t('ext.crashed', null, { name: String((rec && rec.name) || id).slice(0, 60) }), null, () => require('./commands').hooks.openSettings('extensions'));
   try { require('./menu').refresh(true); } catch {}
@@ -380,7 +380,7 @@ function backgroundGone(wc, details, deps = {}) {
 }
 
 function setup() {
-  require('electron').app.on('render-process-gone', (e, wc, details) => { try { backgroundGone(wc, details); } catch (err) { console.error('[orbe] extension', err); } });
+  require('electron').app.on('render-process-gone', (e, wc, details) => { try { backgroundGone(wc, details); } catch (err) { console.error('[orbx] extension', err); } });
   Object.assign(api.host, {
     tabs, windows, currentWindowId, createTab, removeTab, activateTab, focusWindow, confirmPermissions,
     openPopup: (ses, id) => { const w = lastWindow(); return !!(w && openPopup(w, id)); },

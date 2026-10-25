@@ -1,11 +1,11 @@
-// Extensions Chrome : API complémentaires de la couche d'Orbe (ext-api.js).
+// Extensions Chrome : API complémentaires de la couche d'Orbx (ext-api.js).
 //   - `commands` : raccourcis clavier déclarés par les extensions ;
 //   - `identity` : `launchWebAuthFlow` (petite fenêtre de connexion) ;
 //   - `tabGroups`, `tabs.group` : groupes d'onglets tenus en mémoire, sans
-//     dessin dans la barre latérale (Orbe range ses onglets autrement) ;
+//     dessin dans la barre latérale (Orbx range ses onglets autrement) ;
 //   - `tabs.getZoom` / `setZoom`, `downloads.search`.
 //
-// Écrit pour Orbe à partir de la documentation publique des API d'extension de
+// Écrit pour Orbx à partir de la documentation publique des API d'extension de
 // Chrome ; aucun code tiers.
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
@@ -22,8 +22,8 @@ const links = { openAction: () => false, ownerOf: () => null };
 // --- Raccourcis clavier (chrome.commands) ----------------------------------------
 //
 // Rien n'est enregistré auprès du système : la frappe est lue dans les vues
-// d'Orbe (`before-input-event`), donc seulement quand Orbe a le clavier. Un
-// raccourci déjà pris par Orbe n'est pas attribué.
+// d'Orbx (`before-input-event`), donc seulement quand Orbx a le clavier. Un
+// raccourci déjà pris par Orbx n'est pas attribué.
 
 const KEY_NAMES = { comma: 'comma', period: 'period', home: 'home', end: 'end', pageup: 'pageup', pagedown: 'pagedown', space: 'space', insert: 'insert', delete: 'delete', up: 'up', down: 'down', left: 'left', right: 'right' };
 const CODE_KEYS = { Comma: 'comma', Period: 'period', Home: 'home', End: 'end', PageUp: 'pageup', PageDown: 'pagedown', Space: 'space', Insert: 'insert', Delete: 'delete', ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' };
@@ -73,13 +73,13 @@ function parseAccelerator(accel) {
   return combo(m, last.toLowerCase());
 }
 
-// Raccourcis d'Orbe et du système : jamais donnés à une extension.
+// Raccourcis d'Orbx et du système : jamais donnés à une extension.
 let reservedSet = null;
 function reserved() {
   if (reservedSet) return reservedSet;
   reservedSet = new Set();
   const add = (accel) => { const id = accel && parseAccelerator(accel); if (id) reservedSet.add(id); };
-  // Raccourcis d'Orbe en vigueur : ceux que l'utilisateur a changés ou retirés comptent.
+  // Raccourcis d'Orbx en vigueur : ceux que l'utilisateur a changés ou retirés comptent.
   const current = require('./shortcuts');
   for (const c of require('./commands').COMMANDS) add(current.accelOf(c.name));
   add(require('./store').store.state.settings.littleShortcut);
@@ -151,7 +151,7 @@ function shortcuts(ses) {
     const accel = user[`${c.id}/${c.name}`];
     if (!accel) continue;
     const keys = fromAccelerator(accel);
-    // Donné depuis à une commande d'Orbe : Orbe passe avant.
+    // Donné depuis à une commande d'Orbx : Orbx passe avant.
     if (!keys || out.has(keys.id) || current.owner(accel)) continue;
     out.set(keys.id, { id: c.id, name: c.name, keys, user: true });
   }
@@ -193,7 +193,7 @@ function saveUserKeys(map) {
 const splitName = (name) => { const m = /^ext:([a-p]{32})\/(.{1,120})$/.exec(String(name || '')); return m ? { id: m[1], name: m[2] } : null; };
 
 // Donne un raccourci à la commande d'une extension (`name` : « ext:<id>/<commande> »).
-// Pris par une commande d'Orbe ou d'une autre extension : { conflict }, sauf avec `force`.
+// Pris par une commande d'Orbx ou d'une autre extension : { conflict }, sauf avec `force`.
 function assignKey(ses, name, accel, { force = false } = {}) {
   const t = splitName(name);
   const all = declared(ses);
@@ -205,10 +205,10 @@ function assignKey(ses, name, accel, { force = false } = {}) {
   if (!keys) return { error: 'bad' };
   const { store } = require('./store');
   if (current.canon(store.state.settings.littleShortcut || '') === r.accel) return { error: 'reserved', kind: 'global' };
-  const orbe = current.owner(r.accel);
-  if (orbe && !force) return { conflict: orbe, label: current.labelOf(orbe), keys: current.display(r.accel) };
+  const orbx = current.owner(r.accel);
+  if (orbx && !force) return { conflict: orbx, label: current.labelOf(orbx), keys: current.display(r.accel) };
   const other = [...shortcuts(ses).values()].find((s) => s.keys.id === keys.id && !(s.id === t.id && s.name === t.name));
-  if (other && !orbe && !force) {
+  if (other && !orbx && !force) {
     const ext = ses.extensions.getAllExtensions().find((e) => e.id === other.id);
     return { conflict: `ext:${other.id}/${other.name}`, label: `${(ext && ext.name) || other.id} — ${other.name}`, keys: current.display(r.accel) };
   }
@@ -216,7 +216,7 @@ function assignKey(ses, name, accel, { force = false } = {}) {
   if (other) map[`${other.id}/${other.name}`] = '';
   map[`${t.id}/${t.name}`] = r.accel;
   saveUserKeys(map);
-  if (orbe) current.clear(orbe);
+  if (orbx) current.clear(orbx);
   return { ok: true, accel: r.accel, keys: current.display(r.accel) };
 }
 
@@ -267,7 +267,7 @@ function comboOf(input) {
   return key ? combo({ ctrl: input.control, alt: input.alt, shift: input.shift, meta: input.meta }, key) : null;
 }
 
-// Appelé pour chaque touche enfoncée dans une vue d'Orbe. Renvoie true si une
+// Appelé pour chaque touche enfoncée dans une vue d'Orbx. Renvoie true si une
 // extension a reçu la commande.
 function onKey(w, input) {
   if (!w || w.incognito || input.type !== 'keyDown' || input.isAutoRepeat) return false;
@@ -289,7 +289,7 @@ function watchKeys() {
     wc.on('before-input-event', (e, input) => {
       if (input.type !== 'keyDown') return;
       let w = null;
-      try { w = W().OrbeWindow.ownerOf(wc) || links.ownerOf(wc); } catch {}
+      try { w = W().OrbxWindow.ownerOf(wc) || links.ownerOf(wc); } catch {}
       if (w && onKey(w, input)) e.preventDefault();
     });
   };
@@ -351,7 +351,7 @@ function webAuthFlow(ctx, details) {
   const redirect = `https://${ctx.id}.chromiumapp.org/`;
   const interactive = d.interactive === true;
   const parentId = api.host.currentWindowId(ctx.wc);
-  const parent = W().OrbeWindow.all.find((x) => x.win.id === parentId);
+  const parent = W().OrbxWindow.all.find((x) => x.win.id === parentId);
   return new Promise((resolve, reject) => {
     const win = new BrowserWindow({
       parent: parent && !parent.win.isDestroyed() ? parent.win : undefined,
@@ -536,10 +536,10 @@ api.extend({
     X.need(ctx, 'identity');
     return webAuthFlow(ctx, d);
   },
-  // Orbe n'a pas de compte Google : aucun jeton à donner.
+  // Orbx n'a pas de compte Google : aucun jeton à donner.
   'identity.getAuthToken'(ctx) {
     X.need(ctx, 'identity');
-    throw X.fail('OAuth2 not granted or revoked. Orbe n’a pas de compte Google : utiliser launchWebAuthFlow.');
+    throw X.fail('OAuth2 not granted or revoked. Orbx n’a pas de compte Google : utiliser launchWebAuthFlow.');
   },
   'identity.getProfileUserInfo'(ctx) {
     X.need(ctx, 'identity');
@@ -591,7 +591,7 @@ function setup(options = {}) {
   watchKeys();
 }
 
-// Les raccourcis d'Orbe ont changé : la liste réservée est à recalculer.
+// Les raccourcis d'Orbx ont changé : la liste réservée est à recalculer.
 function forgetReserved() { reservedSet = null; }
 
 module.exports = { forgetReserved, reserved, setup, onKey, shortcuts, shortcutOf, parseShortcut, parseAccelerator, fromAccelerator, comboOf, groups, commandList, assignKey, setKey, forgetKeys };

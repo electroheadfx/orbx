@@ -7,7 +7,7 @@
 // Ce qui n'est jamais bloqué :
 //   - la navigation principale (taper un domaine publicitaire l'affiche) ;
 //   - les requêtes vers le site lui-même (même domaine enregistrable) ;
-//   - tout ce qui n'est pas http, https, ws ou wss (orbe://, file://, data:…) ;
+//   - tout ce qui n'est pas http, https, ws ou wss (orbx://, file://, data:…) ;
 //   - les sites que l'utilisateur a mis en liste d'exceptions.
 //
 // ATTENTION — Electron n'accepte qu'UN SEUL écouteur `onBeforeRequest` par
@@ -142,7 +142,7 @@ function loadSync() {
   try {
     install(parse(fs.readFileSync(listPath, 'latin1')), t0);
   } catch (err) {
-    console.error('[orbe] liste de blocage illisible', err.message);
+    console.error('[orbx] liste de blocage illisible', err.message);
     install(new Set(), t0);
   }
   return domains;
@@ -158,7 +158,7 @@ function load() {
   const t0 = performance.now();
   loading = fs.promises.readFile(listPath, 'latin1').then(
     (text) => { if (!domains) install(parse(text), t0); },
-    (err) => { console.error('[orbe] liste de blocage illisible', err.message); if (!domains) install(new Set(), t0); },
+    (err) => { console.error('[orbx] liste de blocage illisible', err.message); if (!domains) install(new Set(), t0); },
   ).then(() => { loading = null; return domains; });
   return loading;
 }
@@ -265,7 +265,7 @@ function notify(id) {
     const ids = [...dirty];
     dirty.clear();
     for (const tab of ids) {
-      try { onCount(tab, blockedByTab.get(tab) || 0); } catch (err) { console.error('[orbe] adblock onCount', err); }
+      try { onCount(tab, blockedByTab.get(tab) || 0); } catch (err) { console.error('[orbx] adblock onCount', err); }
     }
   }, NOTIFY_MS);
   if (notifyTimer.unref) notifyTimer.unref();
@@ -306,7 +306,7 @@ function hook(ses, on) {
     if (on) ses.webRequest.onBeforeRequest(FILTER, listener);
     else ses.webRequest.onBeforeRequest(null);
   } catch (err) {
-    console.error('[orbe] adblock', err);
+    console.error('[orbx] adblock', err);
   }
 }
 
@@ -328,7 +328,7 @@ function eachSession(fn) {
 
 function changed() {
   if (!onChange) return;
-  try { onChange({ enabled, allowlist: [...allow].sort() }); } catch (err) { console.error('[orbe] adblock onChange', err); }
+  try { onChange({ enabled, allowlist: [...allow].sort() }); } catch (err) { console.error('[orbx] adblock onChange', err); }
 }
 
 // Désactivé, l'écouteur est retiré : plus aucun coût par requête. La bascule

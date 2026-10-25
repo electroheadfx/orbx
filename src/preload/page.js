@@ -4,14 +4,14 @@
 // s'exécute dans un monde isolé : la page ne peut ni le lire, ni l'appeler, ni
 // altérer ses objets. Il ne connaît aucun compte enregistré. Son rôle :
 //   - signaler au processus principal qu'un champ de connexion a le clavier
-//     (la liste des comptes s'affiche alors dans une vue d'Orbe, hors de la page) ;
+//     (la liste des comptes s'affiche alors dans une vue d'Orbx, hors de la page) ;
 //   - remplir le formulaire avec le seul compte que l'utilisateur a choisi ;
 //   - signaler l'envoi d'un formulaire, pour proposer d'enregistrer.
 // Il n'insère rien dans le DOM de la page. Le processus principal ne croit
 // rien de ce qu'il dit sur l'origine : voir src/main/passwords.js.
 const { ipcRenderer } = require('electron');
 
-const CHANNEL = 'orbe-pw';
+const CHANNEL = 'orbx-pw';
 
 function start() {
   const send = (msg) => { try { ipcRenderer.send(CHANNEL, msg); } catch {} };
@@ -307,5 +307,5 @@ function start() {
   });
 }
 
-// Pages web seulement : ni l'interface d'Orbe, ni les extensions, ni about:blank.
+// Pages web seulement : ni l'interface d'Orbx, ni les extensions, ni about:blank.
 if (typeof location !== 'undefined' && /^https?:$/.test(location.protocol)) start();

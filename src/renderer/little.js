@@ -1,5 +1,5 @@
 // Barre de la petite fenêtre : une adresse, la copie du lien et le bouton
-// « Ouvrir dans Orbe », avec son menu des Espaces (recherche comprise).
+// « Ouvrir dans Orbx », avec son menu des Espaces (recherche comprise).
 const u = document.getElementById('u');
 const open = document.getElementById('open');
 const copy = document.getElementById('copy');
@@ -17,7 +17,7 @@ O.on('state', (s) => {
   document.getElementById('u-wrap').classList.toggle('site', !!s.url);
   open.disabled = !s.url;
   copy.disabled = !s.url;
-  document.title = s.title || 'Orbe';
+  document.title = s.title || 'Orbx';
   document.getElementById('hint').hidden = !s.hint;
   const was = !!spaces;
   spaces = Array.isArray(s.spaces) ? s.spaces : null;
@@ -34,7 +34,7 @@ u.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && u.value.trim()) { O.send('navigate', u.value.trim()); u.blur(); }
   if (e.key === 'Escape') u.blur();
 });
-open.onclick = () => O.send('openInOrbe');
+open.onclick = () => O.send('openInOrbx');
 document.getElementById('hint-close').onclick = () => O.send('closeHint');
 document.getElementById('open-in').onclick = () => O.send('openInMenu');
 copy.onclick = () => {

@@ -12,7 +12,7 @@ const sheets = require('./sheets');
 const capture = require('./capture-state');
 
 // Accordées sans question : sans danger, ou confirmées autrement (le partage
-// d'écran passe par le sélecteur d'Orbe, qui vaut consentement à chaque fois —
+// d'écran passe par le sélecteur d'Orbx, qui vaut consentement à chaque fois —
 // voir `displayGate` pour la demande « media » qui le précède).
 const AUTO_ALLOW = new Set(['fullscreen', 'pointerLock', 'clipboard-sanitized-write', 'keyboardLock', 'window-management', 'speaker-selection', 'display-capture']);
 // Détection d'inactivité, stockage durable, accès aux cookies depuis un cadre intégré (Storage Access API) : demandés aussi.
@@ -21,12 +21,12 @@ const ASKABLE = new Set(['media', 'geolocation', 'notifications', 'midi', 'midiS
 // n'est jamais accordé : la demande est annulée proprement, avec un message.
 const DEVICES = new Set(['hid', 'serial', 'usb']);
 // Schémas qu'une page ne fait jamais ouvrir par le système.
-const BLOCKED_SCHEMES = new Set(['http', 'https', 'file', 'ftp', 'orbe', 'chrome', 'chrome-extension', 'devtools', 'javascript', 'data', 'blob', 'about', 'view-source', 'ws', 'wss', 'filesystem',
+const BLOCKED_SCHEMES = new Set(['http', 'https', 'file', 'ftp', 'orbx', 'chrome', 'chrome-extension', 'devtools', 'javascript', 'data', 'blob', 'about', 'view-source', 'ws', 'wss', 'filesystem',
   'afp', 'disk', 'disks', 'hcp', 'ie.http', 'ms-help', 'nntp', 'shell', 'vbscript', 'vnd.ms.radio', 'ms-msdt', 'search-ms', 'search', 'ms-officecmd', 'ms-cxh', 'ms-cxh-full', 'ms-its', 'mk', 'res', 'jar', 'smb', 'ssh', 'telnet', 'vnc']);
 
 const env = {
   toast: () => {},
-  ownerWindow: () => null, // webContents -> BaseWindow de sa fenêtre Orbe
+  ownerWindow: () => null, // webContents -> BaseWindow de sa fenêtre Orbx
   // Boîte de dialogue du système, pour les pages qui ne sont pas des onglets.
   confirm: async (parent, opts) => (await (parent ? dialog.showMessageBox(parent, opts) : dialog.showMessageBox(opts))).response === 0,
   openExternal: (url) => shell.openExternal(url).catch(() => {}),
@@ -39,7 +39,7 @@ const env = {
 };
 const GESTURE = 5000; // durée de l'activation passagère de Chromium
 
-// Accès accordé à Orbe par le système (macOS, Windows). Remplacé pendant les
+// Accès accordé à Orbx par le système (macOS, Windows). Remplacé pendant les
 // tests : aucune vraie demande au système n'y est faite.
 const SETTINGS_URL = {
   darwin: { camera: 'x-apple.systempreferences:com.apple.preference.security?Privacy_Camera', microphone: 'x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone', screen: 'x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture' },
@@ -166,7 +166,7 @@ async function ask(wc, origin, keys, top) {
   return p;
 }
 
-// Caméra, micro : il faut aussi l'accord du système pour Orbe. Dit lequel manque.
+// Caméra, micro : il faut aussi l'accord du système pour Orbx. Dit lequel manque.
 async function osAccess(wc, keys) {
   const missing = [];
   for (const key of keys) {
@@ -182,7 +182,7 @@ async function osAccess(wc, keys) {
   return false;
 }
 
-// Lien vers une autre application (mailto:, tel:, lien d'application). Orbe
+// Lien vers une autre application (mailto:, tel:, lien d'application). Orbx
 // demande, puis ouvre lui-même le lien : la réponse donnée à Chromium est
 // toujours « non ». Contre le harcèlement : un refus vaut pour le schéma tant
 // que l'onglet reste sur cette page ; sans geste récent de l'utilisateur, une
@@ -247,8 +247,8 @@ async function external(entry, wc, origin, details) {
 }
 
 // Téléchargements automatiques. Un téléchargement que l'utilisateur n'a pas demandé
-// (ni clic rapporté par le moteur, ni geste récent dans l'onglet, ni action d'Orbe)
-// est « automatique » : Orbe demande alors l'autorisation « downloads », retenue par
+// (ni clic rapporté par le moteur, ni geste récent dans l'onglet, ni action d'Orbx)
+// est « automatique » : Orbx demande alors l'autorisation « downloads », retenue par
 // site comme les autres, avant de laisser partir le premier comme les suivants.
 // Décision synchrone, comme l'exige « will-download » : le téléchargement qui
 // déclenche la question est refusé, puis relancé si la réponse est oui.
@@ -265,7 +265,7 @@ function downloadGate(ses, wc, { gesture = false, url = '' } = {}) {
     return false;
   }
   if (gesture) return true;
-  if (since === null) return true; // pas un onglet (page d'extension, vue d'Orbe) : hors sujet
+  if (since === null) return true; // pas un onglet (page d'extension, vue d'Orbx) : hors sujet
   const entry = memories.get(ses);
   if (!entry) return true;
   const st = pageState(wc);
@@ -287,11 +287,11 @@ function downloadGate(ses, wc, { gesture = false, url = '' } = {}) {
 }
 
 // Demande « media » sans caméra ni micro. Relevé sur Electron 44.7 : c'est ce
-// que reçoit Orbe pour un partage d'écran (`getDisplayMedia`), juste avant
+// que reçoit Orbx pour un partage d'écran (`getDisplayMedia`), juste avant
 // l'appel du sélecteur… mais AUSSI pour l'ancienne capture d'écran
 // `getUserMedia({ video: { mandatory: { chromeMediaSource: 'desktop' } } })`,
 // qu'Electron accorde alors directement, écran entier, sans sélecteur ni geste.
-// Les deux demandes sont identiques à ce stade. Orbe ne laisse donc passer que
+// Les deux demandes sont identiques à ce stade. Orbx ne laisse donc passer que
 // ce qui peut être un vrai partage : un onglet (le sélecteur n'existe que là)
 // où l'utilisateur vient d'agir. Le reste se joue dans `answerDisplay`.
 function displayGate(wc) {
@@ -320,7 +320,7 @@ function contain(wc) {
   try { for (const f of wc.mainFrame.framesInSubtree) pids.add(f.osProcessId); } catch {}
   try { wc.forcefullyCrashRenderer(); } catch {}
   for (const pid of pids) { try { if (pid > 0 && pid !== process.pid) process.kill(pid, 'SIGKILL'); } catch {} }
-  console.error('[orbe] capture d’écran sans sélecteur (getUserMedia chromeMediaSource) : page arrêtée');
+  console.error('[orbx] capture d’écran sans sélecteur (getUserMedia chromeMediaSource) : page arrêtée');
   env.toast(wc, t('share.legacyBlocked'));
 }
 
@@ -333,7 +333,7 @@ function answerDisplay(wc, callback) {
 
 async function request(entry, wc, permission, details) {
   const origin = originOf((details && details.requestingUrl) || (wc && !wc.isDestroyed() && wc.getURL()) || '');
-  if (origin.startsWith('orbe://') || AUTO_ALLOW.has(permission)) return true;
+  if (origin.startsWith('orbx://') || AUTO_ALLOW.has(permission)) return true;
   if (permission === 'openExternal') return external(entry, wc, origin, details);
   if (!ASKABLE.has(permission) || !origin) return false;
   const kinds = permission === 'media' ? mediaKeys(details) : [permission];
@@ -360,7 +360,7 @@ async function request(entry, wc, permission, details) {
 }
 
 function check(entry, permission, requestingOrigin, details) {
-  if (AUTO_ALLOW.has(permission) || DEVICES.has(permission) || (requestingOrigin || '').startsWith('orbe://')) return true;
+  if (AUTO_ALLOW.has(permission) || DEVICES.has(permission) || (requestingOrigin || '').startsWith('orbx://')) return true;
   const origin = originOf(requestingOrigin || '');
   const memory = entry.memory();
   if (permission === 'media') {
@@ -379,7 +379,7 @@ function check(entry, permission, requestingOrigin, details) {
   return lookup(memory, origin, permission) === true;
 }
 
-// Appareils USB, HID, série : Orbe n'a pas (encore) de sélecteur. La demande est
+// Appareils USB, HID, série : Orbx n'a pas (encore) de sélecteur. La demande est
 // annulée tout de suite, avec un message, plutôt que de rester sans réponse —
 // et surtout sans jamais laisser Electron choisir le premier appareil.
 function denyDevice(kind, wc, callback, value) {
@@ -405,7 +405,7 @@ function attach(ses, { persist, profileOf = () => 'default' }) {
   ses.setPermissionRequestHandler((wc, permission, callback, details) => {
     request(entry, wc, permission, details).then((ok) => {
       if (ok === 'display') answerDisplay(wc, callback); else callback(ok === true);
-    }, (err) => { console.error('[orbe] autorisation', err); callback(false); });
+    }, (err) => { console.error('[orbx] autorisation', err); callback(false); });
   });
   ses.setPermissionCheckHandler((wc, permission, requestingOrigin, details) => check(entry, permission, requestingOrigin, details));
   ses.setDevicePermissionHandler(() => false);

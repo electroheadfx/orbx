@@ -1,4 +1,4 @@
-// Une fenêtre Orbe : une vue « coque » (barre latérale) qui occupe toute la
+// Une fenêtre Orbx : une vue « coque » (barre latérale) qui occupe toute la
 // fenêtre, les vues web des onglets posées par-dessus dans la zone de contenu,
 // et des vues flottantes (barre de commande, recherche, notifications).
 const { app, BaseWindow, WebContentsView, Menu, clipboard, ClipboardItem, screen, dialog, nativeTheme } = require('electron');
@@ -32,7 +32,7 @@ const TRAFFIC = { x: 15, y: 15 };
 const SIDEBAR_MIN = 200;
 const SIDEBAR_MAX = 420;
 const UI_PRELOAD = path.join(__dirname, '../preload/ui.js');
-const INTERNAL = 'orbe://app/';
+const INTERNAL = 'orbx://app/';
 // Tout ce qui compte pour la sécurité est écrit ici, sans rien laisser à l'héritage : ces
 // préférences servent aussi aux vues que la coque ouvre elle-même (`adoptSpare`).
 // (Figées, et toujours passées en copie : Electron écrit dans l'objet qu'il reçoit.)
@@ -69,15 +69,15 @@ const UNDO_MAX = 50; // actions de la barre latérale que ⌘Z peut défaire, pa
 const FAVORITES_MAX = 12; // favoris par profil, comme dans Arc
 const NAV_MENU_MAX = 15; // pages proposées par le menu de précédent / suivant
 
-const windows = new Map(); // id BaseWindow -> OrbeWindow
+const windows = new Map(); // id BaseWindow -> OrbxWindow
 const live = new Map(); // id onglet -> { view, wc, owner, loading, lastUsed }
 const trusted = new WeakSet(); // webContents autorisés à parler au processus principal
-const wcOwner = new Map(); // id webContents (coque, flottants) -> OrbeWindow
+const wcOwner = new Map(); // id webContents (coque, flottants) -> OrbxWindow
 let spareSeq = 0;
 const loadingUi = new WeakSet(); // vues de l'interface créées à part, dont la page charge encore
 // `rightInset(fenêtre)` : place réservée à droite des pages (panneau latéral d'une
 // extension) ; `layout(fenêtre)` : appelé à la fin de chaque mise en page.
-// Une page détruite hors d'Orbe moins de quinze secondes après « Rester » n'est pas une page
+// Une page détruite hors d'Orbx moins de quinze secondes après « Rester » n'est pas une page
 // qui s'est fermée d'elle-même : son onglet reste (voir `wire`, événement `destroyed`).
 const STAY_GUARD = 15000;
 const HISTORY_MAX = 50; // pages du parcours rendues à un onglet rouvert
@@ -105,7 +105,7 @@ const hooks = {
   enterFullScreen: (win) => { if (!win.isDestroyed()) win.setFullScreen(true); },
   // Choix du fichier où enregistrer (export d'un Espace) ; remplacé dans les essais.
   saveFile: async (parent, options) => { const r = await dialog.showSaveDialog(parent, options); return r.canceled ? null : r.filePath; },
-  // Un arrêt d'Orbe demandé puis retenu par une page (« Rester ») : posé par main.js.
+  // Un arrêt d'Orbx demandé puis retenu par une page (« Rester ») : posé par main.js.
   quitAborted: () => {},
 };
 
@@ -131,7 +131,7 @@ const isErrorPage = (url) => (url || '').startsWith(INTERNAL + 'error.html');
 // Pages internes pouvant s'ouvrir dans un onglet, avec accès à l'interface.
 const INTERNAL_PAGES = new Set(['library.html', 'shortcuts.html', 'welcome.html', 'notes.html', 'easel.html', 'tasks.html']);
 // Adresse fournie par une page web (lien, image, glisser-déposer) : seuls
-// http et https sont acceptés, jamais file:, orbe: ou chrome:.
+// http et https sont acceptés, jamais file:, orbx: ou chrome:.
 const webUrl = (u) => (/^https?:\/\//i.test(u || '') ? u : null);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 // Messages de l'interface qui ne sont pas un geste de l'utilisateur (aucun son ne les suit).
@@ -320,21 +320,21 @@ function noteDownload(phase, d, wc) {
 // durées de ses mouvements, marge autour d'elle où le pointeur la fait s'écarter.
 const STATUS = { short: 420, expandAfter: 1500, grow: 160, dodge: 140, margin: 10, poll: 90, height: 26 };
 // Lecteurs miniatures de la barre latérale (src/main/media.js).
-const media = require('./media').make({ live, pushAll: () => OrbeWindow.pushAll(), windows: () => OrbeWindow.all, strip: (u) => suggest.strip(u) });
+const media = require('./media').make({ live, pushAll: () => OrbxWindow.pushAll(), windows: () => OrbxWindow.all, strip: (u) => suggest.strip(u) });
 const prewoken = new Map(); // origine -> instant de la dernière pré-connexion (voir `prewake`)
 
 let pushScheduled = false;
 
-class OrbeWindow {
+class OrbxWindow {
   static get all() { return [...windows.values()]; }
   static get focused() {
     const f = BaseWindow.getFocusedWindow();
     return (f && windows.get(f.id)) || null;
   }
   static get primary() {
-    return OrbeWindow.focused && !OrbeWindow.focused.incognito
-      ? OrbeWindow.focused
-      : OrbeWindow.all.find((w) => w.shared) || OrbeWindow.all.find((w) => !w.incognito) || null;
+    return OrbxWindow.focused && !OrbxWindow.focused.incognito
+      ? OrbxWindow.focused
+      : OrbxWindow.all.find((w) => w.shared) || OrbxWindow.all.find((w) => !w.incognito) || null;
   }
   static ownerOf(wc) {
     if (wcOwner.has(wc.id)) return wcOwner.get(wc.id);
@@ -362,12 +362,12 @@ class OrbeWindow {
     this.blank = !incognito && !!blank;
     const apart = incognito || this.blank;
     const saved = apart ? {} : store.state.window;
-    const first = !OrbeWindow.all.some((w) => w.shared);
+    const first = !OrbxWindow.all.some((w) => w.shared);
     this.data = apart
       ? { spaces: [incognito ? store.makeSpace(t('incognito.title'), '🕶️', '#52525b') : store.makeSpace(t('blank.title'), '◻️', '#71717a')], tabs: {}, favs: { default: [] }, profiles: [{ id: 'default', name: '' }] }
       : store.state;
     // Une trace de Chromium en cours porterait sur cette fenêtre aussi : elle est arrêtée et jetée.
-    if (incognito) require('./trace').discard(OrbeWindow.focused || OrbeWindow.primary);
+    if (incognito) require('./trace').discard(OrbxWindow.focused || OrbxWindow.primary);
     this.session = incognito ? sessions.incognitoSession() : sessions.mainSession();
     const restore = !apart && first;
     const resume = resumed(saved, this.data.spaces, restore && store.state.settings.restoreSession !== false);
@@ -386,7 +386,7 @@ class OrbeWindow {
     this.switcher = null;
 
     const b = (restore && saved.bounds) || {};
-    const offset = first ? 0 : 28 * (OrbeWindow.all.length % 6);
+    const offset = first ? 0 : 28 * (OrbxWindow.all.length % 6);
     this.win = new BaseWindow({
       width: b.width || 1360,
       height: b.height || 860,
@@ -416,8 +416,8 @@ class OrbeWindow {
     this.toastView = null;
 
     this.win.on('resize', () => this.layout());
-    this.win.on('enter-full-screen', () => { this.layout(); OrbeWindow.pushAll(); });
-    this.win.on('leave-full-screen', () => { this.layout(); OrbeWindow.pushAll(); });
+    this.win.on('enter-full-screen', () => { this.layout(); OrbxWindow.pushAll(); });
+    this.win.on('leave-full-screen', () => { this.layout(); OrbxWindow.pushAll(); });
     this.win.on('focus', () => { this.focusContent(); hooks.changed(); });
     this.win.on('blur', () => { if (this.peek) this.setPeek(false); });
     this.win.on('close', (e) => {
@@ -446,7 +446,7 @@ class OrbeWindow {
 
     this.syncPeekTimer();
     // La fenêtre paraît sans attendre la barre latérale (60 à 100 ms gagnées).
-    if (!process.env.ORBE_HIDE_UNTIL_READY) this.win.show();
+    if (!process.env.ORBX_HIDE_UNTIL_READY) this.win.show();
     // La fenêtre peut être fermée avant que sa barre latérale ait fini de se
     // charger : l'événement arrive alors sur une fenêtre détruite, et y toucher
     // lève une exception (« Object has been destroyed ») que rien ne rattrape.
@@ -454,7 +454,7 @@ class OrbeWindow {
       if (this.gone) return;
       this.layout();
       if (!this.win.isVisible()) this.win.show();
-      if (process.env.ORBE_TIMING) console.log(`[orbe] fenêtre affichée en ${Math.round(Date.now() - process.getCreationTime())} ms`);
+      if (process.env.ORBX_TIMING) console.log(`[orbx] fenêtre affichée en ${Math.round(Date.now() - process.getCreationTime())} ms`);
       this.sendState();
       this.focusContent();
     });
@@ -516,7 +516,7 @@ class OrbeWindow {
   // Chaque vue de l'interface créée à part démarre son propre processus de rendu
   // (18 à 25 Mo, 80 à 100 ms). Ouvertes par la coque (`window.open`), elles
   // partagent le sien : 2 Mo et une quinzaine de millisecondes. Toutes ont déjà
-  // la même origine (orbe://app), le même script de préchargement et les mêmes
+  // la même origine (orbx://app), le même script de préchargement et les mêmes
   // droits (`trusted`) : aucune frontière de confiance ne passe entre elles. Les
   // vues qui portent davantage (mots de passe, feuilles d'autorisation, pages
   // internes des onglets) ne passent pas par ici et gardent leur processus.
@@ -639,16 +639,16 @@ class OrbeWindow {
 
   // Nouvelle fenêtre demandée par l'utilisateur (⌘N, navigation privée, fenêtre vierge) :
   // ouverte depuis une fenêtre en plein écran, elle s'ouvre en plein écran elle aussi (comme dans Arc).
-  static open(opts = {}, from = OrbeWindow.focused) {
+  static open(opts = {}, from = OrbxWindow.focused) {
     const full = !!from && !!from.win && !from.win.isDestroyed() && from.win.isFullScreen();
-    const w = new OrbeWindow(opts);
+    const w = new OrbxWindow(opts);
     if (full) hooks.enterFullScreen(w.win);
     return w;
   }
 
   // La plus ancienne fenêtre normale encore ouverte mémorise son état.
   get persistent() {
-    return this.shared && OrbeWindow.all.find((w) => w.shared) === this;
+    return this.shared && OrbxWindow.all.find((w) => w.shared) === this;
   }
 
   // Fenêtre ordinaire : elle montre les Espaces enregistrés, partagés entre fenêtres
@@ -764,7 +764,7 @@ class OrbeWindow {
 
   changed() {
     if (!this.incognito) store.save();
-    OrbeWindow.pushAll();
+    OrbxWindow.pushAll();
   }
 
   // Barre d'outils affichée : par réglage, ou parce que le site de l'onglet
@@ -961,7 +961,7 @@ class OrbeWindow {
     this.animateTo(this.sidebarVisible ? 1 : 0);
     this.syncPeekTimer();
     this.remember();
-    OrbeWindow.pushAll();
+    OrbxWindow.pushAll();
   }
 
   // La surveillance du bord gauche ne tourne que barre latérale masquée.
@@ -992,7 +992,7 @@ class OrbeWindow {
         try { this.win.contentView.removeChildView(this.floatView); } catch {}
       }, 220);
     }
-    OrbeWindow.pushAll();
+    OrbxWindow.pushAll();
   }
 
   // Vue qui affiche la barre latérale en ce moment (ancrée ou flottante).
@@ -1015,7 +1015,7 @@ class OrbeWindow {
     store.state.settings.sidebarWidth = clamp(Math.round(w), SIDEBAR_MIN, SIDEBAR_MAX);
     store.save();
     for (const win of windows.values()) win.layout();
-    OrbeWindow.pushAll();
+    OrbxWindow.pushAll();
   }
 
   remember() {
@@ -1034,7 +1034,7 @@ class OrbeWindow {
     clearTimeout(this.focusTimer);
     clearTimeout(this.spareLater);
     windows.delete(this.id);
-    for (const [id, rt] of [...live]) if (rt.owner === this) OrbeWindow.destroyView(id);
+    for (const [id, rt] of [...live]) if (rt.owner === this) OrbxWindow.destroyView(id);
     this.closePeek({ animate: false });
     this.growing = null;
     clearTimeout(this.floatTimer);
@@ -1060,12 +1060,12 @@ class OrbeWindow {
         // L'ancienne fenêtre ne doit plus le croire affiché chez elle.
         prev.leaveSplit(id);
         for (const sid of Object.keys(prev.activeBySpace)) if (prev.activeBySpace[sid] === id) delete prev.activeBySpace[sid];
-        setImmediate(() => { if (!prev.win.isDestroyed()) { prev.layout(); OrbeWindow.pushAll(); } });
+        setImmediate(() => { if (!prev.win.isDestroyed()) { prev.layout(); OrbxWindow.pushAll(); } });
       }
       return rt;
     }
     const tab = this.data.tabs[id];
-    // L'accès à l'interface dépend d'un drapeau posé par Orbe, jamais de
+    // L'accès à l'interface dépend d'un drapeau posé par Orbx, jamais de
     // l'adresse, qu'une page web peut changer.
     const internal = tab.internal === true && isInternal(tab.url);
     const view = existing || new WebContentsView(viewOptions ? {
@@ -1103,7 +1103,7 @@ class OrbeWindow {
     const wc = rt.wc;
     const data = this.data;
     const incognito = this.incognito;
-    const touch = (lazy) => { if (!incognito) store.save(lazy); OrbeWindow.pushAll(); };
+    const touch = (lazy) => { if (!incognito) store.save(lazy); OrbxWindow.pushAll(); };
     if (rt.internal) {
       trusted.add(wc);
       wc.on('will-navigate', (e, url) => {
@@ -1170,12 +1170,12 @@ class OrbeWindow {
       const kept = !rt.sleeping && stayed < STAY_GUARD;
       if (kept) {
         lastLost = { id: rt.id, at: Date.now(), stayed, trail: [...(rt.trail || [])] };
-        console.error(`[orbe] page détruite ${stayed} ms après « Rester », sans qu’Orbe l’ait demandé : l’onglet garde sa ligne. ${lastLost.trail.join(' ; ')}`);
+        console.error(`[orbx] page détruite ${stayed} ms après « Rester », sans qu’Orbx l’ait demandé : l’onglet garde sa ligne. ${lastLost.trail.join(' ; ')}`);
       }
       if (rt.sleeping || kept) {
         live.delete(rt.id);
         const o = rt.owner;
-        if (!o.win.isDestroyed() && o.data.tabs[rt.id]) { if (o.visibleIds().includes(rt.id)) o.layout(); OrbeWindow.pushAll(); }
+        if (!o.win.isDestroyed() && o.data.tabs[rt.id]) { if (o.visibleIds().includes(rt.id)) o.layout(); OrbxWindow.pushAll(); }
         return;
       }
       note(rt, 'fermée par elle-même');
@@ -1184,8 +1184,8 @@ class OrbeWindow {
       if (!owner.win.isDestroyed()) owner.close(rt.id);
       else live.delete(rt.id);
     });
-    wc.on('did-start-loading', () => { rt.loading = true; OrbeWindow.pushAll(); });
-    wc.on('did-stop-loading', () => { rt.loading = false; OrbeWindow.pushAll(); });
+    wc.on('did-start-loading', () => { rt.loading = true; OrbxWindow.pushAll(); });
+    wc.on('did-stop-loading', () => { rt.loading = false; OrbxWindow.pushAll(); });
     wc.on('page-title-updated', (e, title) => {
       if (isErrorPage(wc.getURL())) return;
       tab.title = String(title).slice(0, 300);
@@ -1225,7 +1225,7 @@ class OrbeWindow {
       const paint = () => pageColor.background(wc).then((c) => { if (wc.isDestroyed() || rt.bg === c) return; rt.bg = c; try { rt.view.setBackgroundColor(c); } catch {} });
       wc.on('dom-ready', paint);
       wc.on('did-finish-load', paint);
-      wc.on('did-change-theme-color', (e, color) => { const c = pageColor.theme(color); if ((rt.themeColor || null) === c) return; rt.themeColor = c; OrbeWindow.pushAll(); });
+      wc.on('did-change-theme-color', (e, color) => { const c = pageColor.theme(color); if ((rt.themeColor || null) === c) return; rt.themeColor = c; OrbxWindow.pushAll(); });
       wc.on('did-navigate', () => { rt.themeColor = null; });
     }
     wc.on('update-target-url', (e, url) => { rt.hoverUrl = String(url || '').slice(0, STATUS_MAX); rt.owner.linkStatus(rt, rt.hoverUrl); });
@@ -1234,7 +1234,7 @@ class OrbeWindow {
     wc.on('audio-state-changed', () => {
       const owner = rt.owner;
       if (wc.isCurrentlyAudible()) { rt.playing = true; if (!owner.visibleIds().includes(rt.id)) media.add(owner, rt.id); }
-      OrbeWindow.pushAll();
+      OrbxWindow.pushAll();
     });
     wc.on('context-menu', (e, params) => rt.owner.pageMenu(rt, params));
     wc.on('before-input-event', (e, input) => { if (input.type === 'keyDown' && !rt.internal) hooks.input(rt, input); rt.owner.onInput(e, input, false, rt.internal ? null : wc); });
@@ -1259,7 +1259,7 @@ class OrbeWindow {
       // Lien vers une autre application (mailto:, tel:…) : la page affichée reste en place.
       if (!/^(https?|file|view-source|about|data|blob|chrome):/i.test(url)) return;
       tab.url = url;
-      // Certificat refusé : avertissement d'Orbe, pas la page d'erreur ordinaire.
+      // Certificat refusé : avertissement d'Orbx, pas la page d'erreur ordinaire.
       if (hooks.failed(rt, { code, desc, url })) { rt.failed = true; touch(); return; }
       const q = new URLSearchParams({ url, desc, code: String(code), title: t('err.title'), retry: t('err.retry') });
       wc.loadURL(INTERNAL + 'error.html?' + q).catch(() => {});
@@ -1271,7 +1271,7 @@ class OrbeWindow {
       const owner = rt.owner;
       if (!/^(https?|about|blob|data):/i.test(details.url) && details.url !== '') return { action: 'deny' };
       // Ouverture sans geste de l'utilisateur : bloquée, avec une mention dans la pastille d'adresse (popups.js).
-      if (!rt.internal && !hooks.popup(rt, details)) { OrbeWindow.pushAll(); return { action: 'deny' }; }
+      if (!rt.internal && !hooks.popup(rt, details)) { OrbxWindow.pushAll(); return { action: 'deny' }; }
       if (details.disposition === 'background-tab') {
         // ⌥⌘clic (Alt+Ctrl+clic ailleurs) : petite fenêtre, comme dans Arc.
         if (store.state.settings.littleAltClick !== false && rt.alt && /^https?:/i.test(details.url) && !owner.incognito) {
@@ -1337,11 +1337,11 @@ class OrbeWindow {
     if (rt.windowClosing || rt.unloadAnswer || rt.pendingClose) return;
     rt.sleeping = true;
     rt.sleepAsked = Date.now();
-    OrbeWindow.consult(rt, 'veille');
+    OrbxWindow.consult(rt, 'veille');
   }
 
   // Consulte la page (beforeunload) avant de la fermer. Le bouclier écarte le délai d'une
-  // seconde de Chromium (unload.js) : seul Orbe décide du sort d'une page qui tarde.
+  // seconde de Chromium (unload.js) : seul Orbx décide du sort d'une page qui tarde.
   static consult(rt, why) {
     note(rt, 'consultée (' + why + ')');
     hooks.shield(rt.wc);
@@ -1361,8 +1361,8 @@ class OrbeWindow {
     // demander à ne pas être quittée (voir pageObjects). Une page qui ne répond
     // pas ne retient rien.
     const ask = !!rt.pendingClose;
-    if (!ask) { note(rt, 'détruite par Orbe'); rt.wc.close({ waitForBeforeUnload: false }); return; }
-    OrbeWindow.consult(rt, 'fermeture de l’onglet');
+    if (!ask) { note(rt, 'détruite par Orbx'); rt.wc.close({ waitForBeforeUnload: false }); return; }
+    OrbxWindow.consult(rt, 'fermeture de l’onglet');
     // (`asking` : la page a répondu et la question est à l'écran ; elle ne doit pas être
     // fermée sous la boîte de dialogue.)
     setTimeout(() => { if (rt.pendingClose && !rt.asking && !rt.wc.isDestroyed()) { note(rt, 'sans réponse après 4 s : fermée'); rt.wc.close({ waitForBeforeUnload: false }); } }, 4000).unref();
@@ -1398,7 +1398,7 @@ class OrbeWindow {
   reviveClosed(rt, { rec, tab }) {
     const id = rt.id;
     if (this.win.isDestroyed() || rt.wc.isDestroyed()) return;
-    if (live.has(id) && live.get(id) !== rt) OrbeWindow.destroyView(id);
+    if (live.has(id) && live.get(id) !== rt) OrbxWindow.destroyView(id);
     live.set(id, rt);
     rt.owner = this;
     if (rec && !this.data.tabs[id]) {
@@ -1425,12 +1425,12 @@ class OrbeWindow {
     this.unloading = true;
     const visible = this.visibleIds();
     rts.sort((a, b) => visible.includes(b.id) - visible.includes(a.id));
-    hooks.closeAll(rts, (rt) => { rt.windowClosing = true; OrbeWindow.consult(rt, 'fermeture de la fenêtre'); }).then((ok) => {
+    hooks.closeAll(rts, (rt) => { rt.windowClosing = true; OrbxWindow.consult(rt, 'fermeture de la fenêtre'); }).then((ok) => {
       this.unloading = false;
       const quitting = hooks.quitState.quitting;
       hooks.quitState.quitting = false;
       if (this.win.isDestroyed()) return;
-      if (!ok) { if (quitting) hooks.quitAborted(); this.layout(); OrbeWindow.pushAll(); return; }
+      if (!ok) { if (quitting) hooks.quitAborted(); this.layout(); OrbxWindow.pushAll(); return; }
       this.unloadChecked = true;
       if (quitting) app.quit(); else this.win.close();
     });
@@ -1447,20 +1447,20 @@ class OrbeWindow {
   static setBattery(a, w) {
     if (!a || typeof a !== 'object' || typeof a.charging !== 'boolean' || !Number.isFinite(a.level) || a.level < 0 || a.level > 1) return false;
     const on = store.state.settings.batterySaver !== false;
-    const before = veille.saving(OrbeWindow.battery, on);
-    OrbeWindow.battery = { level: a.level, charging: a.charging };
-    const now = veille.saving(OrbeWindow.battery, on);
+    const before = veille.saving(OrbxWindow.battery, on);
+    OrbxWindow.battery = { level: a.level, charging: a.charging };
+    const now = veille.saving(OrbxWindow.battery, on);
     if (now && !before) {
       // Au lancement, le niveau arrive avant que la fenêtre ait ses vues d'appoint : le message
       // attend qu'il y en ait une (sinon sa vue naîtrait à part, dans son propre processus).
-      const target = w || OrbeWindow.focused || OrbeWindow.primary;
+      const target = w || OrbxWindow.focused || OrbxWindow.primary;
       const say = (n) => {
-        if (!target || target.win.isDestroyed() || !veille.saving(OrbeWindow.battery, store.state.settings.batterySaver !== false)) return;
+        if (!target || target.win.isDestroyed() || !veille.saving(OrbxWindow.battery, store.state.settings.batterySaver !== false)) return;
         if (target.toastView || (target.spares || []).some((s) => s.ready) || n >= 20) target.toast(t('toast.batterySaver'));
         else setTimeout(() => say(n + 1), 150);
       };
       say(0);
-      OrbeWindow.trimLive({ deep: true });
+      OrbxWindow.trimLive({ deep: true });
     }
     return true;
   }
@@ -1489,14 +1489,14 @@ class OrbeWindow {
     }));
     const picked = veille.pick(tabs, {
       max: s.maxLiveTabs,
-      idleMs: deep ? veille.idleFor(s.sleepAfterHours, veille.saving(OrbeWindow.battery, s.batterySaver !== false)) : 0,
+      idleMs: deep ? veille.idleFor(s.sleepAfterHours, veille.saving(OrbxWindow.battery, s.batterySaver !== false)) : 0,
       budgetMb: deep && Number(s.memoryBudget) ? veille.budget(os.totalmem(), Number(s.memoryBudget)) : 0,
       totalMb: mem ? mem.total : 0,
     });
     lastSweep = { at: now, totalMb: mem ? Math.round(mem.total) : 0, budgetMb: deep && Number(s.memoryBudget) ? veille.budget(os.totalmem(), Number(s.memoryBudget)) : 0, real: !!mem && mem.real };
     // La limite en nombre s'applique tout de suite ; ancienneté et mémoire consultent la page.
-    for (const p of picked) { if (p.why === 'count') OrbeWindow.destroyView(p.id); else OrbeWindow.sleepView(p.id); }
-    if (deep && picked.length) OrbeWindow.pushAll();
+    for (const p of picked) { if (p.why === 'count') OrbxWindow.destroyView(p.id); else OrbxWindow.sleepView(p.id); }
+    if (deep && picked.length) OrbxWindow.pushAll();
     return picked;
   }
 
@@ -1506,7 +1506,7 @@ class OrbeWindow {
     const s = store.state.settings;
     const budgetMb = Number(s.memoryBudget) ? veille.budget(os.totalmem(), Number(s.memoryBudget)) : 0;
     if (empreinte.due({ budgetMb, tabs: live.size, minTabs: veille.MIN_LIVE })) await empreinte.refresh(tabProcesses());
-    return OrbeWindow.trimLive({ deep: true });
+    return OrbxWindow.trimLive({ deep: true });
   }
 
   // --- Onglets --------------------------------------------------------------
@@ -1529,7 +1529,7 @@ class OrbeWindow {
     if (split && previous) this.splitWith(previous, tab.id, true);
     if (background) {
       this.ensureView(tab.id);
-      OrbeWindow.trimLive();
+      OrbxWindow.trimLive();
       this.changed();
       // Barre masquée : rien ne montre qu'un onglet vient de s'ouvrir derrière.
       if (!this.sidebarVisible && !this.peek) this.toast(t('toast.newTabCreated', { space: this.space.name }), null, () => { if (this.locate(tab.id)) this.activate(tab.id); });
@@ -1572,7 +1572,7 @@ class OrbeWindow {
     if (this.findOpen) this.closeFind();
     this.layout();
     this.focusContent();
-    OrbeWindow.trimLive();
+    OrbxWindow.trimLive();
     this.remember();
     this.changed();
   }
@@ -1599,7 +1599,7 @@ class OrbeWindow {
   paneFocused(id) {
     if (this.activeId === id || !this.visibleIds().includes(id)) return;
     this.activeBySpace[this.space.id] = id;
-    OrbeWindow.pushAll();
+    OrbxWindow.pushAll();
   }
 
   focusContent() {
@@ -1690,8 +1690,8 @@ class OrbeWindow {
     // Page où l'utilisateur a agi : elle sera consultée (beforeunload) avant de disparaître.
     const closing = ask ? live.get(id) : null;
     if (closing && closing.touched && !closing.crashed && !closing.internal) closing.pendingClose = { rec, tab };
-    OrbeWindow.destroyView(id);
-    OrbeWindow.forget(id, this.data);
+    OrbxWindow.destroyView(id);
+    OrbxWindow.forget(id, this.data);
     if (wasActive && next) this.activeBySpace[space.id] = next;
     if (silent) return rec;
     if (rec) this.recordClosed('undo.archive', [rec]);
@@ -1789,9 +1789,9 @@ class OrbeWindow {
 
   // Site où l'image dans l'image automatique est coupée (réglage `pipOffSites`).
   static pipSite(url) { try { const u = new URL(url); return /^https?:$/.test(u.protocol) ? u.hostname.toLowerCase() : ''; } catch { return ''; } }
-  static pipOff(url) { const h = OrbeWindow.pipSite(url); const list = store.state.settings.pipOffSites; return !!h && Array.isArray(list) && list.includes(h); }
+  static pipOff(url) { const h = OrbxWindow.pipSite(url); const list = store.state.settings.pipOffSites; return !!h && Array.isArray(list) && list.includes(h); }
   static togglePipSite(url) {
-    const h = OrbeWindow.pipSite(url);
+    const h = OrbxWindow.pipSite(url);
     if (!h) return false;
     const list = Array.isArray(store.state.settings.pipOffSites) ? store.state.settings.pipOffSites : [];
     const next = list.includes(h) ? list.filter((x) => x !== h) : [...list, h].slice(-200);
@@ -1804,7 +1804,7 @@ class OrbeWindow {
   pip(rt, enter) {
     if (!store.state.settings.autoPip || rt.wc.isDestroyed()) return;
     // Coupée pour ce site (menu d'une vidéo) : on ne l'y fait pas entrer ; en sortir reste permis.
-    if (enter && OrbeWindow.pipOff(rt.wc.getURL())) return;
+    if (enter && OrbxWindow.pipOff(rt.wc.getURL())) return;
     rt.pip = enter;
     const code = enter
       ? `(() => {
@@ -1852,10 +1852,10 @@ class OrbeWindow {
     return n;
   }
 
-  // Adresse (ou recherche) lue dans le presse-papiers ; jamais file:, orbe: ou javascript:.
+  // Adresse (ou recherche) lue dans le presse-papiers ; jamais file:, orbx: ou javascript:.
   async clipboardUrl() {
     const text = String(await clipboard.readText().catch(() => '') || '').trim().slice(0, 2000);
-    if (!text || /^(file|orbe|chrome|javascript|data|view-source|about|blob):/i.test(text)) return null;
+    if (!text || /^(file|orbx|chrome|javascript|data|view-source|about|blob):/i.test(text)) return null;
     const url = suggest.resolve(text);
     return isInternal(url) ? null : url;
   }
@@ -1975,9 +1975,9 @@ class OrbeWindow {
     const wasActive = this.activeId === id;
     const next = wasActive ? this.nextActiveAfter(id, this.space) : null;
     const before = this.places([id]);
-    OrbeWindow.forget(id, this.data);
+    OrbxWindow.forget(id, this.data);
     // Changer de profil change de cookies : la page sera rechargée.
-    if (loc.space && loc.space.profileId !== target.profileId) OrbeWindow.destroyView(id);
+    if (loc.space && loc.space.profileId !== target.profileId) OrbxWindow.destroyView(id);
     loc.arr.splice(loc.index, 1);
     if (loc.list === 'pinned') target.pinned.push(loc.node);
     else { target.today.unshift(id); delete this.data.tabs[id].homeUrl; }
@@ -2166,7 +2166,7 @@ class OrbeWindow {
       tab.favicon = src.favicon;
       this.ensureView(tab.id);
     }
-    OrbeWindow.trimLive();
+    OrbxWindow.trimLive();
     this.dropSelection();
     this.changed();
   }
@@ -2199,7 +2199,7 @@ class OrbeWindow {
     this.undoStack.push({ label, undo, redo, stale });
     if (this.undoStack.length > UNDO_MAX) this.undoStack.shift();
     this.redoStack.length = 0;
-    OrbeWindow.pushAll();
+    OrbxWindow.pushAll();
   }
 
   // Exécute `fn` sans rien empiler (actions composées, rejeu d'une entrée).
@@ -2293,8 +2293,8 @@ class OrbeWindow {
       // un autre profil veut une page rechargée avec ses propres cookies.
       const was = from.get(p.id);
       if (was !== undefined && was !== space) {
-        OrbeWindow.forget(p.id, d);
-        if (was && space && was.profileId !== space.profileId) OrbeWindow.destroyView(p.id);
+        OrbxWindow.forget(p.id, d);
+        if (was && space && was.profileId !== space.profileId) OrbxWindow.destroyView(p.id);
       }
     }
   }
@@ -2457,7 +2457,7 @@ class OrbeWindow {
       const c = findNode(space.pinned, clone.id);
       if (!c) return;
       c.arr.splice(c.index, 1);
-      for (const tid of walk([clone])) { OrbeWindow.destroyView(tid); OrbeWindow.forget(tid, this.data); delete this.data.tabs[tid]; }
+      for (const tid of walk([clone])) { OrbxWindow.destroyView(tid); OrbxWindow.forget(tid, this.data); delete this.data.tabs[tid]; }
     };
     add();
     this.record('undo.duplicateFolder', remove, add);
@@ -2531,8 +2531,8 @@ class OrbeWindow {
         store.archive({ ...tab, title: tab.customTitle || tab.title, spaceId: space.id });
         if (store.state.archive[0] !== top) archived.push(store.state.archive[0]);
       }
-      OrbeWindow.destroyView(tid);
-      OrbeWindow.forget(tid, this.data);
+      OrbxWindow.destroyView(tid);
+      OrbxWindow.forget(tid, this.data);
       delete this.data.tabs[tid];
     }
     loc.arr.splice(loc.index, 1);
@@ -2584,8 +2584,8 @@ class OrbeWindow {
       if (!loc) continue;
       loc.arr.splice(loc.index, 1);
       this.histories.delete(id);
-      OrbeWindow.destroyView(id);
-      OrbeWindow.forget(id, this.data);
+      OrbxWindow.destroyView(id);
+      OrbxWindow.forget(id, this.data);
       delete this.data.tabs[id];
     }
     const recs = today.map((id) => this.close(id, { silent: true })).filter(Boolean);
@@ -2682,7 +2682,7 @@ class OrbeWindow {
     this.layout();
     this.focusContent();
     this.remember();
-    OrbeWindow.pushAll();
+    OrbxWindow.pushAll();
   }
 
   stepSpace(delta) {
@@ -2744,7 +2744,7 @@ class OrbeWindow {
 
   createSpace(a) {
     if (!this.shared || this.modalMode !== 'space') return false;
-    const ok = OrbeWindow.checkSpace(a, this.data.profiles);
+    const ok = OrbxWindow.checkSpace(a, this.data.profiles);
     if (!ok) return false;
     if (Number.isInteger(a.tone) && a.tone >= 0 && a.tone <= 5 && store.state.window) store.state.window.emojiTone = a.tone;
     this.hideModal();
@@ -2853,7 +2853,7 @@ class OrbeWindow {
       const act = w.activeBySpace[src.id];
       if (act && ids.has(act)) { delete w.activeBySpace[src.id]; w.activeBySpace[sp.id] = act; }
     }
-    if (sp.profileId !== src.profileId) for (const tid of ids) OrbeWindow.destroyView(tid);
+    if (sp.profileId !== src.profileId) for (const tid of ids) OrbxWindow.destroyView(tid);
     for (const w of windows.values()) if (w.data === d) w.layout();
     this.changed();
     return { space: sp, folder, place };
@@ -2887,7 +2887,7 @@ class OrbeWindow {
       delete w.activeBySpace[sp.id];
       if (w.spaceId === sp.id) { w.spaceId = dest.id; if (act) w.activeBySpace[dest.id] = act; }
     }
-    if (sp.profileId !== dest.profileId) for (const tid of ids) OrbeWindow.destroyView(tid);
+    if (sp.profileId !== dest.profileId) for (const tid of ids) OrbxWindow.destroyView(tid);
     for (const w of windows.values()) if (w.data === d) w.layout();
     this.remember();
     this.changed();
@@ -3043,8 +3043,8 @@ class OrbeWindow {
         store.archive({ ...tab, title: tab.customTitle || tab.title, spaceId: space.id });
         if (store.state.archive[0] !== top) archived.push(store.state.archive[0]);
       }
-      OrbeWindow.destroyView(tid);
-      OrbeWindow.forget(tid, this.data);
+      OrbxWindow.destroyView(tid);
+      OrbxWindow.forget(tid, this.data);
       delete this.data.tabs[tid];
     }
     spaces.splice(i, 1);
@@ -3072,7 +3072,7 @@ class OrbeWindow {
   // --- Profils --------------------------------------------------------------
   setProfile(profileId, space = this.space) {
     if (!this.shared || space.profileId === profileId || !this.data.profiles.some((p) => p.id === profileId)) return;
-    for (const id of [...walk(space.pinned), ...space.today]) OrbeWindow.destroyView(id);
+    for (const id of [...walk(space.pinned), ...space.today]) OrbxWindow.destroyView(id);
     space.profileId = profileId;
     for (const w of windows.values()) w.layout();
     this.changed();
@@ -3985,7 +3985,7 @@ class OrbeWindow {
   }
 
   // --- Onglet glissé hors de la fenêtre -------------------------------------
-  // Lâché hors de toute fenêtre d'Orbe : il s'ouvre dans une nouvelle fenêtre, posée sous
+  // Lâché hors de toute fenêtre d'Orbx : il s'ouvre dans une nouvelle fenêtre, posée sous
   // le pointeur. Lâché sur une autre fenêtre ordinaire : c'est elle qui l'affiche. Les
   // fenêtres ordinaires montrent les mêmes Espaces : l'onglet ne change pas de liste, il
   // change de fenêtre. Le point vient du système (jamais de l'interface) ; `pt` sert aux essais.
@@ -3994,10 +3994,10 @@ class OrbeWindow {
     if (!ids.length || !this.shared || !pt || !Number.isFinite(pt.x) || !Number.isFinite(pt.y)) return null;
     const inside = (w) => { const b = w.win.getBounds(); return pt.x >= b.x && pt.x < b.x + b.width && pt.y >= b.y && pt.y < b.y + b.height; };
     if (inside(this)) return null;
-    const other = OrbeWindow.all.find((w) => w !== this && w.shared && !w.win.isDestroyed() && w.win.isVisible() && !w.win.isMinimized() && inside(w));
+    const other = OrbxWindow.all.find((w) => w !== this && w.shared && !w.win.isDestroyed() && w.win.isVisible() && !w.win.isMinimized() && inside(w));
     if (other) return other.adopt(ids, this);
     const from = this.win.getBounds();
-    const w = new OrbeWindow();
+    const w = new OrbxWindow();
     const area = screen.getDisplayNearestPoint({ x: Math.round(pt.x), y: Math.round(pt.y) }).workArea;
     const width = Math.min(from.width, area.width);
     const height = Math.min(from.height, area.height);
@@ -4200,7 +4200,7 @@ class OrbeWindow {
     const copy = () => { clipboard.write([new ClipboardItem({ 'image/png': new Blob([png], { type: 'image/png' }) })]).catch(() => {}); };
     const save = () => {
       const stamp = captureStamp();
-      require('./library').keepCapture(`Orbe ${stamp}.png`, png, { incognito: !this.shared });
+      require('./library').keepCapture(`Orbx ${stamp}.png`, png, { incognito: !this.shared });
     };
     const done = (what) => {
       if (what === 'copy') { copy(); this.toast(t('capture.copied')); }
@@ -4229,7 +4229,7 @@ class OrbeWindow {
 
   // Capture « en portrait » : la page visible posée sur un fond aux couleurs de
   // l'Espace (src/main/portrait.js). Copiée et enregistrée, comme une capture entière.
-  // Seule la page est photographiée : jamais une feuille d'Orbe posée dessus.
+  // Seule la page est photographiée : jamais une feuille d'Orbx posée dessus.
   async capturePortrait(opts = {}) {
     const wc = this.activeWc;
     if (!wc) return null;
@@ -4240,7 +4240,7 @@ class OrbeWindow {
     const png = out.toPNG();
     if (opts.write !== false) {
       clipboard.write([new ClipboardItem({ 'image/png': new Blob([png], { type: 'image/png' }) })]).catch(() => {});
-      require('./library').keepCapture(`Orbe ${captureStamp()}.png`, png, { incognito: !this.shared });
+      require('./library').keepCapture(`Orbx ${captureStamp()}.png`, png, { incognito: !this.shared });
     }
     this.toast(t('toast.captured'));
     return out;
@@ -4251,7 +4251,7 @@ class OrbeWindow {
     const wc = this.activeWc;
     if (!wc) return;
     const dbg = wc.debugger;
-    hooks.unshield(wc); // débogueur tenu un instant par Orbe (unload.js) : il le rend
+    hooks.unshield(wc); // débogueur tenu un instant par Orbx (unload.js) : il le rend
     if (dbg.isAttached()) return this.capture();
     try {
       dbg.attach('1.3');
@@ -4265,10 +4265,10 @@ class OrbeWindow {
       const png = Buffer.from(shot.data, 'base64');
       clipboard.write([new ClipboardItem({ 'image/png': new Blob([png], { type: 'image/png' }) })]).catch(() => {});
       const stamp = captureStamp();
-      require('./library').keepCapture(`Orbe ${stamp}.png`, png, { incognito: !this.shared });
+      require('./library').keepCapture(`Orbx ${stamp}.png`, png, { incognito: !this.shared });
       this.toast(t('toast.captured'));
     } catch (err) {
-      console.error('[orbe] capture', err);
+      console.error('[orbx] capture', err);
     } finally {
       try { dbg.detach(); } catch {}
     }
@@ -4326,7 +4326,7 @@ class OrbeWindow {
     adblock.allowSite(tab.url, !allowed);
     this.toast(t(allowed ? 'adblock.onSite' : 'adblock.offSite', { site: suggest.strip(new URL(tab.url).origin) }));
     this.reload(false);
-    OrbeWindow.pushAll();
+    OrbxWindow.pushAll();
   }
 
   shieldMenu() {
@@ -4342,7 +4342,7 @@ class OrbeWindow {
     if (boosts.get(host).review) { this.run('boost'); return; }
     boosts.set(host, { enabled: !boosts.get(host).enabled });
     applyBoosts(host);
-    OrbeWindow.pushAll();
+    OrbxWindow.pushAll();
   }
 
   // Clic droit sur la barre d'outils : adresse entière ou non, copie, capture, partage.
@@ -4422,8 +4422,8 @@ class OrbeWindow {
     if (i < 0 || profileId === 'default' || s.spaces.some((sp) => sp.profileId === profileId)) return false;
     // Les favoris du profil rejoignent l'archive ; ses cookies sont effacés.
     for (const id of s.favs[profileId] || []) {
-      OrbeWindow.destroyView(id);
-      OrbeWindow.forget(id, s);
+      OrbxWindow.destroyView(id);
+      OrbxWindow.forget(id, s);
       store.archive({ ...s.tabs[id], by: 'manual' });
       delete s.tabs[id];
     }
@@ -4432,7 +4432,7 @@ class OrbeWindow {
     sessions.profileSession(profileId).clearStorageData().catch(() => {});
     store.save();
     for (const w of windows.values()) w.layout();
-    OrbeWindow.pushAll();
+    OrbxWindow.pushAll();
     return true;
   }
 
@@ -4601,7 +4601,7 @@ class OrbeWindow {
   }
 
   // « Exporter l'Espace… » : ses épinglés (avec leurs dossiers) et ses onglets du jour, dans
-  // un fichier de signets (format HTML que tous les navigateurs, et Orbe, savent importer).
+  // un fichier de signets (format HTML que tous les navigateurs, et Orbx, savent importer).
   // Seules les adresses web sortent ; titres et adresses sont échappés.
   spaceExportHtml(space = this.space) {
     const escHtml = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -4629,7 +4629,7 @@ class OrbeWindow {
     if (!file || typeof file !== 'string' || !path.isAbsolute(file)) return null;
     const { html, count } = this.spaceExportHtml(space);
     try { fs.writeFileSync(file, html); } catch (err) {
-      console.error('[orbe] export de l’Espace', err.message);
+      console.error('[orbx] export de l’Espace', err.message);
       this.toast(t('spaces.exportFailed'), 'error');
       return null;
     }
@@ -4727,8 +4727,8 @@ class OrbeWindow {
         { label: t('ctx.copyVideoUrl'), visible: !!src, click: () => clipboard.writeText(p.srcURL) },
       );
       // Image dans l'image automatique, site par site (quand le réglage général est actif).
-      const site = OrbeWindow.pipSite(wc.getURL());
-      if (site && store.state.settings.autoPip) tpl.push({ label: t('ctx.pipAuto', { site }), type: 'checkbox', checked: !OrbeWindow.pipOff(wc.getURL()), click: () => OrbeWindow.togglePipSite(wc.getURL()) });
+      const site = OrbxWindow.pipSite(wc.getURL());
+      if (site && store.state.settings.autoPip) tpl.push({ label: t('ctx.pipAuto', { site }), type: 'checkbox', checked: !OrbxWindow.pipOff(wc.getURL()), click: () => OrbxWindow.togglePipSite(wc.getURL()) });
     }
     if (!p.linkURL && !p.isEditable && p.mediaType === 'none' && !(p.selectionText || '').trim()) {
       const nav = wc.navigationHistory;
@@ -4925,7 +4925,7 @@ class OrbeWindow {
     switch (action) {
       case 'ready': return this.sendState();
       case 'hoverTab': return this.prewake(a);
-      case 'battery': return OrbeWindow.setBattery(a, this);
+      case 'battery': return OrbxWindow.setBattery(a, this);
       // Clic sur l'onglet déjà affiché : rien à faire, et surtout ne pas
       // reprendre le clavier (second clic d'un double-clic pour renommer).
       case 'activate': return a === this.activeId && live.has(a) && !this.peekState ? undefined : this.activate(a);
@@ -4951,7 +4951,7 @@ class OrbeWindow {
         if (!a || typeof a !== 'object') return undefined;
         return Array.isArray(a.ids) ? this.moveManyToSpace(a.ids, String(a.spaceId)) : this.moveToSpace(String(a.id), String(a.spaceId));
       }
-      // Clic sur le bouclier : le centre de contrôle du site (feuille d'Orbe) ; à défaut (page interne, pas d'onglet), le menu.
+      // Clic sur le bouclier : le centre de contrôle du site (feuille d'Orbx) ; à défaut (page interne, pas d'onglet), le menu.
       case 'siteControl': return hooks.action(this, 'siteControl') ? undefined : this.shieldMenu();
       case 'shieldMenu': return this.shieldMenu();
       case 'toolbarMenu': return this.popup(this.toolbarMenuTemplate());
@@ -4971,7 +4971,7 @@ class OrbeWindow {
       case 'resetPinned': return this.resetPinned(a);
       case 'command': return this.run(a);
       case 'dropUrl': {
-        // Texte déposé : une adresse web, ou sinon une recherche — jamais file: ou orbe:.
+        // Texte déposé : une adresse web, ou sinon une recherche — jamais file: ou orbx:.
         const text = String(a || '').trim().slice(0, 2000);
         if (!text) return undefined;
         if (/^[a-z][a-z0-9+.-]*:/i.test(text) && !webUrl(text)) return undefined;
@@ -5007,8 +5007,8 @@ class OrbeWindow {
       case 'splitTab': return this.splitTab(String(a));
       // Onglet lâché hors de la fenêtre : seuls les identifiants viennent de l'interface, le point vient du système.
       case 'tearOff': return a && typeof a === 'object' && Array.isArray(a.ids) ? !!this.tearOff(a.ids) : false;
-      // Ligne d'une autre fenêtre d'Orbe lâchée sur cette barre latérale.
-      case 'adoptTab': { const from = typeof a === 'string' ? OrbeWindow.all.find((x) => x !== this && x.shared && x.orderedIds().includes(a)) : null; return from ? !!this.adopt([a], from) : false; }
+      // Ligne d'une autre fenêtre d'Orbx lâchée sur cette barre latérale.
+      case 'adoptTab': { const from = typeof a === 'string' ? OrbxWindow.all.find((x) => x !== this && x.shared && x.orderedIds().includes(a)) : null; return from ? !!this.adopt([a], from) : false; }
       // ⌥⌘clic sur un onglet de la barre latérale : sa page s'ouvre dans une petite fenêtre.
       case 'littleTab': { const tab = this.data.tabs[a]; if (tab && webUrl(tab.url) && !this.incognito) hooks.openLittle(tab.url); return undefined; }
       case 'splitResize': return this.resizeSplit(Number(a.i), Number(a.at != null ? a.at : a.x));
@@ -5032,7 +5032,7 @@ boosts.hooks.canScript = (wc) => {
 // Sélecteurs d'un Boost venus d'ailleurs : lus par le moteur CSS dans la coque d'une
 // fenêtre (page de l'interface, en bac à sable), jamais dans la page qui les a fournis.
 boosts.hooks.parse = async (list) => {
-  const w = OrbeWindow.primary || OrbeWindow.all.find((x) => x.ui && !x.ui.webContents.isDestroyed());
+  const w = OrbxWindow.primary || OrbxWindow.all.find((x) => x.ui && !x.ui.webContents.isDestroyed());
   if (!w || !w.ui || w.ui.webContents.isDestroyed()) return null;
   return w.ui.webContents.executeJavaScript(`(${boosts.PARSE})(${JSON.stringify(list)})`);
 };
@@ -5048,7 +5048,7 @@ function applyBoosts(host) {
 }
 
 function archiveStale() {
-  const any = OrbeWindow.all.find((w) => w.shared);
+  const any = OrbxWindow.all.find((w) => w.shared);
   if (!any) return;
   const activeIds = new Set();
   for (const w of windows.values()) {
@@ -5079,7 +5079,7 @@ function archiveStale() {
     store.state.window.archiveNoticed = true;
     any.toast(t('toast.autoArchive', { n: count, hours: delay }), null, () => hooks.openSettings());
   }
-  if (count) { store.save(); for (const w of windows.values()) w.layout(); OrbeWindow.pushAll(); }
+  if (count) { store.save(); for (const w of windows.values()) w.layout(); OrbxWindow.pushAll(); }
 }
 
-module.exports = { spaceLabel, PEEK_PULL, OrbeWindow, windows, live, media, STATUS, trusted, hooks, lostAfterStay: () => lastLost, applyBoosts, cleanUrl, mdLink, isMeetingUrl, SPLIT_BAR, archiveStale, tabMemory, tabProcesses, processMb, lastSweep: () => lastSweep, noteDownload, uiRetryDelay, UI_PREFS, STATUS_MAX, ICON_MAX, thumbs: { keep: keepThumb, MAX: THUMBS }, INTERNAL, UI_PRELOAD, isInternal, MOTION, motion, place, forceMotion, motionStats: stats, boundsOf, inFlight, resumed };
+module.exports = { spaceLabel, PEEK_PULL, OrbxWindow, windows, live, media, STATUS, trusted, hooks, lostAfterStay: () => lastLost, applyBoosts, cleanUrl, mdLink, isMeetingUrl, SPLIT_BAR, archiveStale, tabMemory, tabProcesses, processMb, lastSweep: () => lastSweep, noteDownload, uiRetryDelay, UI_PREFS, STATUS_MAX, ICON_MAX, thumbs: { keep: keepThumb, MAX: THUMBS }, INTERNAL, UI_PRELOAD, isInternal, MOTION, motion, place, forceMotion, motionStats: stats, boundsOf, inFlight, resumed };

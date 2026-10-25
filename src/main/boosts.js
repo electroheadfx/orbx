@@ -9,7 +9,7 @@
 //  - un sélecteur de Zap vient de la page (clic) ou d'un fichier importé : il est
 //    vérifié (`validSelector`) et chaque sélecteur a sa propre règle ;
 //  - le JavaScript ne s'exécute que dans la page elle-même (son monde principal,
-//    sans aucun accès à Orbe), jamais dans une page interne, un aperçu, une
+//    sans aucun accès à Orbx), jamais dans une page interne, un aperçu, une
 //    feuille ou une vue de l'interface, et seulement si le site affiché par le
 //    cadre principal est bien celui du Boost — vérifié ici, au dernier moment ;
 //  - le script ne part jamais sur une page « http: » (le réseau peut y avoir mis
@@ -23,7 +23,7 @@
 const { store } = require('./store');
 
 const applied = new WeakMap(); // webContents -> { key : clé du CSS inséré, host : site pour lequel il l'a été }
-// `extraCss(wc)` : CSS ajouté par Orbe à la page (bandeaux de cookies, couleurs du thème).
+// `extraCss(wc)` : CSS ajouté par Orbx à la page (bandeaux de cookies, couleurs du thème).
 // `canScript(wc)` : la page est-elle un onglet web ordinaire ? (posé par window.js)
 // `parse(liste)` : fait lire des sélecteurs par le moteur CSS, dans une page de
 //   l'interface (bac à sable) ; renvoie un booléen par sélecteur (posé par window.js).
@@ -347,7 +347,7 @@ function scriptable(url) {
 // Le script tel qu'il part dans la page. Il commence par vérifier, là où il s'exécute,
 // qu'il est bien sur le site et le protocole vérifiés ici : entre la vérification du
 // processus principal et l'exécution, la page a pu changer.
-const SKIPPED = '\u0000orbe-boost-hors-site';
+const SKIPPED = '\u0000orbx-boost-hors-site';
 function scriptCode(js, host, protocol) {
   return `(async () => { if (location.host.replace(/^www\\./, '') !== ${JSON.stringify(host)} || location.protocol !== ${JSON.stringify(protocol)}) return ${JSON.stringify(SKIPPED)}; try {\n${js}\n} catch (e) { console.error('[Boost]', e); return String((e && e.message) || e).slice(0, 300); } return ''; })()`;
 }
@@ -428,11 +428,11 @@ async function zap(wc, forHost) {
 }
 
 // --- Export et import ---------------------------------------------------------
-// Fichier JSON : { orbeBoosts: 1, boosts: [{ host, name, css, zaps, look, js }] }.
+// Fichier JSON : { orbxBoosts: 1, boosts: [{ host, name, css, zaps, look, js }] }.
 function exportData(hosts) {
   const names = (Array.isArray(hosts) && hosts.length ? hosts : Object.keys(store.state.boosts)).filter(has).sort();
   return {
-    orbeBoosts: 1,
+    orbxBoosts: 1,
     boosts: names.map((host) => { const b = get(host); return { host, name: b.name, css: b.css, zaps: b.zaps, look: b.look, js: b.js }; }),
   };
 }
@@ -442,7 +442,7 @@ function exportData(hosts) {
 // existant. Renvoie { added: [sites], skipped: [sites déjà pourvus], rejected: n }.
 function importData(data) {
   const out = { added: [], skipped: [], rejected: 0 };
-  const items = data && typeof data === 'object' && data.orbeBoosts === 1 && Array.isArray(data.boosts) ? data.boosts : null;
+  const items = data && typeof data === 'object' && data.orbxBoosts === 1 && Array.isArray(data.boosts) ? data.boosts : null;
   if (!items) return { ...out, error: 'format' };
   for (const raw of items.slice(0, IMPORT_MAX)) {
     const host = raw && typeof raw === 'object' && typeof raw.host === 'string' ? raw.host.toLowerCase() : '';

@@ -431,7 +431,7 @@ function insideFile(extDir, rel) {
   try { return fs.statSync(file).isFile() ? file : ''; } catch { return ''; }
 }
 
-// Résout « __MSG_cle__ » dans _locales : langue d'Orbe, puis anglais, puis la
+// Résout « __MSG_cle__ » dans _locales : langue d'Orbx, puis anglais, puis la
 // langue par défaut de l'extension. Les clés ne tiennent pas compte de la casse.
 function makeLocalizer(extDir, manifest) {
   const tried = new Map();

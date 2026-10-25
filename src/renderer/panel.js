@@ -1,7 +1,7 @@
 // Habillage des extensions : en-tête du panneau latéral (titre, fermeture,
 // poignée de largeur) et bandeau du débogueur. Les textes viennent du processus
 // principal, avec l'état à afficher.
-const P = window.orbePanel;
+const P = window.orbxPanel;
 const $ = (id) => document.getElementById(id);
 
 P.on((d) => {

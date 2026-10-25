@@ -1,14 +1,14 @@
 // Import depuis un navigateur installé : liste, aperçu (comptes), application,
 // annulation. Sert le volet Import des réglages et la page d'accueil.
 // La lecture des profils est dans import-browsers.js ; ici, on ne fait que
-// porter ce qui a été lu dans l'état d'Orbe.
+// porter ce qui a été lu dans l'état d'Orbx.
 const crypto = require('crypto');
 const { shell } = require('electron');
 const { store } = require('./store');
 const browsers = require('./import-browsers');
 const bm = require('./import-bookmarks');
 const win = require('./window');
-const { OrbeWindow } = win;
+const { OrbxWindow } = win;
 
 const t = (k, v) => store.t(k, null, v);
 const hooks = { refreshMenu: () => {}, openExternal: (url) => shell.openExternal(url), now: () => Date.now() };
@@ -18,7 +18,7 @@ const previews = new Map(); // jeton -> { data, at }
 const PREVIEW_TTL = 15 * 60e3;
 let last = null; // dernier import : { undo() -> redo }, tant qu'il peut être annulé
 
-const mainWindow = () => OrbeWindow.all.find((w) => !w.incognito) || null;
+const mainWindow = () => OrbxWindow.all.find((w) => !w.incognito) || null;
 
 function dests() {
   const s = store.state;
@@ -49,8 +49,8 @@ async function preview(a) {
 
 function refresh() {
   store.save();
-  for (const w of OrbeWindow.all) w.layout();
-  OrbeWindow.pushAll();
+  for (const w of OrbxWindow.all) w.layout();
+  OrbxWindow.pushAll();
   hooks.refreshMenu();
 }
 
@@ -67,8 +67,8 @@ function removeImported(space, added, ids, folders) {
   for (const id of ids) {
     if (!s.tabs[id]) continue;
     tabs[id] = s.tabs[id];
-    OrbeWindow.destroyView(id);
-    OrbeWindow.forget(id, s);
+    OrbxWindow.destroyView(id);
+    OrbxWindow.forget(id, s);
     delete s.tabs[id];
   }
   const gone = new Set(Object.keys(tabs));

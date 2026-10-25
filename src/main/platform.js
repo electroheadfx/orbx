@@ -105,7 +105,7 @@ function adaptLocales(locales) {
 // --- Habillage des fenêtres ---------------------------------------------------
 const CAPTION_H = 32; // hauteur des boutons de fenêtre de Windows
 const CAPTION_TOOLBAR_H = 46; // … quand la barre d'outils est affichée
-const ICON = path.join(__dirname, '..', '..', 'assets', 'orbe.ico');
+const ICON = path.join(__dirname, '..', '..', 'assets', 'orbx.ico');
 
 // Fond de la coque, comme le calcule base.css : couleur de l'Espace mêlée au
 // fond clair ou sombre. Sert de fond opaque et de couleur aux boutons de fenêtre.
@@ -123,7 +123,7 @@ const overlay = (color, dark, height) => ({ color: '#00000000', symbolColor: dar
 
 // Mica : Windows 11 22H2 ou plus récent.
 function materialSupported() {
-  if (!isWin || process.env.ORBE_NO_MATERIAL) return false;
+  if (!isWin || process.env.ORBX_NO_MATERIAL) return false;
   const build = Number(os.release().split('.')[2]);
   return build >= 22621;
 }
@@ -177,7 +177,7 @@ function syncChrome(win, { color, dark, toolbar, translucent }) {
     win.setBackgroundMaterial(mica ? 'mica' : 'none');
     win.setBackgroundColor(mica ? '#00000000' : tint(color, dark));
   } catch (err) {
-    console.error('[orbe] habillage', err.message);
+    console.error('[orbx] habillage', err.message);
   }
 }
 
@@ -204,7 +204,7 @@ function menuTemplate(template) {
   return clean(template, true);
 }
 
-// Windows n'a pas de barre de menus globale, et la fenêtre d'Orbe n'en affiche
+// Windows n'a pas de barre de menus globale, et la fenêtre d'Orbx n'en affiche
 // pas : le menu reste chargé (ses raccourcis fonctionnent) et s'ouvre depuis
 // le bouton « ⋯ » de la barre latérale.
 function popupAppMenu(win) {
@@ -214,7 +214,7 @@ function popupAppMenu(win) {
 }
 
 // --- Navigateur par défaut ------------------------------------------------------
-// Windows ne laisse pas une application se déclarer elle-même : Orbe s'inscrit
+// Windows ne laisse pas une application se déclarer elle-même : Orbx s'inscrit
 // comme navigateur dans le registre de l'utilisateur (win-default.js), puis
 // ouvre la page des applications par défaut, où le choix se fait à la main.
 function makeDefault() {
@@ -222,7 +222,7 @@ function makeDefault() {
   if (isWin) {
     const wd = require('./win-default');
     return wd.register()
-      .catch((err) => console.error('[orbe] inscription comme navigateur', err.message))
+      .catch((err) => console.error('[orbx] inscription comme navigateur', err.message))
       .then(() => shell.openExternal(wd.settingsUrl()).catch(() => {}));
   }
   app.setAsDefaultProtocolClient('http');
@@ -234,7 +234,7 @@ function undoDefault() {
   if (!isWin) return Promise.resolve(false);
   const { app } = require('electron');
   for (const scheme of ['http', 'https']) { try { app.removeAsDefaultProtocolClient(scheme); } catch {} }
-  return require('./win-default').unregister().then(() => true, (err) => { console.error('[orbe] retrait de l’inscription', err.message); return false; });
+  return require('./win-default').unregister().then(() => true, (err) => { console.error('[orbx] retrait de l’inscription', err.message); return false; });
 }
 
 // --- Chemins ------------------------------------------------------------------

@@ -256,7 +256,7 @@ let theme = null; // { dots: [{h, s, v}], sel, intensity, grain, texture, mode, 
 let themeFrame = 0;
 let themePatch = {};
 
-const dotHex = (d) => OrbeTheme.hsvToHex(d.h, d.s, d.v);
+const dotHex = (d) => OrbxTheme.hsvToHex(d.h, d.s, d.v);
 // Envoi groupé : un message par image au plus, pendant qu'un point ou un curseur bouge.
 function pushTheme(patch) {
   Object.assign(themePatch, patch);
@@ -292,7 +292,7 @@ function drawTheme() {
   wheel.classList.toggle('plain', !theme.dots.length);
   $('theme-n').textContent = String(theme.dots.length);
   $('theme-less').disabled = !theme.dots.length;
-  $('theme-more').disabled = theme.dots.length >= OrbeTheme.MAX_COLORS;
+  $('theme-more').disabled = theme.dots.length >= OrbxTheme.MAX_COLORS;
   const current = theme.dots.length ? colors[theme.sel] : '';
   for (const b of $('theme-palettes').children) b.classList.toggle('sel', b.dataset.c === current);
   for (const b of $('theme-presets').children) b.classList.toggle('sel', b.dataset.preset === theme.preset);
@@ -300,23 +300,23 @@ function drawTheme() {
   for (const b of $('theme-modes').children) b.classList.toggle('sel', b.dataset.mode === theme.mode);
   for (const b of $('theme-icons').children) b.classList.toggle('sel', b.textContent === theme.icon);
   // Le panneau suit la couleur principale.
-  document.documentElement.style.setProperty('--accent', colors[0] || OrbeTheme.DEFAULT_COLOR);
+  document.documentElement.style.setProperty('--accent', colors[0] || OrbxTheme.DEFAULT_COLOR);
 }
 
 function openTheme(p) {
   show('theme');
-  const t0 = OrbeTheme.normalize(p.space);
-  theme = { dots: t0.colors.map(OrbeTheme.hexToHsv), sel: 0, intensity: t0.intensity, grain: t0.grain, texture: t0.texture, mode: t0.mode, icon: p.icon, preset: '' };
+  const t0 = OrbxTheme.normalize(p.space);
+  theme = { dots: t0.colors.map(OrbxTheme.hexToHsv), sel: 0, intensity: t0.intensity, grain: t0.grain, texture: t0.texture, mode: t0.mode, icon: p.icon, preset: '' };
   $('theme').style.left = (p.x || 260) + 'px';
   $('theme-intensity').value = String(Math.round(t0.intensity * 100));
   $('theme-grain').value = String(Math.round(t0.grain * 100));
   const swatch = (c, family) => `<button class="sw-color" data-c="${esc(c)}" data-family="${family}" style="background:${esc(c)}"></button>`;
-  $('theme-palettes').innerHTML = Object.entries(OrbeTheme.PALETTES).map(([family, list]) => list.map((c) => swatch(c, family)).join('')).join('');
-  $('theme-presets').innerHTML = OrbeTheme.PRESETS.map((x) => {
-    const look = OrbeTheme.palette({ colors: x.colors, accent: x.colors[0], intensity: 1, grain: 0, texture: x.texture, mode: 'light' }, false);
-    return `<button class="preset" data-preset="${x.id}" title="${esc(t('theme.preset.' + x.id))}" style="background:${OrbeTheme.paint(look)}"></button>`;
+  $('theme-palettes').innerHTML = Object.entries(OrbxTheme.PALETTES).map(([family, list]) => list.map((c) => swatch(c, family)).join('')).join('');
+  $('theme-presets').innerHTML = OrbxTheme.PRESETS.map((x) => {
+    const look = OrbxTheme.palette({ colors: x.colors, accent: x.colors[0], intensity: 1, grain: 0, texture: x.texture, mode: 'light' }, false);
+    return `<button class="preset" data-preset="${x.id}" title="${esc(t('theme.preset.' + x.id))}" style="background:${OrbxTheme.paint(look)}"></button>`;
   }).join('');
-  $('theme-textures').innerHTML = OrbeTheme.TEXTURES.map((x) => `<button class="tx" data-tx="${x}" title="${esc(t('theme.tx.' + x))}" style="background-image:url(textures/${x}.png)"></button>`).join('');
+  $('theme-textures').innerHTML = OrbxTheme.TEXTURES.map((x) => `<button class="tx" data-tx="${x}" title="${esc(t('theme.tx.' + x))}" style="background-image:url(textures/${x}.png)"></button>`).join('');
   $('theme-icons').innerHTML = ICONS.map((e) => `<button class="sw-icon">${e}</button>`).join('');
   drawTheme();
 }
@@ -368,10 +368,10 @@ wheel.addEventListener('keydown', (e) => {
   pushColors();
 });
 $('theme-more').onclick = () => {
-  if (theme.dots.length >= OrbeTheme.MAX_COLORS) return;
+  if (theme.dots.length >= OrbxTheme.MAX_COLORS) return;
   const last = theme.dots[theme.dots.length - 1];
   // La nouvelle couleur part de la voisine, un peu plus loin sur le cercle.
-  theme.dots.push(last ? { h: (last.h + 48) % 360, s: Math.max(0.45, last.s), v: last.v } : OrbeTheme.hexToHsv(OrbeTheme.DEFAULT_COLOR));
+  theme.dots.push(last ? { h: (last.h + 48) % 360, s: Math.max(0.45, last.s), v: last.v } : OrbxTheme.hexToHsv(OrbxTheme.DEFAULT_COLOR));
   theme.sel = theme.dots.length - 1;
   drawTheme();
   pushColors();
@@ -386,7 +386,7 @@ $('theme-less').onclick = () => {
 $('theme-palettes').addEventListener('click', (e) => {
   const b = e.target.closest('.sw-color');
   if (!b) return;
-  const hsv = OrbeTheme.hexToHsv(b.dataset.c);
+  const hsv = OrbxTheme.hexToHsv(b.dataset.c);
   if (theme.dots.length) theme.dots[theme.sel] = hsv; else { theme.dots.push(hsv); theme.sel = 0; }
   drawTheme();
   theme.preset = '';
@@ -395,9 +395,9 @@ $('theme-palettes').addEventListener('click', (e) => {
 });
 $('theme-presets').addEventListener('click', (e) => {
   const b = e.target.closest('.preset');
-  const preset = b && OrbeTheme.PRESETS.find((x) => x.id === b.dataset.preset);
+  const preset = b && OrbxTheme.PRESETS.find((x) => x.id === b.dataset.preset);
   if (!preset) return;
-  Object.assign(theme, { dots: preset.colors.map(OrbeTheme.hexToHsv), sel: 0, intensity: preset.intensity, grain: preset.grain, texture: preset.texture, preset: preset.id });
+  Object.assign(theme, { dots: preset.colors.map(OrbxTheme.hexToHsv), sel: 0, intensity: preset.intensity, grain: preset.grain, texture: preset.texture, preset: preset.id });
   $('theme-intensity').value = String(Math.round(preset.intensity * 100));
   $('theme-grain').value = String(Math.round(preset.grain * 100));
   drawTheme();
@@ -434,7 +434,7 @@ $('theme-done').onclick = () => send('closeOverlay');
 // messages légèrement teintés, apparence claire ou sombre de l'Espace.
 function applyLook(look) {
   if (!look || !look.space) return;
-  const p = OrbeTheme.palette(look.space, look.dark);
+  const p = OrbxTheme.palette(look.space, look.dark);
   const root = document.documentElement;
   root.dataset.scheme = p.dark ? 'dark' : 'light';
   root.style.setProperty('--accent', p.accent);
@@ -587,16 +587,16 @@ function drawSpace() {
   for (const b of $('space-presets').children) { const on = b.dataset.preset === draft.preset; b.classList.toggle('sel', on); b.setAttribute('aria-checked', String(on)); }
   for (const b of $('space-profiles').children) { const on = b.dataset.profile === draft.profileId; b.classList.toggle('sel', on); b.setAttribute('aria-checked', String(on)); }
   // Le panneau prend la couleur choisie : c'est l'aperçu.
-  const preset = OrbeTheme.PRESETS.find((x) => x.id === draft.preset);
-  const look = OrbeTheme.palette({ color: preset ? preset.colors[0] : draft.color }, document.documentElement.dataset.scheme === 'dark');
+  const preset = OrbxTheme.PRESETS.find((x) => x.id === draft.preset);
+  const look = OrbxTheme.palette({ color: preset ? preset.colors[0] : draft.color }, document.documentElement.dataset.scheme === 'dark');
   document.documentElement.style.setProperty('--accent', look.accent);
   document.documentElement.style.setProperty('--on-accent', look.onAccent);
 }
 
 function openSpace(p) {
   show('space');
-  const colors = (p.colors || []).filter(OrbeTheme.isHex);
-  draft = { icon: p.icon || '✨', tone: p.tone || 0, color: OrbeTheme.isHex(p.color) ? p.color : colors[0] || OrbeTheme.DEFAULT_COLOR, preset: '', profileId: String(p.profileId || 'default'), x: p.x || 260 };
+  const colors = (p.colors || []).filter(OrbxTheme.isHex);
+  draft = { icon: p.icon || '✨', tone: p.tone || 0, color: OrbxTheme.isHex(p.color) ? p.color : colors[0] || OrbxTheme.DEFAULT_COLOR, preset: '', profileId: String(p.profileId || 'default'), x: p.x || 260 };
   $('space').style.left = draft.x + 'px';
   $('icons').hidden = true;
   const colorsBox = $('space-colors');
@@ -610,11 +610,11 @@ function openSpace(p) {
   }
   const presetsBox = $('space-presets');
   presetsBox.textContent = '';
-  for (const x of OrbeTheme.PRESETS) {
-    const look = OrbeTheme.palette({ colors: x.colors, accent: x.colors[0], intensity: 1, grain: 0, texture: x.texture, mode: 'light' }, false);
+  for (const x of OrbxTheme.PRESETS) {
+    const look = OrbxTheme.palette({ colors: x.colors, accent: x.colors[0], intensity: 1, grain: 0, texture: x.texture, mode: 'light' }, false);
     const b = Object.assign(document.createElement('button'), { className: 'preset', title: t('theme.preset.' + x.id) });
     b.dataset.preset = x.id;
-    b.style.background = OrbeTheme.paint(look);
+    b.style.background = OrbxTheme.paint(look);
     b.setAttribute('role', 'radio');
     presetsBox.appendChild(b);
   }
@@ -818,7 +818,7 @@ O.on('settings', (s) => setLang(s.lang));
 // Zone de dépôt : un onglet de la barre latérale lâché ici crée une vue scindée.
 const dropBox = $('drop');
 dropBox.addEventListener('dragover', (e) => {
-  if (![...e.dataTransfer.types].includes('application/x-orbe-item')) return;
+  if (![...e.dataTransfer.types].includes('application/x-orbx-item')) return;
   e.preventDefault();
   e.dataTransfer.dropEffect = 'move';
   dropBox.classList.add('over');
@@ -827,7 +827,7 @@ dropBox.addEventListener('dragleave', () => dropBox.classList.remove('over'));
 dropBox.addEventListener('drop', (e) => {
   e.preventDefault();
   dropBox.classList.remove('over');
-  const id = e.dataTransfer.getData('application/x-orbe-item');
+  const id = e.dataTransfer.getData('application/x-orbx-item');
   if (id) send('dropSplit', id);
 });
 

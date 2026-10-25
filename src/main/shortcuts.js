@@ -36,7 +36,7 @@ function canon(accel) {
   return [...MODS.filter((m) => mods.has(m)), key].join('+');
 }
 
-// Combinaisons que le système ou Orbe gardent pour eux.
+// Combinaisons que le système ou Orbx gardent pour eux.
 let reservedCache = null;
 function reservedMap() {
   if (reservedCache) return reservedCache;
@@ -50,9 +50,9 @@ function reservedMap() {
     add('system', ['Alt+F4', 'Alt+Tab', 'Alt+Shift+Tab', 'Ctrl+Alt+Delete', 'Ctrl+Shift+Escape', 'Ctrl+Escape', 'Alt+Space', 'Alt+Escape', 'Alt+Return', 'F10']);
   }
   // Édition (rôles du menu) et accès direct aux onglets et aux Espaces.
-  add('orbe', ['Cmd+C', 'Cmd+V', 'Cmd+X', 'Cmd+A', 'Shift+Cmd+V'].map((a) => platform.accel(a)));
-  for (let n = 1; n <= 9; n++) add('orbe', [platform.accel(`Cmd+${n}`), platform.accel(`Ctrl+${n}`)]);
-  add('orbe', ['Ctrl+Tab', 'Ctrl+Shift+Tab']);
+  add('orbx', ['Cmd+C', 'Cmd+V', 'Cmd+X', 'Cmd+A', 'Shift+Cmd+V'].map((a) => platform.accel(a)));
+  for (let n = 1; n <= 9; n++) add('orbx', [platform.accel(`Cmd+${n}`), platform.accel(`Ctrl+${n}`)]);
+  add('orbx', ['Ctrl+Tab', 'Ctrl+Shift+Tab']);
   reservedCache = out;
   return out;
 }
@@ -60,7 +60,7 @@ function reservedMap() {
 // Vérifie un accélérateur proposé : { accel } (forme canonique) ou { error }.
 //   bad      : mal formé ;
 //   modifier : il manque une touche de modification ;
-//   reserved : gardé par le système ou par Orbe (`kind`).
+//   reserved : gardé par le système ou par Orbx (`kind`).
 function check(accel) {
   const c = canon(accel);
   if (!c) return { error: 'bad' };
@@ -232,7 +232,7 @@ function list() {
   };
   const groups = GROUPS.map(([title, names]) => ({ title: store.t(title), items: names.map(row).filter(Boolean) }));
   const rest = commands.COMMANDS.map((c) => row(c.name)).filter(Boolean);
-  groups.push({ title: 'Orbe', items: rest });
+  groups.push({ title: 'Orbx', items: rest });
   return groups.filter((g) => g.items.length);
 }
 

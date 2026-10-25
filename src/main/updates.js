@@ -1,6 +1,6 @@
-// Mises à jour : Orbe regarde si une version plus récente est publiée, et le dit.
+// Mises à jour : Orbx regarde si une version plus récente est publiée, et le dit.
 //
-// Orbe n'est pas signé par un compte de développeur (signature « ad hoc » sur
+// Orbx n'est pas signé par un compte de développeur (signature « ad hoc » sur
 // macOS, aucune sous Windows) : il ne peut donc pas se remplacer lui-même comme
 // le font Sparkle ou Squirrel. Ce module fait la version honnête :
 //   - une question par jour au plus à GitHub (« dernière version publiée »), et
@@ -13,10 +13,10 @@
 // Ce qui est garanti :
 //   - la question part vers un seul hôte (api.github.com), en HTTPS, sans
 //     redirection, depuis une session à part, en mémoire : aucun cookie, aucun
-//     identifiant, aucune mesure d'audience ; l'agent annoncé est « Orbe », sans
+//     identifiant, aucune mesure d'audience ; l'agent annoncé est « Orbx », sans
 //     numéro de version ;
 //   - la réponse est une donnée étrangère : taille bornée, chaque champ validé,
-//     les adresses reconstruites ou refusées si elles sortent du dépôt d'Orbe,
+//     les adresses reconstruites ou refusées si elles sortent du dépôt d'Orbx,
 //     les notes de version réduites à du texte (affichées comme du texte) ;
 //   - l'archive téléchargée n'est jamais ouverte ni exécutée : sa taille et son
 //     empreinte SHA-256 (quand GitHub la donne) sont vérifiées, puis elle est
@@ -29,7 +29,7 @@ const { execFile } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const REPO = 'amadoubaui/orbe';
+const REPO = 'electroheadfx/orbx';
 const API_HOST = 'api.github.com';
 const ENDPOINT = `https://${API_HOST}/repos/${REPO}/releases/latest`;
 const RELEASES = `https://github.com/${REPO}/releases`;
@@ -84,8 +84,8 @@ function compare(a, b) {
 
 // Nom de l'archive publiée pour ce système (scripts/build-mac.js, build-win.js).
 function assetName(version, platform = deps.platform, arch = deps.arch) {
-  if (platform === 'darwin' && arch === 'arm64') return `Orbe-${version}-mac-arm64.zip`;
-  if (platform === 'win32' && arch === 'x64') return `Orbe-${version}-windows-x64.zip`;
+  if (platform === 'darwin' && arch === 'arm64') return `Orbx-${version}-mac-arm64.zip`;
+  if (platform === 'win32' && arch === 'x64') return `Orbx-${version}-windows-x64.zip`;
   return '';
 }
 
@@ -121,7 +121,7 @@ function hopAllowed(url) {
 }
 
 // Lit la réponse de GitHub (objet déjà décodé). Rend la version décrite, ou null
-// si elle n'est pas une version publiée d'Orbe lisible.
+// si elle n'est pas une version publiée d'Orbx lisible.
 function parseRelease(json, { platform = deps.platform, arch = deps.arch } = {}) {
   if (!json || typeof json !== 'object' || Array.isArray(json)) return null;
   if (json.draft === true || json.prerelease === true) return null;
@@ -133,7 +133,7 @@ function parseRelease(json, { platform = deps.platform, arch = deps.arch } = {})
   for (const a of Array.isArray(json.assets) ? json.assets.slice(0, 40) : []) {
     if (!a || typeof a !== 'object' || a.name !== want || !want) continue;
     if (!Number.isInteger(a.size) || a.size <= 0 || a.size > MAX_ASSET) continue;
-    // Sans empreinte publiée, pas de téléchargement par Orbe : seule la page de la version est proposée.
+    // Sans empreinte publiée, pas de téléchargement par Orbx : seule la page de la version est proposée.
     const digest = typeof a.digest === 'string' && /^sha256:[0-9a-f]{64}$/i.test(a.digest) ? a.digest.slice(7).toLowerCase() : '';
     const url = assetUrl(String(json.tag_name).trim(), want);
     if (!digest || !url) continue;
@@ -299,7 +299,7 @@ function freeName(dir, name) {
 // Windows à SmartScreen (flux Zone.Identifier, zone 3). Rend true si la marque
 // est posée et relue ; sur les autres systèmes, il n'y a rien à poser.
 function quarantineValue(now = Date.now()) {
-  return `0081;${Math.floor(now / 1000).toString(16)};Orbe;`;
+  return `0081;${Math.floor(now / 1000).toString(16)};Orbx;`;
 }
 function markDownloaded(file, source) {
   if (deps.mark) return Promise.resolve(deps.mark(file, source)).then((v) => !!v, () => false);

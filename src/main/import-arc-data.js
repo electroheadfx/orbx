@@ -10,10 +10,10 @@
 //  - Arc n'est jamais modifié : chaque base est COPIÉE dans un dossier temporaire privé
 //    (0700), lue par le `sqlite3` du système en lecture seule, puis la copie est effacée.
 //  - La clé qui déchiffre les mots de passe et les cookies d'Arc est dans le trousseau
-//    de macOS (« Arc Safe Storage »). Orbe n'a pas de module natif : il la demande par
+//    de macOS (« Arc Safe Storage »). Orbx n'a pas de module natif : il la demande par
 //    l'outil du système `/usr/bin/security`, donc c'est « security » que la fenêtre de macOS
-//    nomme, pas Orbe. « Toujours autoriser » y laisserait l'accès ouvert à tout programme du
-//    compte : la fenêtre d'Orbe l'explique avant, le bilan le redit si l'accès est resté
+//    nomme, pas Orbx. « Toujours autoriser » y laisserait l'accès ouvert à tout programme du
+//    compte : la fenêtre d'Orbx l'explique avant, le bilan le redit si l'accès est resté
 //    ouvert (relecture de sécurité, constat H1 ; voir docs/mots-de-passe.md). La clé dérivée
 //    est effacée à la fin ; le secret lu et les mots de passe sont des chaînes JavaScript, que
 //    rien ne permet d'effacer. Sans la clé, seul l'historique (en clair chez Arc) est repris.
@@ -24,7 +24,7 @@
 //    ou déplacé d'un autre site, il est rejeté. Un mot de passe n'entre que si son adresse et
 //    son domaine d'authentification disent le même site. Aucun texte lu n'est exécuté ni passé
 //    à un interpréteur de commandes.
-//  - Les mots de passe entrent par le coffre d'Orbe (passwords.js, chiffré, par profil),
+//  - Les mots de passe entrent par le coffre d'Orbx (passwords.js, chiffré, par profil),
 //    les cookies par la session Chromium du profil : rien n'est gardé ailleurs.
 //  - macOS seulement : sous Windows, Arc chiffre avec une clé liée à son propre programme.
 const crypto = require('crypto');
@@ -81,7 +81,7 @@ async function query(dir, name, sql) {
   let size = 0;
   try { size = fs.statSync(src).size; } catch { return []; }
   if (!size || size > MAX_DB || !env.sqlite || !fs.existsSync(env.sqlite)) return [];
-  const tmp = fs.mkdtempSync(path.join(env.tmp, 'orbe-arc-'));
+  const tmp = fs.mkdtempSync(path.join(env.tmp, 'orbx-arc-'));
   try {
     fs.chmodSync(tmp, 0o700);
     const copy = path.join(tmp, 'base.db');
@@ -101,7 +101,7 @@ async function query(dir, name, sql) {
 }
 
 // Ce qu'il y a à reprendre, sans rien déchiffrer : des nombres, pour la fenêtre de confirmation.
-// `keys` (facultatif) : ne compter que ces profils d'Arc (ceux qui ont un profil d'Orbe).
+// `keys` (facultatif) : ne compter que ces profils d'Arc (ceux qui ont un profil d'Orbx).
 async function survey(keys = null) {
   const out = { profiles: 0, history: 0, logins: 0, cookies: 0 };
   for (const p of profiles()) {
@@ -238,12 +238,12 @@ async function readCookies(dir, key) {
 }
 
 // --- Import ------------------------------------------------------------------------------
-// `targets` : clé de profil Arc → { pid, session } d'Orbe (un profil d'Arc sans profil d'Orbe
+// `targets` : clé de profil Arc → { pid, session } d'Orbx (un profil d'Arc sans profil d'Orbx
 // n'est pas repris). `sinks` : où ranger ({ history(list), logins(pid, list) → décompte }).
 // `want` : { history, logins, cookies }. Rend le décompte ; `noKey` si le trousseau a refusé.
 async function importAll({ targets, sinks, want }) {
   const done = { profiles: 0, history: 0, logins: 0, cookies: 0, skipped: 0, noKey: false };
-  const mine = profiles().filter((p) => targets.get(p.key)); // seuls les profils d'Arc qui ont un profil d'Orbe
+  const mine = profiles().filter((p) => targets.get(p.key)); // seuls les profils d'Arc qui ont un profil d'Orbx
   const wantSecrets = !!(want.logins || want.cookies);
   // La clé d'Arc (donc la demande de macOS) n'est lue que s'il y a bien un profil à reprendre.
   const key = wantSecrets && mine.length ? await readKey() : null;

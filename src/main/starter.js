@@ -4,10 +4,10 @@
 // ici, jamais lues d'ailleurs. Posé une seule fois : supprimé, il ne revient pas.
 const { store, uid } = require('./store');
 
-const REPO_URL = 'https://github.com/amadoubaui/orbe';
-// [libellé, adresse, page interne d'Orbe ?]
+const REPO_URL = 'https://github.com/electroheadfx/orbx';
+// [libellé, adresse, page interne d'Orbx ?]
 const PAGES = [
-  ['help.shortcuts', 'orbe://app/shortcuts.html', true],
+  ['help.shortcuts', 'orbx://app/shortcuts.html', true],
   ['help.center', REPO_URL + '#readme', false],
   ['help.whatsNew', REPO_URL + '/releases', false],
 ];

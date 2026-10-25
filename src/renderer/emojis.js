@@ -1,5 +1,5 @@
 // Émojis du sélecteur d'icônes (Espace, dossier, onglet) : par rubrique, avec des
-// mots-clés en français et en anglais pour la recherche. Liste écrite pour Orbe.
+// mots-clés en français et en anglais pour la recherche. Liste écrite pour Orbx.
 // Une ligne : « émoji|mots français|english words ».
 const EMOJI_GROUPS = [
   ['usual', `

@@ -11,12 +11,12 @@
 // Les scripts de contenu ne sont pas concernés : Chrome ne leur donne que
 // `runtime`, `storage` et `i18n`, qu'Electron fournit déjà.
 //
-// Écrit pour Orbe à partir de la documentation publique des API d'extension de
+// Écrit pour Orbx à partir de la documentation publique des API d'extension de
 // Chrome ; aucun code tiers.
 const { contextBridge, ipcRenderer } = require('electron');
 
-const CHANNEL = 'orbe-ext';
-const EVENT = 'orbe-ext-event';
+const CHANNEL = 'orbx-ext';
+const EVENT = 'orbx-ext-event';
 
 // Dans un service worker, le script de préchargement n'a pas de `location`.
 const inWorker = typeof location === 'undefined';
@@ -27,8 +27,8 @@ const inExtensionPage = !inWorker && location.protocol === 'chrome-extension:';
 function install(invoke, listen) {
   const main = globalThis.chrome;
   // Service worker d'un site web, ou page sans API d'extension : rien à faire.
-  if (!main || !main.runtime || !main.runtime.id || main.__orbe) return;
-  Object.defineProperty(main, '__orbe', { value: 1 });
+  if (!main || !main.runtime || !main.runtime.id || main.__orbx) return;
+  Object.defineProperty(main, '__orbx', { value: 1 });
   // Chromium expose aussi `browser`, objet distinct de `chrome` : des
   // extensions le préfèrent (`self.browser || self.chrome`). Les deux sont complétés.
   const roots = [main];
@@ -133,7 +133,7 @@ function install(invoke, listen) {
 
   // chrome.storage. Deux manques d'Electron sont comblés ici :
   //   - `sync` est annoncé mais refusé (« not available in this instance »).
-  //     Orbe n'a pas de compte : `sync` devient une zone locale à part, rangée
+  //     Orbx n'a pas de compte : `sync` devient une zone locale à part, rangée
   //     dans `storage.local` sous un préfixe que `local` ne laisse pas voir ;
   //   - `onChanged` n'arrive jamais dans un service worker (il arrive bien
   //     dans les pages et les scripts de contenu). Le service worker calcule
@@ -149,8 +149,8 @@ function install(invoke, listen) {
     const hooks = h || {};
     const root = typeof chrome === 'undefined' ? null : chrome;
     const storage = root && root.storage;
-    if (!storage || !storage.local || typeof storage.local.get !== 'function' || storage.__orbe) return;
-    try { Object.defineProperty(storage, '__orbe', { value: 1 }); } catch { return; }
+    if (!storage || !storage.local || typeof storage.local.get !== 'function' || storage.__orbx) return;
+    try { Object.defineProperty(storage, '__orbx', { value: 1 }); } catch { return; }
     // runtime.lastError le temps d'un rappel (voir `failWith`, plus haut).
     const failWith = (err, cb) => {
       const value = { message: String((err && err.message) || err) };
@@ -165,7 +165,7 @@ function install(invoke, listen) {
       if (o.QUOTA_BYTES) out.QUOTA_BYTES = o.QUOTA_BYTES;
       return out;
     };
-    const PREFIX = '__orbe_sync__/';
+    const PREFIX = '__orbx_sync__/';
     const worker = typeof window === 'undefined';
     const localArea = storage.local;
     const syncArea = storage.sync;
@@ -362,13 +362,13 @@ function install(invoke, listen) {
     define('permissions', { methods: ['contains', 'getAll', 'request', 'remove'], events: ['onAdded', 'onRemoved'] });
 
     define('tabs', {
-      // Le zoom d'Electron ne connaît pas les onglets d'Orbe : il est refait ici.
+      // Le zoom d'Electron ne connaît pas les onglets d'Orbx : il est refait ici.
       methods: ['query', 'get', 'getCurrent', 'create', 'remove', 'update', 'reload', 'duplicate', 'goBack', 'goForward', 'captureVisibleTab', 'detectLanguage', 'getZoom', 'setZoom', 'getZoomSettings', 'setZoomSettings', 'group', 'ungroup'],
       events: ['onCreated', 'onRemoved', 'onUpdated', 'onActivated', 'onReplaced'],
       consts: { TAB_ID_NONE: -1, MAX_CAPTURE_VISIBLE_TAB_CALLS_PER_SECOND: 2 },
     });
 
-    // « activeTab » : quand Orbe a dû donner à l'extension l'accès à tous les
+    // « activeTab » : quand Orbx a dû donner à l'extension l'accès à tous les
     // sites pour que ses injections fonctionnent (src/main/ext-access.js), le
     // processus principal vérifie d'abord que l'onglet visé lui est ouvert.
     if (declared.has('activeTab')) {
@@ -386,17 +386,17 @@ function install(invoke, listen) {
       };
       const scriptingTab = (args) => (args[0] && args[0].target ? args[0].target.tabId : undefined);
       const tabsTab = (args) => (typeof args[0] === 'number' ? args[0] : undefined);
-      if (c.scripting && !c.scripting.__orbe) {
+      if (c.scripting && !c.scripting.__orbx) {
         for (const name of ['executeScript', 'insertCSS', 'removeCSS']) guard(c.scripting, name, scriptingTab);
-        try { Object.defineProperty(c.scripting, '__orbe', { value: 1 }); } catch {}
+        try { Object.defineProperty(c.scripting, '__orbx', { value: 1 }); } catch {}
       }
-      if (c.tabs && !c.tabs.__orbeGuard) {
+      if (c.tabs && !c.tabs.__orbxGuard) {
         for (const name of ['executeScript', 'insertCSS', 'removeCSS']) guard(c.tabs, name, tabsTab);
-        try { Object.defineProperty(c.tabs, '__orbeGuard', { value: 1 }); } catch {}
+        try { Object.defineProperty(c.tabs, '__orbxGuard', { value: 1 }); } catch {}
       }
     }
 
-    // Panneau latéral : la vue est tenue par Orbe (src/main/ext-panel.js).
+    // Panneau latéral : la vue est tenue par Orbx (src/main/ext-panel.js).
     if (declared.has('sidePanel')) {
       define('sidePanel', {
         methods: ['setOptions', 'getOptions', 'open', 'close', 'setPanelBehavior', 'getPanelBehavior', 'getLayout'],
@@ -407,7 +407,7 @@ function install(invoke, listen) {
       // panneau latéral. Les siennes sont requalifiées, ou ajoutées.
       const runtime = c.runtime;
       const nativeContexts = runtime && typeof runtime.getContexts === 'function' ? runtime.getContexts.bind(runtime) : null;
-      if (runtime && !runtime.__orbeContexts) {
+      if (runtime && !runtime.__orbxContexts) {
         const list = async (filter) => {
           const f = filter && typeof filter === 'object' ? filter : {};
           const { contextTypes, ...rest } = f;
@@ -432,7 +432,7 @@ function install(invoke, listen) {
               return undefined;
             },
           });
-          Object.defineProperty(runtime, '__orbeContexts', { value: 1 });
+          Object.defineProperty(runtime, '__orbxContexts', { value: 1 });
         } catch {}
       }
     }
@@ -442,7 +442,7 @@ function install(invoke, listen) {
       define('debugger', { methods: ['attach', 'detach', 'sendCommand', 'getTargets'], events: ['onEvent', 'onDetach'], consts: { DetachReason: { TARGET_CLOSED: 'target_closed', CANCELED_BY_USER: 'canceled_by_user' }, TargetInfoType: { PAGE: 'page', BACKGROUND_PAGE: 'background_page', WORKER: 'worker', OTHER: 'other' } } });
     }
 
-    // Groupes d'onglets : tenus en mémoire, sans dessin dans Orbe (ext-more.js).
+    // Groupes d'onglets : tenus en mémoire, sans dessin dans Orbx (ext-more.js).
     if (declared.has('tabGroups')) {
       define('tabGroups', {
         methods: ['get', 'query', 'update', 'move'],
@@ -451,7 +451,7 @@ function install(invoke, listen) {
       });
     }
 
-    // Connexion à un service tiers : petite fenêtre d'Orbe (ext-more.js).
+    // Connexion à un service tiers : petite fenêtre d'Orbx (ext-more.js).
     if (declared.has('identity')) {
       const identity = define('identity', { methods: ['launchWebAuthFlow', 'getAuthToken', 'getProfileUserInfo', 'getAccounts', 'removeCachedAuthToken', 'clearAllCachedAuthTokens'], events: ['onSignInChanged'] });
       if (identity) identity.getRedirectURL = (path) => `https://${main.runtime.id}.chromiumapp.org/${String(path == null ? '' : path).replace(/^\//, '')}`;
@@ -473,7 +473,7 @@ function install(invoke, listen) {
       // create() rend l'identifiant tout de suite, sans attendre le processus principal.
       menus.create = (props, cb) => {
         const p = { ...(props || {}) };
-        if (p.id == null) p.id = `orbe-menu-${++menuSeq}`;
+        if (p.id == null) p.id = `orbx-menu-${++menuSeq}`;
         if (typeof p.onclick === 'function') menuClicks.set(String(p.id), p.onclick);
         const done = call('contextMenus.create', [p]);
         if (typeof cb === 'function') {
@@ -505,7 +505,7 @@ function install(invoke, listen) {
     define('commands', { methods: ['getAll'], events: ['onCommand'] });
 
     // Bouton de l'extension : `action` (V3), `browserAction` / `pageAction` (V2).
-    // L'état vit dans le processus principal, où Orbe le lit pour dessiner le bouton.
+    // L'état vit dans le processus principal, où Orbx le lit pour dessiner le bouton.
     const ACTION = ['setTitle', 'getTitle', 'setBadgeText', 'getBadgeText', 'setBadgeBackgroundColor', 'getBadgeBackgroundColor', 'setBadgeTextColor', 'getBadgeTextColor', 'setPopup', 'getPopup', 'enable', 'disable', 'isEnabled', 'openPopup', 'getUserSettings'];
     for (const ns of ['action', 'browserAction', 'pageAction']) {
       const key = ns === 'action' ? 'action' : ns === 'browserAction' ? 'browser_action' : 'page_action';
@@ -550,6 +550,6 @@ if (inWorker || inExtensionPage) {
       ],
     });
   } catch (err) {
-    console.error('[orbe] API d’extension indisponibles :', err);
+    console.error('[orbx] API d’extension indisponibles :', err);
   }
 }

@@ -5,7 +5,7 @@
 // Electron 44 ne dit pas à `setWindowOpenHandler` si l'ouverture vient d'un
 // geste (ses `details` : url, frameName, features, disposition, referrer,
 // postBody — rien sur l'activation), et le bloqueur de Chrome n'existe pas dans
-// Electron. Orbe refait donc le raisonnement de Chromium avec ce que le
+// Electron. Orbx refait donc le raisonnement de Chromium avec ce que le
 // processus principal observe lui-même :
 //  - un « geste » est une vraie entrée reçue par la page : bouton de souris
 //    pressé ou relâché, touche enfoncée (hors touches mortes et Échap). Ces

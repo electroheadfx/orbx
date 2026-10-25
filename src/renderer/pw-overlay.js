@@ -75,7 +75,7 @@ $('save-later').onclick = () => answer('later');
 // Entrée dans le champ valide un nouvel enregistrement, jamais un remplacement.
 $('save-user').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !updating) answer('save'); });
 
-// Choix au clavier, relayé par Orbe depuis la page.
+// Choix au clavier, relayé par Orbx depuis la page.
 let keyIndex = -1;
 function onKey(key) {
   const rows = [...document.querySelectorAll('#pick .acc')];

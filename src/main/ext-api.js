@@ -2,7 +2,7 @@
 //
 // Electron charge les extensions mais n'implémente qu'une partie des API de
 // Chrome (`runtime`, `storage`, `scripting`, `alarms`, un peu de `tabs`…). Ce
-// module fournit le reste, branché sur le modèle d'Orbe : `permissions`,
+// module fournit le reste, branché sur le modèle d'Orbx : `permissions`,
 // `tabs`, `windows`, `cookies`, `contextMenus`, `action`, `webNavigation`,
 // `notifications`, `fontSettings`, `commands`. D'autres modules en ajoutent
 // (`extend`) : ext-panel.js (`sidePanel`), ext-debug.js (`debugger`), ext-more.js
@@ -18,17 +18,17 @@
 //   - les événements (`tabs.onUpdated`…) ne partent que vers les contextes qui
 //     les écoutent ; un service worker endormi est réveillé pour les recevoir.
 //
-// Ce module ne connaît pas les fenêtres d'Orbe : il passe par `host`, que
+// Ce module ne connaît pas les fenêtres d'Orbx : il passe par `host`, que
 // src/main/ext-host.js remplit (onglets, fenêtres, fenêtre surgissante).
 //
-// Écrit pour Orbe à partir de la documentation publique des API d'extension de
+// Écrit pour Orbx à partir de la documentation publique des API d'extension de
 // Chrome et de celle d'Electron ; aucun code tiers.
 const { ipcMain, nativeImage, Notification } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
-const CHANNEL = 'orbe-ext';
-const EVENT = 'orbe-ext-event';
+const CHANNEL = 'orbx-ext';
+const EVENT = 'orbx-ext-event';
 const PRELOAD = path.join(__dirname, '../preload/ext.js');
 const HOST_PATTERN = /^(<all_urls>|(\*|https?|wss?|ftp|file|chrome-extension):\/\/)/;
 
@@ -45,7 +45,7 @@ const host = {
   confirmPermissions: async () => false, // (extension, [noms]) -> bool
   groupOf: () => -1, // (session, identifiant d'onglet) -> groupe d'onglets (ext-more.js)
   shortcutOf: () => '', // (session, idExtension, nom de commande) -> raccourci affiché
-  manifestOf: (ext) => ext.manifest || {}, // manifeste d'origine, si Orbe l'a complété (ext-access.js)
+  manifestOf: (ext) => ext.manifest || {}, // manifeste d'origine, si Orbx l'a complété (ext-access.js)
 };
 const hooks = { actionChanged: () => {} };
 
@@ -669,7 +669,7 @@ const METHODS = {
     return windowObject(ctx, w, !!(info && info.populate));
   },
   'windows.getAll': (ctx, [info]) => host.windows().map((w) => windowObject(ctx, w, !!(info && info.populate))),
-  // Orbe n'ouvre pas de fenêtre pour une extension : les adresses demandées
+  // Orbx n'ouvre pas de fenêtre pour une extension : les adresses demandées
   // s'ouvrent en onglets dans la fenêtre courante.
   async 'windows.create'(ctx, [props]) {
     const p = props || {};
@@ -684,7 +684,7 @@ const METHODS = {
     return windowObject(ctx, w, false);
   },
   'windows.remove'() {
-    throw fail('Une extension ne peut pas fermer une fenêtre d’Orbe.');
+    throw fail('Une extension ne peut pas fermer une fenêtre d’Orbx.');
   },
 
   // cookies -------------------------------------------------------------------
@@ -799,7 +799,7 @@ const METHODS = {
   // notifications ---------------------------------------------------------------
   'notifications.create'(ctx, args) {
     need(ctx, 'notifications');
-    const [id, options] = typeof args[0] === 'string' ? [args[0], args[1]] : [`orbe-${Date.now().toString(36)}-${ctx.st.notifications.size}`, args[0]];
+    const [id, options] = typeof args[0] === 'string' ? [args[0], args[1]] : [`orbx-${Date.now().toString(36)}-${ctx.st.notifications.size}`, args[0]];
     const o = options || {};
     const old = ctx.st.notifications.get(id);
     if (old) old.close();
@@ -857,12 +857,12 @@ async function invoke(ses, id, wc, frame, name, args) {
     const ctx = context(ses, id, wc);
     if (!ctx) throw fail('Extension inconnue');
     const fn = Object.hasOwn(METHODS, String(name)) ? METHODS[name] : null;
-    if (!fn) throw fail(`API non prise en charge par Orbe : ${name}`);
-    if (process.env.ORBE_EXT_TRACE && name[0] !== '_') console.log('[appel]', id.slice(0, 4), name, JSON.stringify(args).slice(0, 200));
+    if (!fn) throw fail(`API non prise en charge par Orbx : ${name}`);
+    if (process.env.ORBX_EXT_TRACE && name[0] !== '_') console.log('[appel]', id.slice(0, 4), name, JSON.stringify(args).slice(0, 200));
     const value = await fn(ctx, Array.isArray(args) ? args : [], { frame });
     return { value };
   } catch (err) {
-    if (process.env.ORBE_EXT_TRACE) console.log('[refus]', id.slice(0, 4), name, String((err && err.message) || err));
+    if (process.env.ORBX_EXT_TRACE) console.log('[refus]', id.slice(0, 4), name, String((err && err.message) || err));
     return { error: String((err && err.message) || err) };
   }
 }
@@ -887,8 +887,8 @@ function hookWorker(ses, sw) {
 
 // Envoie un événement à tous les contextes de l'extension qui l'écoutent.
 function emit(ses, id, name, args) {
-  // ORBE_EXT_TRACE=1 : journal des appels et des événements, pour diagnostiquer une extension.
-  if (process.env.ORBE_EXT_TRACE) console.log('[événement]', id.slice(0, 4), name);
+  // ORBX_EXT_TRACE=1 : journal des appels et des événements, pour diagnostiquer une extension.
+  if (process.env.ORBX_EXT_TRACE) console.log('[événement]', id.slice(0, 4), name);
   const map = states.get(ses);
   const st = map && map.get(id);
   if (!st) return;
@@ -900,7 +900,7 @@ function emit(ses, id, name, args) {
   }
   if (st.worker.has(name)) { toWorker(ses, id, name, args); return; }
   // Service worker jamais lancé depuis le chargement de l'extension (démarrage
-  // d'Orbe, extension rechargée) : ce qu'il écoute n'est pas encore connu. On le
+  // d'Orbx, extension rechargée) : ce qu'il écoute n'est pas encore connu. On le
   // démarre, et l'événement part s'il s'y abonne.
   if (st.workerSeen || st.waking === undefined) {
     if (st.workerSeen) return;
@@ -1043,8 +1043,8 @@ const equipped = new WeakSet();
 function equip(ses) {
   if (!ses || !attached.has(ses) || equipped.has(ses)) return;
   equipped.add(ses);
-  ses.registerPreloadScript({ type: 'frame', filePath: PRELOAD, id: 'orbe-ext-frame' });
-  ses.registerPreloadScript({ type: 'service-worker', filePath: PRELOAD, id: 'orbe-ext-worker' });
+  ses.registerPreloadScript({ type: 'frame', filePath: PRELOAD, id: 'orbx-ext-frame' });
+  ses.registerPreloadScript({ type: 'service-worker', filePath: PRELOAD, id: 'orbx-ext-worker' });
 }
 
 // Équipe une session de profil. Sans effet la seconde fois.

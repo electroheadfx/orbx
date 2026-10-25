@@ -11,7 +11,7 @@ const path = require('path');
 const platform = require('./platform');
 const boosts = require('./boosts');
 const { store } = require('./store');
-const { live, trusted, UI_PRELOAD, INTERNAL, OrbeWindow, applyBoosts } = require('./window');
+const { live, trusted, UI_PRELOAD, INTERNAL, OrbxWindow, applyBoosts } = require('./window');
 
 let win = null;
 let target = null; // webContents de l'onglet d'où l'éditeur a été ouvert
@@ -86,7 +86,7 @@ const mine = (a) => !!host && named(a) === host;
 async function exportTo(w, hosts) {
   const data = boosts.exportData(hosts);
   if (!data.boosts.length) return { ok: false };
-  const name = data.boosts.length === 1 ? `boost-${data.boosts[0].host.replace(/[^a-z0-9.-]/gi, '_')}.json` : 'boosts-orbe.json';
+  const name = data.boosts.length === 1 ? `boost-${data.boosts[0].host.replace(/[^a-z0-9.-]/gi, '_')}.json` : 'boosts-orbx.json';
   const r = await dialog.showSaveDialog(w || undefined, { defaultPath: name, filters: [{ name: 'JSON', extensions: ['json'] }] });
   if (!r || r.canceled || !r.filePath) return { ok: false };
   await fs.promises.writeFile(r.filePath, JSON.stringify(data, null, 2));
@@ -118,7 +118,7 @@ async function action(name, a, sender) {
       if (!mine(a)) return null; // l'éditeur a été pointé ailleurs pendant la relecture
       boosts.set(host, patch);
       await applyHost(host);
-      OrbeWindow.pushAll();
+      OrbxWindow.pushAll();
       return state();
     }
     case 'boost:zap': {
@@ -131,7 +131,7 @@ async function action(name, a, sender) {
       return state();
     }
     // « Tout réinitialiser » : le Boost du site est retiré en entier.
-    case 'boost:reset': if (!mine(a)) return null; boosts.remove(host); await applyHost(host); OrbeWindow.pushAll(); return state();
+    case 'boost:reset': if (!mine(a)) return null; boosts.remove(host); await applyHost(host); OrbxWindow.pushAll(); return state();
     // Le script d'un Boost ne s'exécute (ou ne disparaît) qu'au chargement de la page.
     case 'boost:reload': { if (!mine(a)) return null; const wc = page(); if (wc) wc.reload(); return state(); }
     case 'boost:settings': hooks.openSettings(); return null;
@@ -143,7 +143,7 @@ async function action(name, a, sender) {
       if (a.enabled === true && boosts.get(site).review) return { ...listState(), review: boosts.reviewOf(site) };
       boosts.set(site, { enabled: a.enabled === true });
       await applyHost(site);
-      OrbeWindow.pushAll();
+      OrbxWindow.pushAll();
       return listState();
     }
     // Contenu d'un Boost importé, pour la relecture (liste, ou éditeur de ce site).
@@ -154,12 +154,12 @@ async function action(name, a, sender) {
       if ((host && site !== host) || !boosts.has(site)) return null;
       boosts.approve(site);
       await applyHost(site);
-      OrbeWindow.pushAll();
+      OrbxWindow.pushAll();
       return host ? state() : listState();
     }
     case 'boost:delete': {
       const site = named(a);
-      if (boosts.remove(site)) { await applyHost(site); OrbeWindow.pushAll(); }
+      if (boosts.remove(site)) { await applyHost(site); OrbxWindow.pushAll(); }
       return listState();
     }
     // Depuis la liste : ouvrir l'éditeur d'un Boost existant (l'onglet qui affiche ce site, s'il y en a un, sert d'aperçu).

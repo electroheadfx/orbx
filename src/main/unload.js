@@ -1,5 +1,5 @@
 // « Quitter la page ? » : quand une page demande à ne pas être quittée
-// (`beforeunload`), Orbe pose la question au lieu de passer outre.
+// (`beforeunload`), Orbx pose la question au lieu de passer outre.
 //
 // Chromium n'émet `will-prevent-unload` que si l'utilisateur a déjà agi dans la
 // page : une page jamais touchée ne peut retenir personne. La question est une
@@ -40,7 +40,7 @@ function confirm(parent, wc) {
       defaultId: 1,
       cancelId: 1,
     });
-  } catch (err) { console.error('[orbe] beforeunload', err.message); }
+  } catch (err) { console.error('[orbx] beforeunload', err.message); }
   // La page reste : Chromium ne doit pas la fermer d'office si elle tarde à en accuser
   // réception (voir `shield`). Vaut pour tous ceux qui posent la question (onglets, aperçus,
   // petites fenêtres).
@@ -58,9 +58,9 @@ function confirm(parent, wc) {
 // travail avec. De même avant la question : une page occupée plus d'une seconde
 // est fermée sans avoir pu s'y opposer.
 // Chromium n'applique pas ce délai à une page dont le débogueur est attaché
-// (elle peut être arrêtée sur un point d'arrêt). Orbe attache donc le débogueur
+// (elle peut être arrêtée sur un point d'arrêt). Orbx attache donc le débogueur
 // d'Electron, sans rien lui demander, le temps de la consultation : c'est alors
-// Orbe qui décide quand une page qui ne répond pas cesse de retenir (4 s).
+// Orbx qui décide quand une page qui ne répond pas cesse de retenir (4 s).
 // Le bouclier tombe une fois que la page a répondu à un aller-retour (elle a
 // donc accusé réception), ou au bout de dix secondes.
 const SETTLE = 1500;
@@ -79,7 +79,7 @@ function shield(wc) {
   let g = guards.get(wc);
   if (!g) { g = { mine: false, seq: 0 }; guards.set(wc, g); }
   // Débogueur déjà pris (extension, capture de page entière) : la page est déjà protégée.
-  try { if (!wc.debugger.isAttached()) { wc.debugger.attach(); g.mine = true; } } catch (err) { console.error('[orbe] bouclier beforeunload', err.message); }
+  try { if (!wc.debugger.isAttached()) { wc.debugger.attach(); g.mine = true; } } catch (err) { console.error('[orbx] bouclier beforeunload', err.message); }
   g.seq += 1;
   const seq = g.seq;
   const drop = () => { if (guards.get(wc) === g && g.seq === seq) unshield(wc); };

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; media-src 'self'">
-<title>Orbe</title>
+<title>Orbx</title>
 <link rel="stylesheet" href="base.css">
 <link rel="stylesheet" href="page.css">
 <style>
@@ -21,7 +21,7 @@ h1 { font-size: 28px; margin-bottom: 8px; }
 .sub.wrap { white-space: normal; display: block; margin-top: 4px; line-height: 1.45; }
 .card + .card { margin-top: 12px; }
 
-/* L'orbe : anneau blanc sur un fond qui tourne lentement, halo de couleurs à l'ouverture. */
+/* L'orbx : anneau blanc sur un fond qui tourne lentement, halo de couleurs à l'ouverture. */
 .orb { position: relative; width: 84px; height: 84px; margin: 4vh 0 30px; }
 .orb .halo { position: absolute; inset: -34px; border-radius: 50%; background: conic-gradient(from 0deg, #7c6cf0, #06b6d4, #10b981, #f59e0b, #ec4899, #7c6cf0); filter: blur(30px); opacity: 0.55; animation: halo-in 1400ms var(--ease-out, ease-out) both, turn 14s linear infinite; }
 .orb .mark { position: absolute; inset: 0; border-radius: 22px; background: linear-gradient(140deg, #8f7dff, #2a1f8f); display: grid; place-items: center; box-shadow: 0 10px 30px rgba(60, 40, 180, 0.35); animation: mark-in 700ms var(--ease-out, ease-out) both; }
@@ -61,14 +61,12 @@ h1 { font-size: 28px; margin-bottom: 8px; }
 #colors button[aria-pressed=true] { box-shadow: 0 0 0 3px var(--base), 0 0 0 5px var(--c); }
 #colors button:focus-visible { outline: 2px solid var(--fg); outline-offset: 4px; }
 
-.support { border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); }
-.support .line { align-items: center; padding: 14px; }
 .tips { display: grid; grid-template-columns: 1fr 1fr; }
 .tips .line { border-top: 0.5px solid var(--line); min-height: 48px; }
 .tips .line:nth-child(-n+2) { border-top: 0; }
 .tips .line:nth-child(odd) { border-right: 0.5px solid var(--line); }
 /* Premiers gestes : chaque astuce a sa petite démonstration animée, dessinée ici (aucune
-   vidéo) : une fenêtre d'Orbe en réduction — barre latérale à gauche, page à droite.
+   vidéo) : une fenêtre d'Orbx en réduction — barre latérale à gauche, page à droite.
    Boucles de 4,2 s, transformations et opacité seulement ; figées par « Réduire les animations ». */
 .demo { position: relative; flex: none; width: 64px; height: 42px; border-radius: 7px; overflow: hidden; background: color-mix(in srgb, var(--accent) 16%, var(--base)); box-shadow: 0 0 0 0.5px var(--line); }
 .demo b { position: absolute; display: block; }
@@ -162,12 +160,6 @@ footer .btn { height: 32px; padding: 0 16px; }
       <div class="line"><i class="demo d-little" aria-hidden="true"><b class="pg"></b><b class="r r1"></b><b class="r r2"></b><b class="lw"></b></i><span class="grow" data-t="file.newLittle"></span><kbd data-key="newLittle">⌥⌘N</kbd></div>
     </div>
     <p style="margin:12px 0 14px"><button class="btn" data-cmd="shortcuts" data-t="help.shortcuts"></button></p>
-    <div class="card support">
-      <div class="line">
-        <div class="grow"><b data-t="support.title"></b><span class="sub wrap" data-t="support.body"></span></div>
-        <button class="btn primary" data-cmd="support" data-t="support.button"></button>
-      </div>
-    </div>
   </section>
 </main>
 <footer>

@@ -22,7 +22,7 @@ const searchUrl = (q) => engine().search.replace('%s', encodeURIComponent(q));
 function toUrl(input) {
   const s = input.trim();
   if (!s) return null;
-  if (/^(https?|orbe|file|about|view-source|chrome|data|blob):/i.test(s)) return s;
+  if (/^(https?|orbx|file|about|view-source|chrome|data|blob):/i.test(s)) return s;
   if (/\s/.test(s)) return null;
   if (/^localhost(:\d+)?(\/.*)?$/i.test(s) || /^\d{1,3}(\.\d{1,3}){3}(:\d+)?(\/.*)?$/.test(s)) return 'http://' + s;
   if (/^[^\s/?#]+\.[a-z]{2,}(:\d+)?([/?#].*)?$/i.test(s)) return 'https://' + s;

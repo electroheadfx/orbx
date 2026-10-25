@@ -7,7 +7,7 @@
 // et ne voyagent que comme du texte (la coque les pose par `textContent`) ; la
 // pochette n'est acceptée qu'en http(s) ou `data:image`, téléchargée dans la
 // session de la page elle-même (ses témoins, son profil, son bloqueur), bornée
-// en poids, puis redessinée en petit par Orbe : la coque ne reçoit jamais
+// en poids, puis redessinée en petit par Orbx : la coque ne reçoit jamais
 // l'adresse de la page, seulement l'image recodée.
 //
 // Précédent / suivant : ce sont les gestionnaires que la page a elle-même
@@ -38,7 +38,7 @@ const ACTIONS = new Set(['toggle', 'prev', 'next', 'back', 'forward', 'seek', 'c
 const attached = new WeakSet();
 // Clé du document affiché par chaque onglet : elle ouvre la table des gestionnaires
 // `mediaSession` que src/preload/media.js garde hors de portée de la page.
-const KEY_CHANNEL = 'orbe:media-key';
+const KEY_CHANNEL = 'orbx:media-key';
 const keys = new WeakMap(); // webContents -> clé
 let listening = false;
 const keyOf = (wc) => keys.get(wc) || '';
@@ -270,7 +270,7 @@ function make(env) {
 function attach(ses) {
   if (!ses || attached.has(ses)) return;
   attached.add(ses);
-  ses.registerPreloadScript({ type: 'frame', filePath: PRELOAD, id: 'orbe-media' });
+  ses.registerPreloadScript({ type: 'frame', filePath: PRELOAD, id: 'orbx-media' });
   if (listening) return;
   listening = true;
   // La clé n'est acceptée que du cadre principal, et seulement si elle en a la forme.

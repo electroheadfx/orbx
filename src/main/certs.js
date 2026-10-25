@@ -2,12 +2,12 @@
 // de la connexion dans la pastille d'adresse, résumé du certificat.
 //
 // Sécurité :
-//  - un certificat refusé par Chromium reste refusé : Orbe n'accepte rien de
-//    lui-même. La page d'avertissement est une feuille d'Orbe (sheets.js), pas
+//  - un certificat refusé par Chromium reste refusé : Orbx n'accepte rien de
+//    lui-même. La page d'avertissement est une feuille d'Orbx (sheets.js), pas
 //    une page web : le site ne peut ni l'imiter de l'intérieur ni la fermer ;
 //  - « Continuer quand même » vaut pour un hôte (avec son port), pour CE
 //    certificat (empreinte), dans la session en cours : jamais écrit sur disque,
-//    oublié à la fermeture d'Orbe ; un autre certificat redemande ;
+//    oublié à la fermeture d'Orbx ; un autre certificat redemande ;
 //  - le choix n'est pas proposé pour les refus sans appel (certificat révoqué,
 //    invalide ou incohérent, transparence exigée, interception connue) ni pour
 //    un site qui impose HTTPS (HSTS), reconnu par une sonde locale du réseau de
@@ -150,13 +150,13 @@ function failed(wc, { code, url }, actions) {
       allow(ses, url, mine.cert.fingerprint);
       actions.load(url);
     } else if (choice === 'back') actions.back();
-  })().catch((err2) => console.error('[orbe] certificat', err2));
+  })().catch((err2) => console.error('[orbx] certificat', err2));
   return true;
 }
 
 // État de la connexion pour la pastille d'adresse :
 // 'secure' (https), 'insecure' (http), 'broken' (https avec certificat refusé,
-// accepté ou non), 'local' (cette machine), '' (pages d'Orbe, fichiers…).
+// accepté ou non), 'local' (cette machine), '' (pages d'Orbx, fichiers…).
 function state(wc, url) {
   let u;
   try { u = new URL(url); } catch { return ''; }

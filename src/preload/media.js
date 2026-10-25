@@ -2,14 +2,14 @@
 // par `navigator.mediaSession.setActionHandler` (piste précédente, suivante…).
 //
 // Chromium ne laisse pas relire ces gestionnaires, et Electron n'ouvre pas la
-// session multimédia du navigateur : pour que les boutons du lecteur d'Orbe
+// session multimédia du navigateur : pour que les boutons du lecteur d'Orbx
 // (src/main/media.js) déclenchent ceux du site, on les note au passage. Le script
 // tourne dans le monde de la page, avant ses scripts, cadre principal des pages
 // web seulement.
 //
 // Rien n'est posé sur un objet de la page : la table vit dans une fermeture, et
 // `setActionHandler` est remplacé par un mandataire de la fonction d'origine (même
-// `name`, même `length`, texte « [native code] »). Orbe atteint la table en
+// `name`, même `length`, texte « [native code] »). Orbx atteint la table en
 // appelant cette même fonction avec une clé tirée au hasard pour ce document,
 // que seuls ce script et le processus principal connaissent : `(clé, null)` rend
 // la liste des actions déclarées, `(clé, 'nexttrack')` appelle le gestionnaire.
@@ -17,7 +17,7 @@
 // emprunterait la fonction n'y lit rien et n'y écrit rien.
 const { webFrame, ipcRenderer } = require('electron');
 
-const CHANNEL = 'orbe:media-key';
+const CHANNEL = 'orbx:media-key';
 
 const patch = (key) => `(() => { try {
   const ms = navigator.mediaSession;

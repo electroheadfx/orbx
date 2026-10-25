@@ -6,7 +6,7 @@
 //  - le nom du fichier proposé par le site est réduit à un simple nom (jamais un
 //    chemin) et ne remplace jamais un fichier existant ;
 //  - un fichier exécutable n'est jamais ouvert tout seul : il est signalé, et
-//    son ouverture depuis Orbe demande une confirmation qui nomme sa provenance ;
+//    son ouverture depuis Orbx demande une confirmation qui nomme sa provenance ;
 //  - seuls les PDF sont ouverts automatiquement, dans la visionneuse de Chromium
 //    (bac à sable), jamais par une application du système. « PDF » se juge sur le
 //    fichier enregistré : extension `.pdf` ET contenu qui commence par `%PDF-`.
@@ -19,8 +19,8 @@
 //    ouvert, à l'endroit où il a réellement été écrit (une extension peut avoir
 //    changé son nom en route). Si la marque ne peut pas être posée, le fichier est
 //    tenu pour douteux : question avant de l'ouvrir, de le copier, de le partager
-//    ou de le glisser hors d'Orbe, et la Bibliothèque le signale ;
-//  - une image n'est décodée par Orbe (« Copier ») que si elle est petite, marquée
+//    ou de le glisser hors d'Orbx, et la Bibliothèque le signale ;
+//  - une image n'est décodée par Orbx (« Copier ») que si elle est petite, marquée
 //    et sans risque connu ; sinon c'est le fichier qui est copié, sans être lu.
 const { app, clipboard, ClipboardItem, dialog, nativeImage, shell, BaseWindow, Menu } = require('electron');
 const path = require('path');
@@ -36,7 +36,7 @@ const DANGEROUS = new Set(['dmg', 'pkg', 'mpkg', 'app', 'command', 'tool', 'term
   'inetloc', 'fileloc', 'mobileconfig', 'prefpane', 'xip']);
 
 const env = {
-  // Fenêtre Orbe (BaseWindow) de la page qui télécharge, pour y attacher les boîtes de dialogue.
+  // Fenêtre Orbx (BaseWindow) de la page qui télécharge, pour y attacher les boîtes de dialogue.
   ownerWindow: () => null,
   profileSession: () => null, // identifiant de profil -> session
   openInTab: () => false, // (adresse, webContents d'origine) -> ouvre un onglet
@@ -61,7 +61,7 @@ const env = {
     menu.popup({ ...(parent ? { window: parent } : {}), callback: () => setTimeout(resolve, 30) });
   }),
 };
-const items = new Map(); // identifiant -> DownloadItem en cours (cette exécution d'Orbe)
+const items = new Map(); // identifiant -> DownloadItem en cours (cette exécution d'Orbx)
 const resuming = new Map(); // chemin du fichier -> enregistrement dont la reprise est demandée
 const profiles = new WeakMap(); // session -> identifiant de profil
 const t = (key, vars) => store.t(key, null, vars);
@@ -84,7 +84,7 @@ function isPdfFile(file) {
 }
 // Exécutable ? Jugé sur le fichier tel qu'il est sur disque, au moment de l'ouvrir.
 const dangerNow = (d) => !!d.danger || isDangerous(d.path) || isDangerous(d.name);
-// Téléchargements lancés par Orbe à la demande de l'utilisateur : id webContents -> adresses attendues.
+// Téléchargements lancés par Orbx à la demande de l'utilisateur : id webContents -> adresses attendues.
 const expected = new Map();
 function saveFrom(wc, url) {
   if (!wc || wc.isDestroyed() || typeof url !== 'string' || !url) return;
@@ -132,7 +132,7 @@ const volatileRecords = new Set(); // navigation privée : jamais écrits sur di
 function quarantine(file, url, withUrl = true) {
   return new Promise((resolve) => {
     if (process.platform === 'darwin') {
-      const value = `0081;${Math.floor(Date.now() / 1000).toString(16)};Orbe;${require('crypto').randomUUID().toUpperCase()}`;
+      const value = `0081;${Math.floor(Date.now() / 1000).toString(16)};Orbx;${require('crypto').randomUUID().toUpperCase()}`;
       require('child_process').execFile('/usr/bin/xattr', ['-w', 'com.apple.quarantine', value, file], { timeout: 5000 }, (err) => resolve(!err));
     } else if (process.platform === 'win32') {
       const host = withUrl && /^https?:/i.test(url || '') ? `HostUrl=${String(url).replace(/[\r\n]/g, '')}\r\n` : '';
@@ -190,7 +190,7 @@ async function cleared(d, parent) {
   if (yes) accepted.add(d);
   return yes;
 }
-// Glisser hors d'Orbe ne peut pas attendre une réponse : permis seulement si la
+// Glisser hors d'Orbx ne peut pas attendre une réponse : permis seulement si la
 // marque est posée, ou si l'utilisateur a déjà accepté ce fichier.
 const dragAllowed = (d) => !unmarked(d) || accepted.has(d);
 
@@ -270,7 +270,7 @@ function track(d, item, wc, { persist, hooks }) {
     d.total = item.getTotalBytes();
     d.paused = item.isPaused();
     d.canResume = item.canResume();
-    // De quoi reprendre plus tard, même après un redémarrage d'Orbe.
+    // De quoi reprendre plus tard, même après un redémarrage d'Orbx.
     d.resume = { urlChain: item.getURLChain().slice(0, 20), mimeType: item.getMimeType(), eTag: item.getETag(), lastModified: item.getLastModifiedTime(), startTime: item.getStartTime() };
   };
   item.on('updated', (e, state) => {
@@ -324,7 +324,7 @@ function attach(ses, { persist, hooks }) {
       hooks.onDownload('progress', again, wc, item);
       return;
     }
-    // Demandé par Orbe pour l'utilisateur (« Enregistrer l'image ») : hors de la règle qui suit.
+    // Demandé par Orbx pour l'utilisateur (« Enregistrer l'image ») : hors de la règle qui suit.
     const wanted = wc && !wc.isDestroyed() ? expected.get(wc.id) : null;
     const mine = !!wanted && wanted.delete(item.getURL());
     // Téléchargements automatiques lancés par la page sans rien demander (permissions.downloadGate).
@@ -369,7 +369,7 @@ function fileSize(file) {
 }
 
 // Reprend un téléchargement : en pause, calé, ou interrompu (même par la
-// fermeture d'Orbe). Si la partie déjà reçue n'est plus là, il repart de zéro.
+// fermeture d'Orbx). Si la partie déjà reçue n'est plus là, il repart de zéro.
 function resume(d) {
   const item = items.get(d.id);
   if (item) {
@@ -390,7 +390,7 @@ function resume(d) {
       return 'continued';
     } catch (err) {
       resuming.delete(d.path);
-      console.error('[orbe] reprise du téléchargement', err.message);
+      console.error('[orbx] reprise du téléchargement', err.message);
     }
   }
   // Rien à continuer : nouveau téléchargement, l'ancienne ligne disparaît.
@@ -512,7 +512,7 @@ async function copyFile(d, { parent = null } = {}) {
     await clipboard.write([new ClipboardItem({ 'text/uri-list': pathToFileURL(d.path).href })]);
     return 'file';
   } catch (err) {
-    console.error('[orbe] copie du fichier', err.message);
+    console.error('[orbx] copie du fichier', err.message);
     return false;
   }
 }
@@ -530,7 +530,7 @@ function forget(d) {
 async function trash(d) {
   if (!d || items.has(d.id) || d.state === 'progressing') return false;
   if (d.path && fs.existsSync(d.path)) {
-    try { await env.trash(d.path); } catch (err) { console.error('[orbe] corbeille', err.message); return false; }
+    try { await env.trash(d.path); } catch (err) { console.error('[orbx] corbeille', err.message); return false; }
   }
   return forget(d);
 }

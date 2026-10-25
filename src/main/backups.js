@@ -1,8 +1,8 @@
 // Sauvegardes locales de l'état (Espaces, onglets, dossiers, réglages) : une copie
-// d'orbe.json à chaque lancement puis toutes les heures, rangée dans
+// d'orbx.json à chaque lancement puis toutes les heures, rangée dans
 // « sauvegardes ». Comme dans Arc, on garde les dix dernières du jour et une
 // par jour pour les dix jours d'avant. Aide → Dépannage → « Restaurer une
-// sauvegarde » remet l'une d'elles en place et relance Orbe.
+// sauvegarde » remet l'une d'elles en place et relance Orbx.
 // L'historique (history.json) n'en fait pas partie.
 //
 // Confidentialité et sécurité (voir docs/securite-navigation.md, « Sauvegardes ») :
@@ -16,7 +16,7 @@
 //  - restaurer ne rend jamais un droit retiré depuis : les autorisations des sites
 //    restent celles du moment, le JavaScript des Boosts n'est jamais rallumé, et un
 //    Boost supprimé ou modifié depuis revient désactivé, à relire (`plan`) ;
-//  - la restauration ne coupe pas Orbe d'un coup : elle demande un arrêt normal
+//  - la restauration ne coupe pas Orbx d'un coup : elle demande un arrêt normal
 //    (question des téléchargements en cours, pages qui retiennent, écritures en
 //    attente) et ne remplace l'état qu'une fois l'arrêt acquis (`will-quit`).
 const { app, dialog } = require('electron');
@@ -26,7 +26,7 @@ const { store } = require('./store');
 
 const TODAY_MAX = 10;
 const DAYS_MAX = 10;
-const NAME = /^orbe-(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})\.json$/;
+const NAME = /^orbx-(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})\.json$/;
 
 // Boîte de dialogue, arrêt et relance ; remplacés pendant les tests.
 const env = {
@@ -80,7 +80,7 @@ function snapshot(file = store.file, now = new Date(), { fresh = false } = {}) {
     const dir = dirOf(file);
     fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
     own(dir, 0o700);
-    const target = path.join(dir, `orbe-${stamp(now)}.json`);
+    const target = path.join(dir, `orbx-${stamp(now)}.json`);
     fs.writeFileSync(target, raw, { mode: 0o600 });
     own(target, 0o600);
     const names = fs.readdirSync(dir);
@@ -94,7 +94,7 @@ function snapshot(file = store.file, now = new Date(), { fresh = false } = {}) {
 
 // --- « Supprimé veut dire supprimé » -------------------------------------------------
 // Ce que l'utilisateur vient de supprimer exprès est retiré des sauvegardes déjà
-// faites, et de la copie de secours « orbe.json.bak ». `what` :
+// faites, et de la copie de secours « orbx.json.bak ». `what` :
 //   archiveAll, archiveIds, archiveUrls — l'archive (toute, ou ces entrées) ; avec
 //     elles partent les onglets des sauvegardes qui ont été fermés depuis ;
 //   historyAll, historyUrls — l'historique (copie de secours « history.json.bak »,
@@ -154,7 +154,7 @@ function rewrite(file, change) {
     fs.writeFileSync(file + '.tmp', JSON.stringify(data), { mode: 0o600 });
     fs.renameSync(file + '.tmp', file);
   } catch (err) {
-    console.error('[orbe] sauvegarde : retrait impossible', err.message);
+    console.error('[orbx] sauvegarde : retrait impossible', err.message);
     // Un fichier qu'on ne peut pas récrire ne garde pas ce qui a été supprimé : il est retiré.
     try { fs.unlinkSync(file + '.tmp'); } catch {}
     try { fs.unlinkSync(file); } catch {}
@@ -231,16 +231,16 @@ function plan(parsed, cur = store.state) {
   return out;
 }
 
-// Restauration demandée, en attente de l'arrêt d'Orbe : { file, raw }.
+// Restauration demandée, en attente de l'arrêt d'Orbx : { file, raw }.
 let armed = null;
 const restoring = () => !!armed;
 // L'arrêt a été retenu (une page a répondu « Rester ») : rien n'est restauré.
 function disarm() { armed = null; }
 
-// Remet une sauvegarde en place. Après accord, Orbe est arrêté normalement : la
+// Remet une sauvegarde en place. Après accord, Orbx est arrêté normalement : la
 // question des téléchargements en cours est posée d'abord, les pages peuvent
 // retenir, chaque module écrit ce qu'il avait en attente. L'état n'est remplacé
-// qu'une fois l'arrêt acquis (`apply`, sur « will-quit »), puis Orbe se relance.
+// qu'une fois l'arrêt acquis (`apply`, sur « will-quit »), puis Orbx se relance.
 // `name` doit être l'un des fichiers listés (jamais un chemin).
 async function restore(name) {
   flushForget();
@@ -250,7 +250,7 @@ async function restore(name) {
   try { parsed = JSON.parse(fs.readFileSync(b.file, 'utf8')); } catch { return false; }
   if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.spaces)) return false;
   const p = plan(parsed);
-  // La question dit ce qui revient, ce qui ne revient pas, et ce qu'Orbe garde comme sauvegardes.
+  // La question dit ce qui revient, ce qui ne revient pas, et ce qu'Orbx garde comme sauvegardes.
   const detail = [
     t('backup.detail', { date: label(b) }),
     [t('backup.detailPerms'), p.boosts ? t('backup.detailBoosts', { n: p.boosts }) : '', p.js ? t('backup.detailJs') : ''].filter(Boolean).join('\n'),

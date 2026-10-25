@@ -8,7 +8,7 @@
 // manifeste, l'injection est refusée (GoFullPage, par exemple, ne capture alors
 // que la partie visible de la page).
 //
-// Orbe fait donc ainsi, avec l'accord de l'utilisateur, demandé au premier clic :
+// Orbx fait donc ainsi, avec l'accord de l'utilisateur, demandé au premier clic :
 //   - le manifeste installé reçoit l'accès à tous les sites (`<all_urls>`), et
 //     l'extension est rechargée ;
 //   - la couche d'API continue de raisonner sur le manifeste d'origine (onglets
@@ -65,7 +65,7 @@ function patch(dir) {
 // manifeste d'origine, l'accès accordé y est reporté.
 function beforeLoad(id, dir) {
   if (!widened(id)) return;
-  try { patch(dir); } catch (err) { console.error('[orbe] extension', id, 'accès aux sites non reporté :', err.message); }
+  try { patch(dir); } catch (err) { console.error('[orbx] extension', id, 'accès aux sites non reporté :', err.message); }
 }
 
 // Pose la question, puis élargit l'accès et recharge l'extension. Renvoie true
@@ -92,7 +92,7 @@ function offer(ses, id) {
       }));
       const dir = ext.path;
       s.extensions.removeExtension(id);
-      // Extension installée par Orbe : la synchronisation la recharge. Sinon
+      // Extension installée par Orbx : la synchronisation la recharge. Sinon
       // (chargée d'ailleurs, tests), on la recharge depuis son dossier.
       if (!extensions.get(id)) s.extensions.loadExtension(dir, { allowFileAccess: false }).catch(() => {});
     }
@@ -114,7 +114,7 @@ function original(ext) {
 
 api.extend({
   // Avant une injection de script : l'onglet visé est-il ouvert à l'extension ?
-  // Sans effet pour une extension dont Orbe n'a pas élargi l'accès : Chromium
+  // Sans effet pour une extension dont Orbx n'a pas élargi l'accès : Chromium
   // fait alors le contrôle lui-même.
   _access(ctx, [tabId]) {
     if (!widened(ctx.id)) return true;
